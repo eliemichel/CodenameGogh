@@ -2,39 +2,68 @@
 #include "NodeGraphView.h"
 #include "LinkGraphicsItem.h"
 #include "Slot.h"
+#include "Logger.h"
 
 #include <QGraphicsSceneMouseEvent>
 
 SlotGraphicsItem::SlotGraphicsItem(QGraphicsItem *parent)
 	: QGraphicsEllipseItem(0, 0, 15, 15, parent)
 	, m_slot(nullptr)
+	, m_inputLink(nullptr)
 {
 	setData(NodeGraphView::RoleData, NodeGraphView::SlotRole);
 	setPen(QPen(Qt::black));
 	setBrush(QBrush(QColor(215, 192, 128)));
 }
 
+void SlotGraphicsItem::setSlot(Slot *slot)
+{
+	m_slot = slot;
+	if (m_slot)
+	{
+		m_slot->setGraphicItem(this);
+	}
+}
+
+void SlotGraphicsItem::setInputLink(LinkGraphicsItem *link)
+{
+	if (m_inputLink)
+	{
+		if (slot() && slot()->sourceSlot() && slot()->sourceSlot()->graphicItem())
+		{
+			slot()->sourceSlot()->graphicItem()->removeOutputLink(m_inputLink);
+		}
+		scene()->removeItem(m_inputLink);
+		delete m_inputLink;
+	}
+	m_inputLink = link;
+}
+
+void SlotGraphicsItem::removeOutputLink(LinkGraphicsItem *link)
+{
+	std::vector<LinkGraphicsItem*> newOutputs;
+	newOutputs.reserve(m_outputLinks.size());
+	for (LinkGraphicsItem *l : m_outputLinks)
+	{
+		if (l != link)
+		{
+			newOutputs.push_back(l);
+		}
+	}
+	m_outputLinks = newOutputs;
+}
+
 void SlotGraphicsItem::updateLinks() const
 {
-	if (!slot())
+	if (inputLink())
 	{
-		return;
+		inputLink()->setEndPos(sceneBoundingRect().center());
+		inputLink()->update();
 	}
-
-	for (LinkGraphicsItem *l : slot()->inputLinks())
-	{
-		l->setEndPos(sceneBoundingRect().center());
-		l->update();
-	}
-	for (LinkGraphicsItem *l : slot()->outputLinks())
+	for (LinkGraphicsItem *l : outputLinks())
 	{
 		l->setStartPos(sceneBoundingRect().center());
 		l->update();
 	}
 }
 
-
-void SlotGraphicsItem::mousePressEvent(QGraphicsSceneMouseEvent *event)
-{
-
-}

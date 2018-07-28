@@ -211,20 +211,26 @@ void NodeGraphView::dropEvent(QDropEvent *event)
 
 		if (isOnSlot)
 		{
-			// Create actual links in place of temporary pending links
+			// Create actual links in place of temporary pending links if possible
 			SlotGraphicsItem *slotItem = static_cast<SlotGraphicsItem*>(item);
 			Slot *slot = slotItem->slot();
-			for (SlotGraphicsItem *sourceSlotItem : m_pendingLinksSources)
+			for (SlotGraphicsItem *otherSlotItem : m_pendingLinksSources)
 			{
-				Slot *sourceSlot = sourceSlotItem->slot();
-				if (slot && sourceSlot)
+				Slot *otherSlot = otherSlotItem->slot();
+				if (slot && otherSlot && slot->isInput() != otherSlot->isInput())
 				{
+					Slot *destinationSlot = otherSlot->isInput() ? otherSlot : slot;
+					Slot *sourceSlot = otherSlot->isInput() ? slot : otherSlot;
+					SlotGraphicsItem *destinationSlotItem = otherSlot->isInput() ? otherSlotItem : slotItem;
+					SlotGraphicsItem *sourceSlotItem = otherSlot->isInput() ? slotItem : otherSlotItem;
+
 					LinkGraphicsItem *link = new LinkGraphicsItem();
 					scene()->addItem(link);
-					slot->addInputLink(link);
-					slot->setSourceSlot(sourceSlot);
-					sourceSlot->addOutputLink(link);
+					destinationSlotItem->setInputLink(link);
+					sourceSlotItem->addOutputLink(link);
 					sourceSlotItem->updateLinks();
+
+					destinationSlot->setSourceSlot(sourceSlot);
 				}
 			}
 			slotItem->updateLinks();

@@ -15,15 +15,21 @@ public:
 	SlotGraphicsItem(QGraphicsItem *parent = nullptr);
 
 	Slot *slot() const { return m_slot; }
-	void setSlot(Slot *slot) { m_slot = slot; }
+	void setSlot(Slot *slot);
+
+	LinkGraphicsItem * inputLink() const { return m_inputLink; }
+	void setInputLink(LinkGraphicsItem *link);
+
+	const std::vector<LinkGraphicsItem*> outputLinks() const { return m_outputLinks; }
+	void addOutputLink(LinkGraphicsItem *link) { m_outputLinks.push_back(link); }
+	void removeOutputLink(LinkGraphicsItem *link);
 
 	void updateLinks() const;
 
-protected:
-	void mousePressEvent(QGraphicsSceneMouseEvent *event) override;
-
 private:
 	Slot *m_slot;
+	LinkGraphicsItem *m_inputLink;
+	std::vector<LinkGraphicsItem*> m_outputLinks;
 };
 
 #endif // H_SLOTGRAPHICSITEM

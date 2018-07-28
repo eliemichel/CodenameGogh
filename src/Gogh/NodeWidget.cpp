@@ -13,45 +13,6 @@ NodeWidget::NodeWidget(QWidget *parent)
 {
 }
 
-NodeWidget::NodeWidget(GTest test, QWidget *parent)
-	: QWidget(parent)
-{
-	QBoxLayout *mainLayout, *layout;
-	switch (test)
-	{
-	case G_TEST_LEFTNODE:
-		mainLayout = new QHBoxLayout();
-		mainLayout->addWidget(new QLabel("Path"));
-		mainLayout->addWidget(new QLineEdit("input.mp4"));
-		mainLayout->addWidget(new QWidget());
-		this->setLayout(mainLayout);
-
-		newOutputSlot();
-		break;
-
-	case G_TEST_RIGHTNODE:
-		mainLayout = new QVBoxLayout();
-		layout = new QHBoxLayout();
-		layout->addWidget(new QWidget());
-		layout->addWidget(new QLabel("Path"));
-		layout->addWidget(new QLineEdit("output1.mov"));
-		mainLayout->addLayout(layout);
-		layout = new QHBoxLayout();
-		layout->addWidget(new QWidget());
-		layout->addWidget(new QLabel("Path"));
-		layout->addWidget(new QLineEdit("output2.mov"));
-		mainLayout->addLayout(layout);
-		layout = new QHBoxLayout();
-		layout->addWidget(new QPushButton("Render"));
-		mainLayout->addLayout(layout);
-		this->setLayout(mainLayout);
-
-		newInputSlot();
-		newInputSlot();
-		break;
-	}
-}
-
 NodeWidget::~NodeWidget()
 {
 	for (Slot *s : m_inputSlots)
@@ -72,6 +33,7 @@ Slot* NodeWidget::newInputSlot()
 	s->setMaxInputs(1);
 	s->setMaxOutputs(0);
 	s->setParentNode(this);
+	s->setIsInput(true);
 	m_inputSlots.push_back(s);
 	return s;
 }
@@ -82,6 +44,7 @@ Slot* NodeWidget::newOutputSlot()
 	s->setMaxInputs(1);
 	s->setMaxOutputs(-1);
 	s->setParentNode(this);
+	s->setIsInput(false);
 	m_outputSlots.push_back(s);
 	return s;
 }
@@ -98,4 +61,28 @@ bool NodeWidget::buildRenderCommand(const Slot *slot, RenderCommand  & cmd) cons
 	}
 	WARN_LOG << "Invalid slot pointer provided to NodeWidget::buildRenderCommand";
 	return false;
+}
+
+bool NodeWidget::parentBuildRenderCommand(int inputIndex, RenderCommand & cmd) const
+{
+	if (inputIndex >= inputSlots().size())
+	{
+		ERR_LOG << "Input " << inputIndex << " does not exist";
+		return false;
+	}
+
+	const Slot *sourceSlot = inputSlots()[inputIndex]->sourceSlot();
+	if (!sourceSlot)
+	{
+		ERR_LOG << "Input " << inputIndex << " is not connected, unable to render";
+		return false;
+	}
+	const NodeWidget *parentNode = sourceSlot->parentNode();
+	if (!parentNode)
+	{
+		ERR_LOG << "Input " << inputIndex << " is not connected to an orphan slot";
+		return false;
+	}
+
+	return parentNode->buildRenderCommand(sourceSlot, cmd);
 }

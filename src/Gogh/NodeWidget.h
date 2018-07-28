@@ -8,13 +8,13 @@
 
 class LinkGraphicsItem;
 
+/**
+ * This structure is transmitted among the graph nodes while building the
+ * render command. Feel free to add any field required to properly build
+ * the command.
+ */
 struct RenderCommand {
 	std::string cmd;
-};
-
-enum GTest {
-	G_TEST_LEFTNODE,
-	G_TEST_RIGHTNODE,
 };
 
 class NodeWidget : public QWidget
@@ -23,7 +23,6 @@ class NodeWidget : public QWidget
 
 public:
 	explicit NodeWidget(QWidget *parent = 0);
-	explicit NodeWidget(GTest test, QWidget *parent = 0);
 	~NodeWidget();
 
 	const std::vector<Slot*> inputSlots() const { return m_inputSlots; }
@@ -32,8 +31,24 @@ public:
 	const std::vector<Slot*> outputSlots() const { return m_outputSlots; }
 	Slot* newOutputSlot();
 
-	bool buildRenderCommand(const Slot *slot, RenderCommand  & cmd) const;
+	/**
+	 * Function that contains the logic of the node. This must be reimplemented
+	 * in each node and is called when building the render command.
+	 */
 	virtual bool buildRenderCommand(int outputIndex, RenderCommand & cmd) const { return true; }
+
+	/**
+	 * Try to call buildRenderCommand by providing a pointer to a slot instead
+	 * of the slot index. This iterates through the inputs until finding one
+	 * that equals.
+	 */
+	bool buildRenderCommand(const Slot *slot, RenderCommand  & cmd) const;
+
+	/**
+	 * Convenience function calling buildRenderCommand() on the source output slot
+	 * connected to the input at index inputIndex.
+	 */
+	bool parentBuildRenderCommand(int inputIndex, RenderCommand & cmd) const;
 
 private:
 	std::vector<Slot*> m_inputSlots;

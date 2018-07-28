@@ -3,7 +3,7 @@
 
 #include <vector>
 
-class LinkGraphicsItem;
+class SlotGraphicsItem;
 class NodeWidget;
 
 /**
@@ -14,13 +14,7 @@ class NodeWidget;
 class Slot
 {
 public:
-	Slot() : m_sourceSlot(nullptr) {}
-
-	const std::vector<LinkGraphicsItem*> inputLinks() const { return m_inputLinks; }
-	void addInputLink(LinkGraphicsItem *link) { m_inputLinks.push_back(link); }
-
-	const std::vector<LinkGraphicsItem*> outputLinks() const { return m_outputLinks; }
-	void addOutputLink(LinkGraphicsItem *link) { m_outputLinks.push_back(link); }
+	Slot() : m_sourceSlot(nullptr), m_parentNode(nullptr), m_graphicItem(nullptr){}
 
 	int maxInputs() const { return m_maxInputs; }
 	void setMaxInputs(int maxInputs);
@@ -34,13 +28,19 @@ public:
 	const NodeWidget * parentNode() const { return m_parentNode; }
 	void setParentNode(NodeWidget *parentNode) { m_parentNode = parentNode; }
 
+	bool isInput() const { return m_isInput; }
+	void setIsInput(bool isInput) { m_isInput = isInput; }
+
+	SlotGraphicsItem *graphicItem() const { return m_graphicItem; }
+	void setGraphicItem(SlotGraphicsItem * item) { m_graphicItem = item; }
+
 private:
-	std::vector<LinkGraphicsItem*> m_inputLinks;
-	std::vector<LinkGraphicsItem*> m_outputLinks;
 	int m_maxInputs = 1;
 	int m_maxOutputs = -1;
 	Slot *m_sourceSlot;
 	NodeWidget *m_parentNode;
+	bool m_isInput;
+	SlotGraphicsItem *m_graphicItem;
 };
 
 #endif // H_SLOT
