@@ -5,6 +5,9 @@
 #include "NodeWidget.h"
 #include "LinkGraphicsItem.h"
 #include "NodeGraphicsItem.h"
+#include "SlotGraphicsItem.h"
+#include "Nodes/InputNode.h"
+#include "Nodes/OutputNode.h"
 
 #include <QFileDialog>
 #include <QGraphicsScene>
@@ -35,10 +38,16 @@ MainWindow::MainWindow(QWidget *parent)
 	NodeGraphicsItem *rightNodeItem = new NodeGraphicsItem(m_scene, rightNodeContent);
 	rightNodeItem->setPos(QPointF(200, 0));
 
-	LinkGraphicsItem *link = new LinkGraphicsItem();
-	m_scene->addItem(link);
-	leftNodeContent->allSlots()[0]->addOutputLink(link);
-	rightNodeContent->allSlots()[0]->addInputLink(link);
+	NodeGraphicsItem *nodeItem;
+	nodeItem = new NodeGraphicsItem(m_scene, new InputNode());
+	nodeItem->setPos(QPointF(-300, -200));
+	nodeItem = new NodeGraphicsItem(m_scene, new OutputNode());
+	nodeItem->setPos(QPointF(-100, -200));
+
+	SlotGraphicsItem *slotItem = new SlotGraphicsItem();
+	slotItem->setPos(100, -200);
+	slotItem->setSlot(new Slot());
+	m_scene->addItem(slotItem);
 
 	m_scene->setSceneRect(-1000, -1000, 2000, 2000);
 	ui->viewport->setScene(m_scene);

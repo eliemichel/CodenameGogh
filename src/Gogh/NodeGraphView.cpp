@@ -3,19 +3,20 @@
 #include "Logger.h"
 #include "NodeWidget.h"
 #include "LinkGraphicsItem.h"
+#include "SlotGraphicsItem.h"
 
 #include <QPainter>
 #include <QMouseEvent>
 #include <QWheelEvent>
 #include <QGraphicsItem>
 #include <QGraphicsProxyWidget>
+#include <QMimeData>
+#include <QDrag>
 
 NodeGraphView::NodeGraphView(QWidget *parent)
 	: QGraphicsView(parent)
 	, m_zoom(1.f)
 	, m_isPanning(false)
-	, m_isMovingNode(false)
-	, m_movingItem(nullptr)
 {
 	setBackgroundBrush(QColor(64, 64, 64));
 	setRenderHint(QPainter::Antialiasing);
@@ -81,31 +82,6 @@ void NodeGraphView::mouseMoveEvent(QMouseEvent *event)
 		QPointF delta = mapToScene(m_pressPos) - mapToScene(event->pos());
 		centerOn(m_pressCenter + delta);
 	}
-	else if (m_isMovingNode && m_movingItem)
-	{
-		QPointF c = mapToScene(viewport()->rect().center());
-		QPointF delta = mapToScene(m_pressPos) - mapToScene(event->pos());
-		m_movingItem->setPos(m_movingItemStartPos - delta);
-
-		// update link
-		QVariant itemType = m_movingItem->data(0);
-		if (itemType.isValid() && itemType.toInt() == 1) // if is node
-		{
-			QGraphicsProxyWidget *proxy = static_cast<QGraphicsProxyWidget*>(m_movingItem->toGraphicsObject());
-			NodeWidget *node = static_cast<NodeWidget*>(proxy->widget());
-			for (Slot *s : node->allSlots())
-			{
-				for (LinkGraphicsItem *l : s->inputLinks())
-				{
-					l->setEndPos(s->pos() + proxy->scenePos());
-				}
-				for (LinkGraphicsItem *l : s->outputLinks())
-				{
-					l->setStartPos(s->pos() + proxy->scenePos());
-				}
-			}
-		}
-	}
 	else
 	{
 		QGraphicsView::mouseMoveEvent(event);
@@ -122,12 +98,40 @@ void NodeGraphView::mousePressEvent(QMouseEvent *event)
 	}
 	else if (event->button() == Qt::LeftButton)
 	{
-		if (QGraphicsItem *item = itemAt(event->pos()))
+		QGraphicsItem *item = itemAt(event->pos());
+		QVariant v = item->data(RoleData);
+		if (v.isValid() && v.toInt() == SlotRole)
 		{
-			m_isMovingNode = true;
-			m_movingItem = item;
-			m_pressPos = event->pos();
-			m_movingItemStartPos = m_movingItem->pos();
+			// If press on a slot, start dragging link
+
+			// create pending link
+			LinkGraphicsItem *link = new LinkGraphicsItem();
+			link->setStartPos(item->sceneBoundingRect().center());
+			link->setEndPos(mapToScene(event->pos()));
+			scene()->addItem(link);
+			m_pendingLinks.push_back(link);
+			SlotGraphicsItem *slotItem = static_cast<SlotGraphicsItem*>(item);
+			m_pendingLinksSources.push_back(slotItem);
+
+			// create drag action
+			QMimeData *mimeData = new QMimeData();
+			mimeData->setData("application/x-gogh-slot", QByteArray());
+			QDrag *drag = new QDrag(this);
+			drag->setMimeData(mimeData);
+			drag->setHotSpot(event->pos());
+			drag->exec();
+
+			for (LinkGraphicsItem *l : m_pendingLinks)
+			{
+				scene()->removeItem(l);
+				delete l;
+			}
+			m_pendingLinks.clear();
+			m_pendingLinksSources.clear();
+		}
+		else
+		{
+			QGraphicsView::mousePressEvent(event);
 		}
 	}
 	else
@@ -142,10 +146,6 @@ void NodeGraphView::mouseReleaseEvent(QMouseEvent *event)
 	{
 		m_isPanning = false;
 	}
-	else if (event->button() == Qt::LeftButton)
-	{
-		m_isMovingNode = false;
-	}
 	else
 	{
 		QGraphicsView::mouseReleaseEvent(event);
@@ -154,12 +154,10 @@ void NodeGraphView::mouseReleaseEvent(QMouseEvent *event)
 
 void NodeGraphView::wheelEvent(QWheelEvent *event)
 {
-	// TODO: when zooming, we should pause and restart the ongoing panning/moving actions
-
 	float oldZoom = m_zoom;
 
 	// 1.1 ^ angle makes zoom exponential and reversible
-	m_zoom *= exp(event->angleDelta().y()/180.f * log(1.1f));
+	m_zoom *= exp(event->angleDelta().y()/180.f * 2.f * log(1.1f));
 
 	// /!\ relative zoom has a risk of numerical error accumulation
 	// this would be changed if we would go for a manual management of the view transform
@@ -167,4 +165,81 @@ void NodeGraphView::wheelEvent(QWheelEvent *event)
 	scale(s, s);
 
 	update();
+}
+
+void NodeGraphView::dragEnterEvent(QDragEnterEvent *event)
+{
+	if (event->mimeData()->hasFormat("application/x-gogh-slot") && event->source() == this)
+	{
+		event->accept();
+	}
+	else
+	{
+		event->ignore();
+	}
+}
+
+void NodeGraphView::dragMoveEvent(QDragMoveEvent *event)
+{
+	if (event->mimeData()->hasFormat("application/x-gogh-slot") && event->source() == this)
+	{
+		QGraphicsItem *item = itemAt(event->pos());
+		QVariant v = item->data(RoleData);
+		bool isOnSlot = v.isValid() && v.toInt() == SlotRole;
+		QPointF p = isOnSlot ? item->sceneBoundingRect().center() : mapToScene(event->pos());
+		
+		for (LinkGraphicsItem *l : m_pendingLinks)
+		{
+			l->setEndPos(p);
+		}
+
+		event->accept();
+	}
+	else
+	{
+		event->ignore();
+	}
+}
+
+void NodeGraphView::dropEvent(QDropEvent *event)
+{
+	if (event->mimeData()->hasFormat("application/x-gogh-slot") && event->source() == this)
+	{
+		QGraphicsItem *item = itemAt(event->pos());
+		QVariant v = item->data(RoleData);
+		bool isOnSlot = v.isValid() && v.toInt() == SlotRole;
+
+		if (isOnSlot)
+		{
+			// Create actual links in place of temporary pending links
+			SlotGraphicsItem *slotItem = static_cast<SlotGraphicsItem*>(item);
+			Slot *slot = slotItem->slot();
+			for (SlotGraphicsItem *sourceSlotItem : m_pendingLinksSources)
+			{
+				Slot *sourceSlot = sourceSlotItem->slot();
+				if (slot && sourceSlot)
+				{
+					LinkGraphicsItem *link = new LinkGraphicsItem();
+					scene()->addItem(link);
+					slot->addInputLink(link);
+					slot->setSourceSlot(sourceSlot);
+					sourceSlot->addOutputLink(link);
+					sourceSlotItem->updateLinks();
+				}
+			}
+			slotItem->updateLinks();
+		}
+		QPointF p = isOnSlot ? item->sceneBoundingRect().center() : mapToScene(event->pos());
+
+		for (LinkGraphicsItem *l : m_pendingLinks)
+		{
+			l->setEndPos(p);
+		}
+
+		event->accept();
+	}
+	else
+	{
+		event->ignore();
+	}
 }

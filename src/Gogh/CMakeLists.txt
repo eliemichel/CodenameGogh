@@ -16,6 +16,8 @@ add_executable(
 	utils/strutils.cpp
 	utils/fileutils.h
 	utils/fileutils.cpp
+	Slot.h
+	Slot.cpp
 	MainWindow.h
 	MainWindow.ui
 	MainWindow.cpp
@@ -27,6 +29,17 @@ add_executable(
 	LinkGraphicsItem.cpp
 	NodeGraphicsItem.h
 	NodeGraphicsItem.cpp
+	SlotGraphicsItem.h
+	SlotGraphicsItem.cpp
+	Nodes/TestNode.h
+	Nodes/TestNode.ui
+	Nodes/TestNode.cpp
+	Nodes/OutputNode.h
+	Nodes/OutputNode.ui
+	Nodes/OutputNode.cpp
+	Nodes/InputNode.h
+	Nodes/InputNode.ui
+	Nodes/InputNode.cpp
 	main.cpp
 )
 

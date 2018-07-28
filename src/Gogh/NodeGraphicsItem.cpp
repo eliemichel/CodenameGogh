@@ -2,6 +2,8 @@
 #include "LinkGraphicsItem.h"
 #include "NodeWidget.h"
 #include "Logger.h"
+#include "NodeGraphView.h"
+#include "SlotGraphicsItem.h"
 
 #include <QWidget>
 #include <QGraphicsRectItem>
@@ -23,31 +25,42 @@ NodeGraphicsItem::NodeGraphicsItem(QGraphicsScene *scene, NodeWidget *content)
 	setFlag(ItemSendsGeometryChanges, true);
 
 	m_proxy = scene->addWidget(content);
-	m_proxy->setData(0, 1); // set item as node proxy TODO: use enums
+	m_proxy->setData(NodeGraphView::RoleData, NodeGraphView::NodeContentRole);
 	m_proxy->setPos(0, rect().height());
 	m_proxy->setParentItem(this);
-}
 
-void NodeGraphicsItem::updateLinks() const
-{
-	for (Slot *s : m_content->allSlots())
+	// Wrap a SlotGraphiscItem around all the slots of the content node
+	int offset = 30;
+	for (Slot *s : content->inputSlots())
 	{
-		for (LinkGraphicsItem *l : s->inputLinks())
-		{
-			l->setEndPos(s->pos() + m_proxy->scenePos());
-		}
-		for (LinkGraphicsItem *l : s->outputLinks())
-		{
-			l->setStartPos(s->pos() + m_proxy->scenePos());
-		}
+		SlotGraphicsItem *slotItem = new SlotGraphicsItem();
+		scene->addItem(slotItem);
+		slotItem->setSlot(s);
+		slotItem->setPos(-15, offset);
+		slotItem->setParentItem(this);
+		m_slotItems.push_back(slotItem);
+		offset += 30;
+	}
+	offset = 30;
+	for (Slot *s : content->outputSlots())
+	{
+		SlotGraphicsItem *slotItem = new SlotGraphicsItem();
+		scene->addItem(slotItem);
+		slotItem->setSlot(s);
+		slotItem->setPos(rect().width(), offset);
+		slotItem->setParentItem(this);
+		m_slotItems.push_back(slotItem);
+		offset += 30;
 	}
 }
 
 QVariant NodeGraphicsItem::itemChange(GraphicsItemChange change, const QVariant &value)
 {
 	if (change == ItemPositionChange && scene()) {
-		//QPointF newPos = value.toPointF();
-		updateLinks();
+		for (SlotGraphicsItem *item : m_slotItems)
+		{
+			item->updateLinks();
+		}
 	}
 	return QGraphicsItem::itemChange(change, value);
 }
