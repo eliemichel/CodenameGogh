@@ -25,6 +25,8 @@ add_executable(
 	NodeWidget.cpp
 	LinkGraphicsItem.h
 	LinkGraphicsItem.cpp
+	NodeGraphicsItem.h
+	NodeGraphicsItem.cpp
 	main.cpp
 )
 

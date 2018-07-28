@@ -97,11 +97,11 @@ void NodeGraphView::mouseMoveEvent(QMouseEvent *event)
 			{
 				for (LinkGraphicsItem *l : s->inputLinks())
 				{
-					l->setEndPos(s->pos() + proxy->pos());
+					l->setEndPos(s->pos() + proxy->scenePos());
 				}
 				for (LinkGraphicsItem *l : s->outputLinks())
 				{
-					l->setStartPos(s->pos() + proxy->pos());
+					l->setStartPos(s->pos() + proxy->scenePos());
 				}
 			}
 		}

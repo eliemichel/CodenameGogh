@@ -4,6 +4,7 @@
 #include "Logger.h"
 #include "NodeWidget.h"
 #include "LinkGraphicsItem.h"
+#include "NodeGraphicsItem.h"
 
 #include <QFileDialog>
 #include <QGraphicsScene>
@@ -25,23 +26,19 @@ MainWindow::MainWindow(QWidget *parent)
 
 	m_scene = new QGraphicsScene();
 
-	NodeWidget *leftNode = new NodeWidget(G_TEST_LEFTNODE);
-	NodeWidget *rightNode = new NodeWidget(G_TEST_RIGHTNODE);
+	NodeWidget *leftNodeContent = new NodeWidget(G_TEST_LEFTNODE);
+	NodeWidget *rightNodeContent = new NodeWidget(G_TEST_RIGHTNODE);
 
-	QGraphicsProxyWidget *wdg;
-	wdg = m_scene->addWidget(leftNode);
-	wdg->setData(0, 1); // set item as node proxy TODO: use enums
-	wdg->setPos(-200, 0);
+	NodeGraphicsItem *leftNodeItem = new NodeGraphicsItem(m_scene, leftNodeContent);
+	leftNodeItem->setPos(QPointF(-200, 0));
 
-	wdg = m_scene->addWidget(rightNode);
-	wdg->setData(0, 1);
-	wdg->setPos(200, 0);
+	NodeGraphicsItem *rightNodeItem = new NodeGraphicsItem(m_scene, rightNodeContent);
+	rightNodeItem->setPos(QPointF(200, 0));
 
 	LinkGraphicsItem *link = new LinkGraphicsItem();
-	link->setLine(0, 0, 120, 150);
 	m_scene->addItem(link);
-	leftNode->allSlots()[0]->addOutputLink(link);
-	rightNode->allSlots()[0]->addInputLink(link);
+	leftNodeContent->allSlots()[0]->addOutputLink(link);
+	rightNodeContent->allSlots()[0]->addInputLink(link);
 
 	m_scene->setSceneRect(-1000, -1000, 2000, 2000);
 	ui->viewport->setScene(m_scene);
