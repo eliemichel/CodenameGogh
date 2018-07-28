@@ -1,18 +1,24 @@
 #include "NodeGraphView.h"
 
 #include "Logger.h"
+#include "NodeWidget.h"
+#include "LinkGraphicsItem.h"
 
 #include <QPainter>
 #include <QMouseEvent>
 #include <QWheelEvent>
+#include <QGraphicsItem>
+#include <QGraphicsProxyWidget>
 
 NodeGraphView::NodeGraphView(QWidget *parent)
 	: QGraphicsView(parent)
 	, m_zoom(1.f)
 	, m_isPanning(false)
+	, m_isMovingNode(false)
+	, m_movingItem(nullptr)
 {
 	setBackgroundBrush(QColor(64, 64, 64));
-	// 
+	setRenderHint(QPainter::Antialiasing);
 	setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
 }
 
@@ -65,12 +71,6 @@ void NodeGraphView::drawBackground(QPainter *painter, const QRectF &rect)
 		painter->drawLine(rect.left(), y, rect.right(), y);
 		painter->setPen(pen);
 	}
-
-	//painter.drawEllipse(m_offset, 5, 5);
-	painter->setPen(QPen(QColor(255, 80, 80)));
-	QPointF offset = QPointF(0.f, 0.f);
-	painter->drawLine(offset - QPoint(10, 10), offset + QPoint(10, 10));
-	painter->drawLine(offset - QPoint(10, -10), offset + QPoint(10, -10));
 }
 
 void NodeGraphView::mouseMoveEvent(QMouseEvent *event)
@@ -80,6 +80,31 @@ void NodeGraphView::mouseMoveEvent(QMouseEvent *event)
 		QPointF c = mapToScene(viewport()->rect().center());
 		QPointF delta = mapToScene(m_pressPos) - mapToScene(event->pos());
 		centerOn(m_pressCenter + delta);
+	}
+	else if (m_isMovingNode && m_movingItem)
+	{
+		QPointF c = mapToScene(viewport()->rect().center());
+		QPointF delta = mapToScene(m_pressPos) - mapToScene(event->pos());
+		m_movingItem->setPos(m_movingItemStartPos - delta);
+
+		// update link
+		QVariant itemType = m_movingItem->data(0);
+		if (itemType.isValid() && itemType.toInt() == 1) // if is node
+		{
+			QGraphicsProxyWidget *proxy = static_cast<QGraphicsProxyWidget*>(m_movingItem->toGraphicsObject());
+			NodeWidget *node = static_cast<NodeWidget*>(proxy->widget());
+			for (Slot *s : node->allSlots())
+			{
+				for (LinkGraphicsItem *l : s->inputLinks())
+				{
+					l->setEndPos(s->pos() + proxy->pos());
+				}
+				for (LinkGraphicsItem *l : s->outputLinks())
+				{
+					l->setStartPos(s->pos() + proxy->pos());
+				}
+			}
+		}
 	}
 	else
 	{
@@ -95,6 +120,16 @@ void NodeGraphView::mousePressEvent(QMouseEvent *event)
 		m_pressPos = event->pos();
 		m_pressCenter = mapToScene(viewport()->rect().center());
 	}
+	else if (event->button() == Qt::LeftButton)
+	{
+		if (QGraphicsItem *item = itemAt(event->pos()))
+		{
+			m_isMovingNode = true;
+			m_movingItem = item;
+			m_pressPos = event->pos();
+			m_movingItemStartPos = m_movingItem->pos();
+		}
+	}
 	else
 	{
 		QGraphicsView::mousePressEvent(event);
@@ -107,6 +142,10 @@ void NodeGraphView::mouseReleaseEvent(QMouseEvent *event)
 	{
 		m_isPanning = false;
 	}
+	else if (event->button() == Qt::LeftButton)
+	{
+		m_isMovingNode = false;
+	}
 	else
 	{
 		QGraphicsView::mouseReleaseEvent(event);
@@ -115,7 +154,17 @@ void NodeGraphView::mouseReleaseEvent(QMouseEvent *event)
 
 void NodeGraphView::wheelEvent(QWheelEvent *event)
 {
+	// TODO: when zooming, we should pause and restart the ongoing panning/moving actions
+
+	float oldZoom = m_zoom;
+
 	// 1.1 ^ angle makes zoom exponential and reversible
 	m_zoom *= exp(event->angleDelta().y()/180.f * log(1.1f));
+
+	// /!\ relative zoom has a risk of numerical error accumulation
+	// this would be changed if we would go for a manual management of the view transform
+	float s = m_zoom / oldZoom;
+	scale(s, s);
+
 	update();
 }

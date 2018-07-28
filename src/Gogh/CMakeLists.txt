@@ -8,7 +8,7 @@ if(Qt5Widgets_FOUND)
 endif()
 
 add_executable(
-	Nodia
+	Gogh
 	resources.qrc
 	Logger.h
 	Logger.cpp
@@ -21,11 +21,15 @@ add_executable(
 	MainWindow.cpp
 	NodeGraphView.h
 	NodeGraphView.cpp
+	NodeWidget.h
+	NodeWidget.cpp
+	LinkGraphicsItem.h
+	LinkGraphicsItem.cpp
 	main.cpp
 )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries_and_dll(Nodia Qt5::Core)
-target_link_libraries_and_dll(Nodia Qt5::Gui)
-target_link_libraries_and_dll(Nodia Qt5::Widgets)
+target_link_libraries_and_dll(Gogh Qt5::Core)
+target_link_libraries_and_dll(Gogh Qt5::Gui)
+target_link_libraries_and_dll(Gogh Qt5::Widgets)

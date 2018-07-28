@@ -3,6 +3,9 @@
 
 #include <QGraphicsView>
 
+/**
+ * Node view, handles zooming/panning and moving the nodes
+ */
 class NodeGraphView : public QGraphicsView
 {
 	Q_OBJECT
@@ -21,10 +24,13 @@ protected:
 private:
 	float m_zoom;
 	bool m_isPanning;
+	bool m_isMovingNode;
 
 	// no need for initialization
 	QPoint m_pressPos;
 	QPointF m_pressCenter;
+	QGraphicsItem *m_movingItem;
+	QPointF m_movingItemStartPos;
 };
 
 #endif // H_NODEGRAPHVIEW
