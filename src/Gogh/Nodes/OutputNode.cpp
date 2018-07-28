@@ -13,7 +13,6 @@ OutputNode::OutputNode(QWidget *parent)
 
 	// Add slots
 	newInputSlot();
-	newInputSlot();
 }
 
 OutputNode::~OutputNode()
@@ -29,13 +28,13 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	const Slot *sourceSlot = inputSlots()[0]->sourceSlot();
 	if (!sourceSlot)
 	{
-		ERR_LOG << "Input 0 is not connected, unable to render";
+		ERR_LOG << "[OutputNode] Input 0 is not connected, unable to render";
 		return false;
 	}
 	const NodeWidget *parentNode = sourceSlot->parentNode();
 	if (!parentNode)
 	{
-		ERR_LOG << "Input 0 is not connected to an orphan slot";
+		ERR_LOG << "[OutputNode] Input 0 is not connected to an orphan slot";
 		return false;
 	}
 

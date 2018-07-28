@@ -8,6 +8,7 @@
 #include "SlotGraphicsItem.h"
 #include "Nodes/InputNode.h"
 #include "Nodes/OutputNode.h"
+#include "Nodes/ScaleNode.h"
 
 #include <QFileDialog>
 #include <QGraphicsScene>
@@ -29,25 +30,13 @@ MainWindow::MainWindow(QWidget *parent)
 
 	m_scene = new QGraphicsScene();
 
-	NodeWidget *leftNodeContent = new NodeWidget(G_TEST_LEFTNODE);
-	NodeWidget *rightNodeContent = new NodeWidget(G_TEST_RIGHTNODE);
-
-	NodeGraphicsItem *leftNodeItem = new NodeGraphicsItem(m_scene, leftNodeContent);
-	leftNodeItem->setPos(QPointF(-200, 0));
-
-	NodeGraphicsItem *rightNodeItem = new NodeGraphicsItem(m_scene, rightNodeContent);
-	rightNodeItem->setPos(QPointF(200, 0));
-
 	NodeGraphicsItem *nodeItem;
 	nodeItem = new NodeGraphicsItem(m_scene, new InputNode());
 	nodeItem->setPos(QPointF(-300, -200));
+	nodeItem = new NodeGraphicsItem(m_scene, new ScaleNode());
+	nodeItem->setPos(QPointF(0, -250));
 	nodeItem = new NodeGraphicsItem(m_scene, new OutputNode());
-	nodeItem->setPos(QPointF(-100, -200));
-
-	SlotGraphicsItem *slotItem = new SlotGraphicsItem();
-	slotItem->setPos(100, -200);
-	slotItem->setSlot(new Slot());
-	m_scene->addItem(slotItem);
+	nodeItem->setPos(QPointF(300, -200));
 
 	m_scene->setSceneRect(-1000, -1000, 2000, 2000);
 	ui->viewport->setScene(m_scene);
