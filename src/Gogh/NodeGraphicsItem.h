@@ -20,7 +20,7 @@ public:
 	const std::vector<SlotGraphicsItem*> & slotItems() const { return m_slotItems; }
 
 protected:
-	QVariant NodeGraphicsItem::itemChange(GraphicsItemChange change, const QVariant &value) override;
+	QVariant itemChange(GraphicsItemChange change, const QVariant &value) override;
 
 private:
 	NodeWidget * m_content;

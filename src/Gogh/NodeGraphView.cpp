@@ -12,6 +12,9 @@
 #include <QGraphicsProxyWidget>
 #include <QMimeData>
 #include <QDrag>
+#include <math.h>
+
+//using std::ceil;
 
 NodeGraphView::NodeGraphView(QWidget *parent)
 	: QGraphicsView(parent)
@@ -32,13 +35,13 @@ void NodeGraphView::drawBackground(QPainter *painter, const QRectF &rect)
 {
 	painter->setBrush(backgroundBrush());
 	painter->drawRect(rect);
-	
+
 	QPen pen(QColor(80, 80, 80), 1, Qt::DotLine);
 	// thicker pen for one line out of 5
 	QPen steppen(QColor(80, 80, 80));
 
 	painter->setPen(pen);
-	
+
 	float step = 10.f;
 
 	// number of columns
@@ -60,7 +63,7 @@ void NodeGraphView::drawBackground(QPainter *painter, const QRectF &rect)
 		painter->drawLine(x, rect.bottom(), x, rect.top());
 		painter->setPen(pen);
 	}
-	
+
 	// Draw lines
 	for (int j = 0; j < m; ++j)
 	{
@@ -187,7 +190,7 @@ void NodeGraphView::dragMoveEvent(QDragMoveEvent *event)
 		QVariant v = item->data(RoleData);
 		bool isOnSlot = v.isValid() && v.toInt() == SlotRole;
 		QPointF p = isOnSlot ? item->sceneBoundingRect().center() : mapToScene(event->pos());
-		
+
 		for (LinkGraphicsItem *l : m_pendingLinks)
 		{
 			l->setEndPos(p);
