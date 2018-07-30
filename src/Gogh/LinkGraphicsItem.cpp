@@ -2,7 +2,7 @@
 
 #include <QPainter>
 
-#include <math.h>
+#include <cmath>
 
 void LinkGraphicsItem::setStartPos(QPointF pos) {
 	prepareGeometryChange();
