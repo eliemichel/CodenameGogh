@@ -43,6 +43,9 @@ add_executable(
 	Nodes/ScaleNode.h
 	Nodes/ScaleNode.ui
 	Nodes/ScaleNode.cpp
+	Nodes/CodecNode.h
+	Nodes/CodecNode.ui
+	Nodes/CodecNode.cpp
 	main.cpp
 )
 

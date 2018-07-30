@@ -9,6 +9,7 @@
 #include "Nodes/InputNode.h"
 #include "Nodes/OutputNode.h"
 #include "Nodes/ScaleNode.h"
+#include "Nodes/CodecNode.h"
 
 #include <QFileDialog>
 #include <QGraphicsScene>
@@ -35,6 +36,8 @@ MainWindow::MainWindow(QWidget *parent)
 	nodeItem->setPos(QPointF(-300, -200));
 	nodeItem = new NodeGraphicsItem(m_scene, new ScaleNode());
 	nodeItem->setPos(QPointF(0, -250));
+	nodeItem = new NodeGraphicsItem(m_scene, new CodecNode());
+	nodeItem->setPos(QPointF(0, -100));
 	nodeItem = new NodeGraphicsItem(m_scene, new OutputNode());
 	nodeItem->setPos(QPointF(300, -200));
 
