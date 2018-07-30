@@ -19,7 +19,7 @@ NodeGraphicsItem::NodeGraphicsItem(QGraphicsScene *scene, NodeWidget *content)
 	scene->addItem(this);
 	setRect(0, 0, content->width(), 20);
 	setPen(Qt::NoPen);
-	setBrush(QBrush(QColor(192, 192, 192)));
+	setBrush(QBrush(QColor(41, 41, 41)));
 	//setFlag(ItemIsMovable, true);
 	setFlag(ItemIsSelectable, true);
 	setFlag(ItemSendsGeometryChanges, true);

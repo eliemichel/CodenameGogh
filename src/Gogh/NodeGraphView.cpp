@@ -23,7 +23,7 @@ NodeGraphView::NodeGraphView(QWidget *parent)
 	, m_isPanning(false)
 	, m_isMovingNodes(false)
 {
-	setBackgroundBrush(QColor(64, 64, 64));
+	setBackgroundBrush(QColor(57, 57, 57));
 	setRenderHint(QPainter::Antialiasing);
 	setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
 }
@@ -38,9 +38,9 @@ void NodeGraphView::drawBackground(QPainter *painter, const QRectF &rect)
 	painter->setBrush(backgroundBrush());
 	painter->drawRect(rect);
 
-	QPen pen(QColor(80, 80, 80), 1, Qt::DotLine);
+	QPen pen(QColor(47, 47, 47), 1, Qt::DotLine);
 	// thicker pen for one line out of 5
-	QPen steppen(QColor(80, 80, 80));
+	QPen steppen(QColor(41, 41, 41));
 
 	painter->setPen(pen);
 

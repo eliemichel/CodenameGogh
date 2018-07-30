@@ -13,7 +13,7 @@ SlotGraphicsItem::SlotGraphicsItem(QGraphicsItem *parent)
 {
 	setData(NodeGraphView::RoleData, NodeGraphView::SlotRole);
 	setPen(QPen(Qt::black));
-	setBrush(QBrush(QColor(215, 192, 128)));
+	setBrush(QBrush(QColor(99, 99, 199)));
 }
 
 void SlotGraphicsItem::setSlot(Slot *slot)
