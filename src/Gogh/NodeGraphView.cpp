@@ -4,6 +4,7 @@
 #include "NodeWidget.h"
 #include "LinkGraphicsItem.h"
 #include "SlotGraphicsItem.h"
+#include "NodeGraphicsItem.h"
 
 #include <QPainter>
 #include <QMouseEvent>
@@ -20,6 +21,7 @@ NodeGraphView::NodeGraphView(QWidget *parent)
 	: QGraphicsView(parent)
 	, m_zoom(1.f)
 	, m_isPanning(false)
+	, m_isMovingNodes(false)
 {
 	setBackgroundBrush(QColor(64, 64, 64));
 	setRenderHint(QPainter::Antialiasing);
@@ -85,6 +87,15 @@ void NodeGraphView::mouseMoveEvent(QMouseEvent *event)
 		QPointF delta = mapToScene(m_pressPos) - mapToScene(event->pos());
 		centerOn(m_pressCenter + delta);
 	}
+	else if (m_isMovingNodes)
+	{
+		QPointF delta = mapToScene(m_moveStartPos) - mapToScene(event->pos());
+		for (SelectionItem sel : m_selectionModel)
+		{
+			sel.nodeItem->setPos(sel.startPos - delta);
+			sel.nodeItem->updateLinks();
+		}
+	}
 	else
 	{
 		QGraphicsView::mouseMoveEvent(event);
@@ -103,8 +114,20 @@ void NodeGraphView::mousePressEvent(QMouseEvent *event)
 	{
 		QGraphicsItem *item = itemAt(event->pos());
 		QVariant v = item->data(RoleData);
-		if (v.isValid() && v.toInt() == SlotRole)
+		if (v.isValid() && v.toInt() == NodeControlRole)
 		{
+			NodeGraphicsItem *nodeItem = static_cast<NodeGraphicsItem*>(item);
+			// If press on a slot, start moving nodes
+
+			m_selectionModel.clear();
+			SelectionItem sel(nodeItem, nodeItem->pos());
+			m_selectionModel.push_back(sel);
+			m_moveStartPos = event->pos();
+			m_isMovingNodes = true;
+		}
+		else if (v.isValid() && v.toInt() == SlotRole)
+		{
+			SlotGraphicsItem *slotItem = static_cast<SlotGraphicsItem*>(item);
 			// If press on a slot, start dragging link
 
 			// create pending link
@@ -113,7 +136,6 @@ void NodeGraphView::mousePressEvent(QMouseEvent *event)
 			link->setEndPos(mapToScene(event->pos()));
 			scene()->addItem(link);
 			m_pendingLinks.push_back(link);
-			SlotGraphicsItem *slotItem = static_cast<SlotGraphicsItem*>(item);
 			m_pendingLinksSources.push_back(slotItem);
 
 			// create drag action
@@ -151,6 +173,10 @@ void NodeGraphView::mouseReleaseEvent(QMouseEvent *event)
 	}
 	else
 	{
+		if (event->button() == Qt::LeftButton)
+		{
+			m_isMovingNodes = false;
+		}
 		QGraphicsView::mouseReleaseEvent(event);
 	}
 }

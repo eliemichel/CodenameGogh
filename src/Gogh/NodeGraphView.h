@@ -7,6 +7,7 @@
 class Slot;
 class LinkGraphicsItem;
 class SlotGraphicsItem;
+class NodeGraphicsItem;
 
 /**
  * Node view, handles zooming/panning
@@ -24,6 +25,14 @@ public:
 		NodeControlRole,
 		NodeContentRole,
 		SlotRole,
+	};
+
+private:
+	struct SelectionItem {
+		NodeGraphicsItem *nodeItem;
+		QPointF startPos;
+
+		SelectionItem(NodeGraphicsItem *_nodeItem, QPointF _startPos) : nodeItem(_nodeItem), startPos(_startPos) {}
 	};
 
 public:
@@ -52,6 +61,11 @@ private:
 	/// Links that are currently being dragged
 	std::vector<LinkGraphicsItem*> m_pendingLinks;
 	std::vector<SlotGraphicsItem*> m_pendingLinksSources;
+
+	// Data for moving nodes
+	bool m_isMovingNodes;
+	QPoint m_moveStartPos;
+	std::vector<SelectionItem> m_selectionModel;
 };
 
 #endif // H_NODEGRAPHVIEW

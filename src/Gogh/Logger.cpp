@@ -28,6 +28,7 @@
 #include <ctime>
 #include <cstring>
 #include <iomanip>
+#include <algorithm>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -143,7 +144,7 @@ const char * Logger::shorterFilename(const char *filename)
 void Logger::align(std::stringstream &ss)
 {
 	size_t l = ss.str().length();
-    Logger::align_width = std::max(Logger::align_width, l);
+    Logger::align_width = (std::max)(Logger::align_width, l);
 	size_t x = Logger::align_width;  // why is that needed?
 	ss << std::setw(x - l) << "";
 }

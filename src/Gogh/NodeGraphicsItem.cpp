@@ -18,11 +18,12 @@ NodeGraphicsItem::NodeGraphicsItem(QGraphicsScene *scene, NodeWidget *content)
 
 	scene->addItem(this);
 	setRect(0, 0, content->width(), 20);
-	setPen(QPen(Qt::black));
-	setBrush(QBrush(Qt::darkBlue));
-	setFlag(ItemIsMovable, true);
+	setPen(Qt::NoPen);
+	setBrush(QBrush(QColor(192, 192, 192)));
+	//setFlag(ItemIsMovable, true);
 	setFlag(ItemIsSelectable, true);
 	setFlag(ItemSendsGeometryChanges, true);
+	setData(NodeGraphView::RoleData, NodeGraphView::NodeControlRole);
 
 	m_proxy = scene->addWidget(content);
 	m_proxy->setData(NodeGraphView::RoleData, NodeGraphView::NodeContentRole);
@@ -36,7 +37,7 @@ NodeGraphicsItem::NodeGraphicsItem(QGraphicsScene *scene, NodeWidget *content)
 		SlotGraphicsItem *slotItem = new SlotGraphicsItem();
 		scene->addItem(slotItem);
 		slotItem->setSlot(s);
-		slotItem->setPos(-15, offset);
+		slotItem->setPos(-7, offset);
 		slotItem->setParentItem(this);
 		m_slotItems.push_back(slotItem);
 		offset += 30;
@@ -47,20 +48,25 @@ NodeGraphicsItem::NodeGraphicsItem(QGraphicsScene *scene, NodeWidget *content)
 		SlotGraphicsItem *slotItem = new SlotGraphicsItem();
 		scene->addItem(slotItem);
 		slotItem->setSlot(s);
-		slotItem->setPos(rect().width(), offset);
+		slotItem->setPos(rect().width() - 8, offset);
 		slotItem->setParentItem(this);
 		m_slotItems.push_back(slotItem);
 		offset += 30;
 	}
 }
 
+void NodeGraphicsItem::updateLinks() const
+{
+	for (SlotGraphicsItem *item : m_slotItems)
+	{
+		item->updateLinks();
+	}
+}
+
 QVariant NodeGraphicsItem::itemChange(GraphicsItemChange change, const QVariant &value)
 {
 	if (change == ItemPositionChange && scene()) {
-		for (SlotGraphicsItem *item : m_slotItems)
-		{
-			item->updateLinks();
-		}
+		updateLinks();
 	}
 	return QGraphicsItem::itemChange(change, value);
 }

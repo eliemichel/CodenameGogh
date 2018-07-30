@@ -19,6 +19,8 @@ public:
 
 	const std::vector<SlotGraphicsItem*> & slotItems() const { return m_slotItems; }
 
+	void updateLinks() const;
+
 protected:
 	QVariant itemChange(GraphicsItemChange change, const QVariant &value) override;
 
