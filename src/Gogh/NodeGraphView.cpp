@@ -257,12 +257,13 @@ void NodeGraphView::dropEvent(QDropEvent *event)
 					scene()->addItem(link);
 					destinationSlotItem->setInputLink(link);
 					sourceSlotItem->addOutputLink(link);
+
+					destinationSlotItem->updateLinks();
 					sourceSlotItem->updateLinks();
 
 					destinationSlot->setSourceSlot(sourceSlot);
 				}
 			}
-			slotItem->updateLinks();
 		}
 		QPointF p = isOnSlot ? item->sceneBoundingRect().center() : mapToScene(event->pos());
 
