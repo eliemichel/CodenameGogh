@@ -25,12 +25,16 @@ add_executable(
 	NodeGraphView.cpp
 	NodeWidget.h
 	NodeWidget.cpp
+	RenderDialog.h
+	RenderDialog.cpp
+
 	LinkGraphicsItem.h
 	LinkGraphicsItem.cpp
 	NodeGraphicsItem.h
 	NodeGraphicsItem.cpp
 	SlotGraphicsItem.h
 	SlotGraphicsItem.cpp
+
 	Nodes/TestNode.h
 	Nodes/TestNode.ui
 	Nodes/TestNode.cpp
@@ -43,8 +47,10 @@ add_executable(
 	Nodes/ScaleNode.h
 	Nodes/ScaleNode.ui
 	Nodes/ScaleNode.cpp
-	RenderDialog.h
-	RenderDialog.cpp
+	Nodes/CodecNode.h
+	Nodes/CodecNode.ui
+	Nodes/CodecNode.cpp
+
 	main.cpp
 )
 
