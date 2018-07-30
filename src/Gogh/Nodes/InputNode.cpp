@@ -3,6 +3,10 @@
 
 #include "Logger.h"
 
+#include <QFileInfo>
+
+#include <sstream>
+
 InputNode::InputNode(QWidget *parent)
 	: NodeWidget(parent)
 	, ui(new Ui::InputNode)
@@ -23,6 +27,16 @@ bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		return false;
 	}
 
-	cmd.cmd = "-i " + ui->filenameInput->text().toStdString();
+	QString filename = ui->filenameInput->text();
+	QFileInfo fileinfo(filename);
+	if (!fileinfo.isFile())
+	{
+		std::ostringstream ss;
+		ss << "Input file does not exist: " << filename.toStdString();
+		cmd.err = ss.str();
+		return false;
+	}
+
+	cmd.cmd = "-i " + filename.toStdString();
 	return true;
 }

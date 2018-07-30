@@ -3,6 +3,8 @@
 
 #include "Logger.h"
 
+#include <QMessageBox>
+
 OutputNode::OutputNode(QWidget *parent)
 	: NodeWidget(parent)
 	, ui(new Ui::OutputNode)
@@ -44,6 +46,11 @@ void OutputNode::render()
 	}
 	else
 	{
+		QMessageBox msgBox;
+		msgBox.setText("Render failed");
+		msgBox.setInformativeText(QString::fromStdString(cmd.err));
+		msgBox.setIcon(QMessageBox::Critical);
+		int ret = msgBox.exec();
 		ERR_LOG << "Render failed";
 	}
 }
