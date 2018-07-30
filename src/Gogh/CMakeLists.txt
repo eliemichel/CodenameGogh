@@ -43,6 +43,8 @@ add_executable(
 	Nodes/ScaleNode.h
 	Nodes/ScaleNode.ui
 	Nodes/ScaleNode.cpp
+	RenderDialog.h
+	RenderDialog.cpp
 	main.cpp
 )
 
