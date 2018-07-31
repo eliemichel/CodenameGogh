@@ -19,6 +19,7 @@ public:
 		float x, y;
 	};
 
+	// When adding a new type here, handle it in the body of buildNode() as well
 	enum NodeType
 	{
 		NODE_OUTPUT = 0,
@@ -26,6 +27,12 @@ public:
 		NODE_SCALE  = 2,
 		NODE_CODEC  = 3,
 	};
+
+public:
+	// Factory function building a new node from a given type.
+	// This is the only place holding a mapping from type enum to type classes
+	// and must be updated any time a new node type is defined
+	static NodeWidget * buildNode(int type);
 
 public:
 	void LoadDefaultGraph();

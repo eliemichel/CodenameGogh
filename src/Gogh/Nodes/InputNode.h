@@ -17,6 +17,9 @@ public:
 
 	bool buildRenderCommand(int outputIndex, RenderCommand & cmd) const override;
 
+	void read(QDataStream & stream) override;
+	void write(QDataStream & stream) const override;
+
 private:
 	Ui::InputNode *ui;
 };

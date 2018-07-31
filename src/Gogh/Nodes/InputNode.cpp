@@ -40,3 +40,17 @@ bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	cmd.cmd = "-i " + filename.toStdString();
 	return true;
 }
+
+void InputNode::read(QDataStream & stream)
+{
+	QString filename;
+	stream >> filename;
+	ui->filenameInput->setText(filename);
+}
+
+void InputNode::write(QDataStream & stream) const
+{
+	QString filename = ui->filenameInput->text();
+	stream << filename;
+}
+

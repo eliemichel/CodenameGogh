@@ -57,16 +57,16 @@
     <property name="title">
      <string>File</string>
     </property>
-    <addaction name="actionOpen"/>
-    <addaction name="actionSave"/>
-    <addaction name="actionExport"/>
+    <addaction name="openAction"/>
+    <addaction name="saveAction"/>
+    <addaction name="saveAsAction"/>
     <addaction name="separator"/>
-    <addaction name="actionQuit"/>
+    <addaction name="quitAction"/>
    </widget>
    <addaction name="menuFile"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
-  <action name="actionOpen">
+  <action name="openAction">
    <property name="text">
     <string>Open...</string>
    </property>
@@ -74,15 +74,15 @@
     <string>Ctrl+O</string>
    </property>
   </action>
-  <action name="actionSave">
+  <action name="saveAction">
    <property name="text">
-    <string>Save...</string>
+    <string>Save</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
    </property>
   </action>
-  <action name="actionExport">
+  <action name="exporAction">
    <property name="text">
     <string>Export...</string>
    </property>
@@ -90,12 +90,17 @@
     <string>Ctrl+E</string>
    </property>
   </action>
-  <action name="actionQuit">
+  <action name="quitAction">
    <property name="text">
     <string>Quit</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+Q</string>
+   </property>
+  </action>
+  <action name="saveAsAction">
+   <property name="text">
+    <string>Save As...</string>
    </property>
   </action>
  </widget>

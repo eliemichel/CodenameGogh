@@ -54,6 +54,13 @@ public:
 	 */
 	bool parentBuildRenderCommand(int inputIndex, RenderCommand & cmd) const;
 
+	/**
+	 * I/O function, used to save and load scenes.
+	 * Reimplement this in subclasses to symmetrically write and read back raw node data.
+	 */
+	virtual void read(QDataStream & stream) {}
+	virtual void write(QDataStream & stream) const {}
+
 private:
 	std::vector<Slot*> m_inputSlots;
 	std::vector<Slot*> m_outputSlots;

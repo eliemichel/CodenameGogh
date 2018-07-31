@@ -38,6 +38,19 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	return true;
 }
 
+void OutputNode::read(QDataStream & stream)
+{
+	QString filename;
+	stream >> filename;
+	ui->filenameInput->setText(filename);
+}
+
+void OutputNode::write(QDataStream & stream) const
+{
+	QString filename = ui->filenameInput->text();
+	stream << filename;
+}
+
 void OutputNode::render()
 {
 	RenderCommand cmd;

@@ -10,6 +10,23 @@
 #include <QFile>
 #include <QDataStream>
 
+NodeWidget * NodeGraphModel::buildNode(int type)
+{
+	switch (type)
+	{
+	case NODE_INPUT:
+		return new InputNode();
+	case NODE_OUTPUT:
+		return new OutputNode();
+	case NODE_SCALE:
+		return new ScaleNode();
+	case NODE_CODEC:
+		return new CodecNode();
+	default:
+		return nullptr;
+	}
+}
+
 void NodeGraphModel::LoadDefaultGraph()
 {
 	addNode(new InputNode(), NODE_INPUT, -300, -200);
@@ -37,27 +54,18 @@ bool NodeGraphModel::LoadGraph(QString filename)
 		float x, y;
 		in >> type >> x >> y;
 
-		NodeWidget *node;
-		switch (type)
+		NodeWidget *node = buildNode(type);
+		if (!node)
 		{
-		case NODE_INPUT:
-			node = new InputNode();
-			break;
-		case NODE_OUTPUT:
-			node = new OutputNode();
-			break;
-		case NODE_SCALE:
-			node = new ScaleNode();
-			break;
-		case NODE_CODEC:
-			node = new CodecNode();
-			break;
-		default:
 			ERR_LOG << "Invalid node type: " << type << " (in file " << filename.toStdString() << ")";
 			return false;
 		}
+
+		node->read(in);
+
 		addNode(node, type, x, y);
 	}
+	return true;
 }
 
 bool NodeGraphModel::SaveGraph(QString filename)
@@ -76,7 +84,9 @@ bool NodeGraphModel::SaveGraph(QString filename)
 	for (NodeEntry entry : nodes())
 	{
 		out << entry.type << entry.x << entry.y;
+		entry.node->write(out);
 	}
+	return true;
 }
 
 void NodeGraphModel::addNode(NodeWidget *node, int type, float x, float y)

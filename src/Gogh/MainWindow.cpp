@@ -24,8 +24,9 @@ MainWindow::MainWindow(QWidget *parent)
 {
 	ui->setupUi(this);
 
-	connect(ui->actionQuit, &QAction::triggered, this, &QWidget::close);
-	connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::showOpenFileDialog);
+	connect(ui->quitAction, &QAction::triggered, this, &QWidget::close);
+	connect(ui->openAction, &QAction::triggered, this, &MainWindow::showOpenFileDialog);
+	connect(ui->saveAction, &QAction::triggered, this, &MainWindow::save);
 
 	m_scene = new QGraphicsScene();
 	m_model = new NodeGraphModel();
@@ -48,7 +49,7 @@ MainWindow::MainWindow(QWidget *parent)
 	m_scene->setSceneRect(-1000, -1000, 2000, 2000);
 	ui->viewport->setScene(m_scene);
 
-	ui->splitter->setSizes(QList<int>() << 200 << 100);
+	ui->splitter->setSizes(QList<int>() << 300 << 10);
 }
 
 MainWindow::~MainWindow()
@@ -58,4 +59,10 @@ MainWindow::~MainWindow()
 void MainWindow::showOpenFileDialog()
 {
 	QString fileName = QFileDialog::getOpenFileName(this, tr("Open Shader"), "", tr("Shader Files (*.txt *.glsl)"));
+}
+
+void MainWindow::save()
+{
+	QString filename = QDir::tempPath() + "/gogh_sample.gog";
+	m_model->SaveGraph(filename);
 }
