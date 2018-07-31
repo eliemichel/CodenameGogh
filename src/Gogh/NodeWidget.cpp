@@ -86,3 +86,25 @@ bool NodeWidget::parentBuildRenderCommand(int inputIndex, RenderCommand & cmd) c
 
 	return parentNode->buildRenderCommand(sourceSlot, cmd);
 }
+
+void NodeWidget::read(QDataStream & stream)
+{
+	int n;
+	QVariant v;
+	stream >> n;
+	for (int i = 0; i < std::min(n, parmCount()); ++i)
+	{
+		stream >> v;
+		setParm(i, v);
+	}
+}
+
+void NodeWidget::write(QDataStream & stream) const
+{
+	int n = parmCount();
+	stream << n;
+	for (int i = 0; i < n; ++i)
+	{
+		stream << parmEval(i);
+	}
+}

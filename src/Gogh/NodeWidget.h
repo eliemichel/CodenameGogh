@@ -2,7 +2,10 @@
 #define H_NODEWIDGET
 
 #include "Slot.h"
+
 #include <QWidget>
+#include <QVariant>
+
 #include <vector>
 #include <string>
 
@@ -58,8 +61,14 @@ public:
 	 * I/O function, used to save and load scenes.
 	 * Reimplement this in subclasses to symmetrically write and read back raw node data.
 	 */
-	virtual void read(QDataStream & stream) {}
-	virtual void write(QDataStream & stream) const {}
+	virtual void read(QDataStream & stream);
+	virtual void write(QDataStream & stream) const;
+
+public: // data model
+	virtual int parmCount() const { return 0; }
+	virtual QString parmName(int parm) const { return QString(); }
+	virtual QVariant parmEval(int parm) const { return QVariant(); }
+	virtual void setParm(int parm, QVariant value) {}
 
 private:
 	std::vector<Slot*> m_inputSlots;

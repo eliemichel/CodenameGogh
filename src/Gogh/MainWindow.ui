@@ -39,7 +39,17 @@
        <enum>Qt::Horizontal</enum>
       </property>
       <widget class="NodeGraphView" name="viewport" native="true"/>
-      <widget class="QWidget" name="text" native="true"/>
+      <widget class="QWidget" name="text" native="true">
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <widget class="QTreeView" name="outliner">
+          <property name="uniformRowHeights">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
      </widget>
     </item>
    </layout>

@@ -17,8 +17,11 @@ public:
 
 	bool buildRenderCommand(int outputIndex, RenderCommand & cmd) const override;
 
-	void read(QDataStream & stream) override;
-	void write(QDataStream & stream) const override;
+public: // data model
+	int parmCount() const override;
+	QString parmName(int parm) const override;
+	QVariant parmEval(int parm) const override;
+	void setParm(int parm, QVariant value) override;
 
 private:
 	Ui::InputNode *ui;

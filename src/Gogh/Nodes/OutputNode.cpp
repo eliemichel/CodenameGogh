@@ -38,17 +38,43 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	return true;
 }
 
-void OutputNode::read(QDataStream & stream)
+// Data model
+
+int OutputNode::parmCount() const
 {
-	QString filename;
-	stream >> filename;
-	ui->filenameInput->setText(filename);
+	return 1;
 }
 
-void OutputNode::write(QDataStream & stream) const
+QString OutputNode::parmName(int parm) const
 {
-	QString filename = ui->filenameInput->text();
-	stream << filename;
+	switch (parm)
+	{
+	case 0:
+		return "filename";
+	default:
+		return QString();
+	}
+}
+
+QVariant OutputNode::parmEval(int parm) const
+{
+	switch (parm)
+	{
+	case 0:
+		return ui->filenameInput->text();
+	default:
+		return QVariant();
+	}
+}
+
+void OutputNode::setParm(int parm, QVariant value)
+{
+	switch (parm)
+	{
+	case 0:
+		ui->filenameInput->setText(value.toString());
+		break;
+	}
 }
 
 void OutputNode::render()

@@ -17,6 +17,7 @@
 #include <QGraphicsProxyWidget>
 #include <QHBoxLayout>
 #include <QDir>
+#include <QModelIndex>
 
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
@@ -50,6 +51,7 @@ MainWindow::MainWindow(QWidget *parent)
 	ui->viewport->setScene(m_scene);
 
 	ui->splitter->setSizes(QList<int>() << 300 << 10);
+	ui->outliner->setModel(m_model);
 }
 
 MainWindow::~MainWindow()
@@ -58,7 +60,8 @@ MainWindow::~MainWindow()
 
 void MainWindow::showOpenFileDialog()
 {
-	QString fileName = QFileDialog::getOpenFileName(this, tr("Open Shader"), "", tr("Shader Files (*.txt *.glsl)"));
+	QString filename = QFileDialog::getOpenFileName(this, tr("Open Gogh Graph"), "", tr("Gogh files (*.gog)"));
+	m_model->LoadGraph(filename);
 }
 
 void MainWindow::save()
