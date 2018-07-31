@@ -134,7 +134,7 @@ QVariant NodeGraphModel::data(const QModelIndex & index, int role) const
 		return QVariant();
 	}
 
-	if (role == Qt::DisplayRole || role == Qt::ToolTipRole || role == Qt::WhatsThisRole || role == Qt::UserRole)
+	if (role == Qt::DisplayRole || role == Qt::ToolTipRole || role == Qt::WhatsThisRole || role == Qt::UserRole || role == Qt::EditRole)
 	{
 		if (isRoot(index.parent()))
 		{
@@ -142,7 +142,7 @@ QVariant NodeGraphModel::data(const QModelIndex & index, int role) const
 			switch (index.column())
 			{
 			case TypeColumn:
-				if (role == Qt::UserRole)
+				if (role == Qt::UserRole || role == Qt::EditRole)
 				{
 					return entry.type;
 				}
@@ -197,6 +197,59 @@ QVariant NodeGraphModel::headerData(int section, Qt::Orientation orientation, in
 	else
 	{
 		return QVariant();
+	}
+}
+
+bool NodeGraphModel::setData(const QModelIndex & index, const QVariant & value, int role)
+{
+	if (role != Qt::EditRole)
+	{
+		return false;
+	}
+
+	if (isRoot(index))
+	{
+		return false;
+	}
+	else if (isRoot(index.parent()))
+	{
+		return false;
+	}
+	else if (isNodeIndex(index.parent()))
+	{
+		NodeEntry entry = nodes()[index.internalId()];
+		switch (index.column())
+		{
+		case 1:
+			entry.node->setParm(index.row(), value);
+			return true;
+		default:
+			return false;
+		}
+	}
+}
+
+Qt::ItemFlags NodeGraphModel::flags(const QModelIndex & index) const
+{
+	Qt::ItemFlags f = QAbstractItemModel::flags(index);
+
+	if (isRoot(index))
+	{
+		return f;
+	}
+	else if (isRoot(index.parent()))
+	{
+		return f;
+	}
+	else if (isNodeIndex(index.parent()))
+	{
+		switch (index.column())
+		{
+		case 1:
+			return f | Qt::ItemIsEditable;
+		default:
+			return f;
+		}
 	}
 }
 
