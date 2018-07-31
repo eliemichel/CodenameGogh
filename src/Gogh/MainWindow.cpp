@@ -2,14 +2,11 @@
 #include "ui_MainWindow.h"
 
 #include "Logger.h"
+#include "NodeGraphModel.h"
 #include "NodeWidget.h"
 #include "LinkGraphicsItem.h"
 #include "NodeGraphicsItem.h"
 #include "SlotGraphicsItem.h"
-#include "Nodes/InputNode.h"
-#include "Nodes/OutputNode.h"
-#include "Nodes/ScaleNode.h"
-#include "Nodes/CodecNode.h"
 
 #include <QFileDialog>
 #include <QGraphicsScene>
@@ -19,6 +16,7 @@
 #include <QLineEdit>
 #include <QGraphicsProxyWidget>
 #include <QHBoxLayout>
+#include <QDir>
 
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
@@ -30,16 +28,22 @@ MainWindow::MainWindow(QWidget *parent)
 	connect(ui->actionOpen, &QAction::triggered, this, &MainWindow::showOpenFileDialog);
 
 	m_scene = new QGraphicsScene();
+	m_model = new NodeGraphModel();
 
+	QString filename = QDir::tempPath() + "/gogh_sample.gog";
+	if (!m_model->LoadGraph(filename))
+	{
+		m_model->LoadDefaultGraph();
+		m_model->SaveGraph(filename);
+	}
+
+	// Node creation has been moved to NodeGraphModel::LoadGraph
 	NodeGraphicsItem *nodeItem;
-	nodeItem = new NodeGraphicsItem(m_scene, new InputNode());
-	nodeItem->setPos(QPointF(-300, -200));
-	nodeItem = new NodeGraphicsItem(m_scene, new ScaleNode());
-	nodeItem->setPos(QPointF(0, -250));
-	nodeItem = new NodeGraphicsItem(m_scene, new CodecNode());
-	nodeItem->setPos(QPointF(0, -100));
-	nodeItem = new NodeGraphicsItem(m_scene, new OutputNode());
-	nodeItem->setPos(QPointF(300, -200));
+	for (NodeGraphModel::NodeEntry entry : m_model->nodes())
+	{
+		nodeItem = new NodeGraphicsItem(m_scene, entry.node);
+		nodeItem->setPos(QPointF(entry.x, entry.y));
+	}
 
 	m_scene->setSceneRect(-1000, -1000, 2000, 2000);
 	ui->viewport->setScene(m_scene);

@@ -25,6 +25,8 @@ add_executable(
 	NodeGraphView.cpp
 	NodeWidget.h
 	NodeWidget.cpp
+	NodeGraphModel.h
+	NodeGraphModel.cpp
 	RenderDialog.h
 	RenderDialog.cpp
 
