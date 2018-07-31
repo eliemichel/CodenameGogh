@@ -14,6 +14,10 @@ CodecNode::CodecNode(QWidget *parent)
 	// Add slots
 	newInputSlot();
 	newOutputSlot();
+
+	//Add items in combo box
+	ui->codecBox->addItem("libx264");
+	ui->codecBox->addItem("hap");
 }
 
 CodecNode::~CodecNode()
@@ -32,7 +36,8 @@ bool CodecNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	}
 
 	std::ostringstream ss;
-	ss << cmd.cmd << " -vf scale=" << ui->widthInput->value() << ":" << ui->heightInput->value();
+ 	ss << cmd.cmd << " -c:v "<< ui->codecBox->currentText().toStdString();
+	//std::cout << ui->codecBox->currentText();
 	cmd.cmd = ss.str();
 	return true;
 }

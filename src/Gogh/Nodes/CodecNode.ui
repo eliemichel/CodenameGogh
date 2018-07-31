@@ -15,47 +15,14 @@
   </property>
   <layout class="QGridLayout" name="gridLayout">
    <item row="0" column="0">
-    <widget class="QLabel" name="widthLabel">
+    <widget class="QLabel" name="codecLabel">
      <property name="text">
-      <string>Width</string>
+      <string>Codec</string>
      </property>
     </widget>
    </item>
    <item row="0" column="1">
-    <widget class="QSpinBox" name="widthInput">
-     <property name="minimumSize">
-      <size>
-       <width>100</width>
-       <height>0</height>
-      </size>
-     </property>
-     <property name="minimum">
-      <number>0</number>
-     </property>
-     <property name="maximum">
-      <number>999999999</number>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="0">
-    <widget class="QLabel" name="heightLabel">
-     <property name="text">
-      <string>Height</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="1">
-    <widget class="QSpinBox" name="heightInput">
-     <property name="minimumSize">
-      <size>
-       <width>100</width>
-       <height>0</height>
-      </size>
-     </property>
-     <property name="maximum">
-      <number>999999999</number>
-     </property>
-    </widget>
+    <widget class="QComboBox" name="codecBox"/>
    </item>
   </layout>
  </widget>
