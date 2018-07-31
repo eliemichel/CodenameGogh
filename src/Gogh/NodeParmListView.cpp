@@ -1,47 +1,60 @@
 #include "NodeParmListView.h"
 
-QModelIndex NodeParmListView::indexAt(const QPoint & point) const
+#include <QGridLayout>
+#include <QLabel>
+#include <QAbstractItemModel>
+#include <QItemSelectionModel>
+
+NodeParmListView::NodeParmListView(QWidget *parent)
+	: QWidget(parent)
 {
-	return currentIndex();
+	QGridLayout *layout = new QGridLayout();
+	layout->addWidget(new QLabel("parm"), 0, 0);
+	layout->addWidget(new QLabel("value"), 0, 1);
+	this->setLayout(layout);
 }
 
-void NodeParmListView::scrollTo(const QModelIndex & index, QAbstractItemView::ScrollHint hint)
+void NodeParmListView::setModel(QAbstractItemModel * model)
 {
+	m_model = model;
+	// TODO: listen to data change
 }
 
-QRect NodeParmListView::visualRect(const QModelIndex & index) const
+void NodeParmListView::setSelectionModel(QItemSelectionModel * selectionModel)
 {
-	if (index == currentIndex())
+	m_selectionModel = selectionModel;
+	connect(m_selectionModel, &QItemSelectionModel::currentChanged, this, &NodeParmListView::updateContent);
+}
+
+void NodeParmListView::updateContent()
+{
+	// clean-up
+	QLayoutItem *item;
+	while (item = layout()->takeAt(0))
 	{
-		return rect();
+		delete item->widget();
+		delete item;
 	}
-	else
+	delete layout();
+
+	QGridLayout *layout = new QGridLayout();
+	layout->addWidget(new QLabel("parm"), 0, 0);
+	layout->addWidget(new QLabel("value"), 0, 1);
+	if (model() && selectionModel())
 	{
-		return QRect();
+		const QModelIndex & index = selectionModel()->currentIndex();
+		if (index.isValid() && !index.parent().isValid()) // if isNodeIndex
+		{
+			int n = model()->rowCount(index);;
+			for (int i = 0; i < n; ++i)
+			{
+				QString parm = model()->data(model()->index(i, 0, index), Qt::DisplayRole).toString();
+				layout->addWidget(new QLabel(parm), i + 1, 0);
+
+				QVariant value = model()->data(model()->index(i, 1, index), Qt::DisplayRole);
+				layout->addWidget(new QLabel(value.toString()), i + 1, 1);
+			}
+		}
 	}
-}
-
-int NodeParmListView::horizontalOffset() const
-{
-	return 0;
-}
-
-bool NodeParmListView::isIndexHidden(const QModelIndex & index) const
-{
-	return index != currentIndex();
-}
-
-void NodeParmListView::setSelection(const QRect & rect, QItemSelectionModel::SelectionFlags flags)
-{
-	selectionModel()->select(currentIndex(), flags);
-}
-
-int NodeParmListView::verticalOffset() const
-{
-	return 0;
-}
-
-QRegion NodeParmListView::visualRegionForSelection(const QItemSelection & selection) const
-{
-	return rect();
+	this->setLayout(layout);
 }

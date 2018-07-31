@@ -1,21 +1,29 @@
 #ifndef H_NODEPARMLISTVIEW
 #define H_NODEPARMLISTVIEW
 
-#include <QAbstractItemView>
+#include <QWidget>
 
-class NodeParmListView : public QAbstractItemView
+class QAbstractItemModel;
+class QItemSelectionModel;
+
+class NodeParmListView : public QWidget
 {
+	Q_OBJECT
 public:
-	QModelIndex indexAt(const QPoint & point) const override;
-	void scrollTo(const QModelIndex & index, QAbstractItemView::ScrollHint hint = EnsureVisible) override;
-	QRect visualRect(const QModelIndex & index) const override;
+	explicit NodeParmListView(QWidget *parent = nullptr);
 
-protected:
-	int horizontalOffset() const override;
-	bool isIndexHidden(const QModelIndex & index) const override;
-	void setSelection(const QRect & rect, QItemSelectionModel::SelectionFlags flags) override;
-	int verticalOffset() const override;
-	QRegion visualRegionForSelection(const QItemSelection & selection) const override;
+	QAbstractItemModel * model() const { return m_model; }
+	void setModel(QAbstractItemModel *model);
+
+	QItemSelectionModel * selectionModel() const { return m_selectionModel; }
+	void setSelectionModel(QItemSelectionModel *selectionModel);
+
+private slots:
+	void updateContent();
+
+private:
+	QAbstractItemModel * m_model;
+	QItemSelectionModel * m_selectionModel;
 };
 
 #endif // H_NODEPARMLISTVIEW

@@ -40,12 +40,24 @@
       </property>
       <widget class="NodeGraphView" name="viewport" native="true"/>
       <widget class="QWidget" name="text" native="true">
-       <layout class="QVBoxLayout" name="verticalLayout">
+       <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
-         <widget class="QTreeView" name="outliner">
-          <property name="uniformRowHeights">
-           <bool>true</bool>
-          </property>
+         <widget class="QWidget" name="widget_2" native="true">
+          <layout class="QVBoxLayout" name="verticalLayout">
+           <item>
+            <widget class="QSplitter" name="splitter_3">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <widget class="QTreeView" name="outliner">
+              <property name="uniformRowHeights">
+               <bool>true</bool>
+              </property>
+             </widget>
+             <widget class="NodeParmListView" name="parameters" native="true"/>
+            </widget>
+           </item>
+          </layout>
          </widget>
         </item>
        </layout>
@@ -119,6 +131,12 @@
    <class>NodeGraphView</class>
    <extends>QWidget</extends>
    <header>NodeGraphView.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>NodeParmListView</class>
+   <extends>QWidget</extends>
+   <header>NodeParmListView.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

@@ -52,6 +52,8 @@ MainWindow::MainWindow(QWidget *parent)
 
 	ui->splitter->setSizes(QList<int>() << 300 << 10);
 	ui->outliner->setModel(m_model);
+	ui->parameters->setModel(m_model);
+	ui->parameters->setSelectionModel(ui->outliner->selectionModel());
 }
 
 MainWindow::~MainWindow()
