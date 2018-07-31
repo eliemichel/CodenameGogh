@@ -46,7 +46,7 @@ bool NodeGraphModel::LoadGraph(QString filename)
 	LOG << "Loading graph from: " << filename.toStdString();
 
 	QDataStream in(&file);
-	size_t n;
+	int n = static_cast<int>(m_nodes.size());;
 	in >> n;
 	for (int i = 0; i < n; ++i)
 	{
@@ -79,7 +79,7 @@ bool NodeGraphModel::SaveGraph(QString filename)
 	LOG << "Saving graph to: " << filename.toStdString();
 
 	QDataStream out(&file);
-	size_t n = nodes().size();
+	int n = static_cast<int>(m_nodes.size());
 	out << n;
 	for (NodeEntry entry : nodes())
 	{
