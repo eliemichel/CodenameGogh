@@ -222,6 +222,7 @@ bool NodeGraphModel::setData(const QModelIndex & index, const QVariant & value, 
 		{
 		case 1:
 			entry.node->setParm(index.row(), value);
+			emit dataChanged(index, index);
 			return true;
 		default:
 			return false;

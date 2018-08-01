@@ -2,6 +2,7 @@
 #define H_NODEPARMLISTVIEW
 
 #include <QWidget>
+#include <QModelIndex>
 
 class QAbstractItemModel;
 class QItemSelectionModel;
@@ -20,10 +21,12 @@ public:
 
 private slots:
 	void updateContent();
+	void onDataChanged(const QModelIndex & topLeft, const QModelIndex & bottomRight);
 
 private:
 	QAbstractItemModel * m_model;
 	QItemSelectionModel * m_selectionModel;
+	QModelIndex m_currentNodeIndex;
 };
 
 #endif // H_NODEPARMLISTVIEW
