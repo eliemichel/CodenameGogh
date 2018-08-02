@@ -5,6 +5,7 @@
 #include "LinkGraphicsItem.h"
 #include "SlotGraphicsItem.h"
 #include "NodeGraphicsItem.h"
+#include "NodeGraphModel.h"
 
 #include <QPainter>
 #include <QMouseEvent>
@@ -13,12 +14,16 @@
 #include <QGraphicsProxyWidget>
 #include <QMimeData>
 #include <QDrag>
+#include <QAbstractItemModel>
+#include <QItemSelectionModel>
 #include <math.h>
 
 //using std::ceil;
 
 NodeGraphView::NodeGraphView(QWidget *parent)
 	: QGraphicsView(parent)
+	, m_model(nullptr)
+	, m_selectionModel(nullptr)
 	, m_zoom(1.f)
 	, m_isPanning(false)
 	, m_isMovingNodes(false)
@@ -31,6 +36,26 @@ NodeGraphView::NodeGraphView(QWidget *parent)
 NodeGraphView::~NodeGraphView()
 {
 
+}
+
+void NodeGraphView::setModel(QAbstractItemModel *model)
+{
+	if (m_model)
+	{
+		disconnect(m_model, 0, this, 0);
+	}
+	m_model = model;
+	connect(m_model, &QAbstractItemModel::dataChanged, this, &NodeGraphView::onDataChanged);
+}
+
+void NodeGraphView::setSelectionModel(QItemSelectionModel *selectionModel)
+{
+	if (m_selectionModel)
+	{
+		disconnect(m_selectionModel, 0, this, 0);
+	}
+	m_selectionModel = selectionModel;
+	connect(m_selectionModel, &QItemSelectionModel::currentChanged, this, &NodeGraphView::onCurrentChanged);
 }
 
 void NodeGraphView::drawBackground(QPainter *painter, const QRectF &rect)
@@ -90,10 +115,17 @@ void NodeGraphView::mouseMoveEvent(QMouseEvent *event)
 	else if (m_isMovingNodes)
 	{
 		QPointF delta = mapToScene(m_moveStartPos) - mapToScene(event->pos());
-		for (SelectionItem sel : m_selectionModel)
+		size_t i = 0;
+		for (const QModelIndex & index : m_selectionModel->selectedIndexes())
 		{
-			sel.nodeItem->setPos(sel.startPos - delta);
-			sel.nodeItem->updateLinks();
+			if (model())
+			{
+				const QModelIndex & colX = model()->index(index.row(), NodeGraphModel::PosXColumn, index.parent());
+				const QModelIndex & colY = model()->index(index.row(), NodeGraphModel::PosYColumn, index.parent());
+				QPointF startPos = m_selectionStartPos[i++];
+				model()->setData(colX, startPos.x() - delta.x());
+				model()->setData(colY, startPos.y() - delta.y());
+			}
 		}
 	}
 	else
@@ -116,12 +148,16 @@ void NodeGraphView::mousePressEvent(QMouseEvent *event)
 		QVariant v = item->data(RoleData);
 		if (v.isValid() && v.toInt() == NodeControlRole)
 		{
-			NodeGraphicsItem *nodeItem = static_cast<NodeGraphicsItem*>(item);
+			NodeGraphicsItem *nodeItem = item->data(NodePointerData).value<NodeGraphicsItem*>();
 			// If press on a slot, start moving nodes
 
-			m_selectionModel.clear();
-			SelectionItem sel(nodeItem, nodeItem->pos());
-			m_selectionModel.push_back(sel);
+			const QModelIndex & index = nodeItem->modelIndex();
+			m_selectionModel->select(index, QItemSelectionModel::ClearAndSelect);
+			const QModelIndex & colX = model()->index(index.row(), NodeGraphModel::PosXColumn, index.parent());
+			const QModelIndex & colY = model()->index(index.row(), NodeGraphModel::PosYColumn, index.parent());
+			QPointF startPos = QPointF(model()->data(colX).toFloat(), model()->data(colY).toFloat());
+			m_selectionStartPos.clear();
+			m_selectionStartPos.push_back(startPos);
 			m_moveStartPos = event->pos();
 			m_isMovingNodes = true;
 		}
@@ -278,4 +314,12 @@ void NodeGraphView::dropEvent(QDropEvent *event)
 	{
 		event->ignore();
 	}
+}
+
+void NodeGraphView::onDataChanged()
+{
+}
+
+void NodeGraphView::onCurrentChanged()
+{
 }

@@ -171,6 +171,10 @@ QVariant NodeGraphModel::data(const QModelIndex & index, int role) const
 				return QVariant();
 			}
 		}
+		else
+		{
+			return QVariant();
+		}
 	}
 	else
 	{
@@ -211,13 +215,31 @@ bool NodeGraphModel::setData(const QModelIndex & index, const QVariant & value, 
 	{
 		return false;
 	}
-	else if (isRoot(index.parent()))
+	else if (isNodeIndex(index))
 	{
-		return false;
+		if (index.column() == PosXColumn || index.column() == PosYColumn)
+		{
+			// TODO: merge PosX and PosY columns
+			NodeEntry & entry = m_nodes[index.row()];
+			if (index.column() == PosXColumn)
+			{
+				entry.x = value.toFloat();
+			}
+			else
+			{
+				entry.y = value.toFloat();
+			}
+			emit dataChanged(index, index);
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 	else if (isNodeIndex(index.parent()))
 	{
-		NodeEntry entry = nodes()[index.internalId()];
+		const NodeEntry & entry = m_nodes[index.internalId()];
 		switch (index.column())
 		{
 		case 1:
@@ -227,6 +249,10 @@ bool NodeGraphModel::setData(const QModelIndex & index, const QVariant & value, 
 		default:
 			return false;
 		}
+	}
+	else
+	{
+		return false;
 	}
 }
 
@@ -238,9 +264,16 @@ Qt::ItemFlags NodeGraphModel::flags(const QModelIndex & index) const
 	{
 		return f;
 	}
-	else if (isRoot(index.parent()))
+	else if (isNodeIndex(index))
 	{
-		return f;
+		if (index.column() == PosXColumn || index.column() == PosYColumn)
+		{
+			return f | Qt::ItemIsEditable;
+		}
+		else
+		{
+			return f;
+		}
 	}
 	else if (isNodeIndex(index.parent()))
 	{
@@ -251,6 +284,10 @@ Qt::ItemFlags NodeGraphModel::flags(const QModelIndex & index) const
 		default:
 			return f;
 		}
+	}
+	else
+	{
+		return f;
 	}
 }
 

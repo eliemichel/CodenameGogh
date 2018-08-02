@@ -8,6 +8,8 @@ class Slot;
 class LinkGraphicsItem;
 class SlotGraphicsItem;
 class NodeGraphicsItem;
+class QAbstractItemModel;
+class QItemSelectionModel;
 
 /**
  * Node view, handles zooming/panning
@@ -19,6 +21,7 @@ class NodeGraphView : public QGraphicsView
 public:
 	enum CustomData {
 		RoleData,
+		NodePointerData,
 	};
 	enum ItemRole {
 		NoneRole,
@@ -39,6 +42,12 @@ public:
 	explicit NodeGraphView(QWidget *parent = 0);
 	~NodeGraphView();
 
+	QAbstractItemModel * model() const { return m_model; }
+	void setModel(QAbstractItemModel *model);
+
+	QItemSelectionModel * selectionModel() const { return m_selectionModel; }
+	void setSelectionModel(QItemSelectionModel *selectionModel);
+
 protected:
 	void drawBackground(QPainter *painter, const QRectF &rect) override;
 	void mouseMoveEvent(QMouseEvent *event) override;
@@ -50,7 +59,15 @@ protected:
 	void dragMoveEvent(QDragMoveEvent *event) override;
 	void dropEvent(QDropEvent *event) override;
 
+private slots:
+	void onDataChanged();
+	void onCurrentChanged();
+
 private:
+	QAbstractItemModel *m_model;
+	QItemSelectionModel *m_selectionModel;
+	std::vector<QPointF> m_selectionStartPos;
+
 	float m_zoom;
 	bool m_isPanning;
 
@@ -65,7 +82,6 @@ private:
 	// Data for moving nodes
 	bool m_isMovingNodes;
 	QPoint m_moveStartPos;
-	std::vector<SelectionItem> m_selectionModel;
 };
 
 #endif // H_NODEGRAPHVIEW

@@ -41,19 +41,25 @@ MainWindow::MainWindow(QWidget *parent)
 
 	// Node creation has been moved to NodeGraphModel::LoadGraph
 	NodeGraphicsItem *nodeItem;
+	int i = 0;
 	for (NodeGraphModel::NodeEntry entry : m_model->nodes())
 	{
 		nodeItem = new NodeGraphicsItem(m_scene, entry.node);
+		nodeItem->setModelIndex(m_model->index(i++, 0));
 		nodeItem->setPos(QPointF(entry.x, entry.y));
 	}
-
 	m_scene->setSceneRect(-1000, -1000, 2000, 2000);
-	ui->viewport->setScene(m_scene);
 
 	ui->splitter->setSizes(QList<int>() << 300 << 10);
+
 	ui->outliner->setModel(m_model);
+
 	ui->parameters->setModel(m_model);
 	ui->parameters->setSelectionModel(ui->outliner->selectionModel());
+
+	ui->viewport->setScene(m_scene);
+	ui->viewport->setModel(m_model);
+	ui->viewport->setSelectionModel(ui->outliner->selectionModel());
 }
 
 MainWindow::~MainWindow()
