@@ -3,7 +3,7 @@
 
 #include <QMainWindow>
 
-class QGraphicsScene;
+class NodeGraphScene;
 class NodeGraphModel;
 
 namespace Ui {
@@ -25,7 +25,7 @@ private slots:
 	
 private:
 	Ui::MainWindow *ui;
-	QGraphicsScene *m_scene;
+	NodeGraphScene *m_scene;
 	NodeGraphModel *m_model;
 };
 

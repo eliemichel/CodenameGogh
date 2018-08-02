@@ -3,6 +3,7 @@
 
 #include "Logger.h"
 #include "NodeGraphModel.h"
+#include "NodeGraphScene.h"
 #include "NodeWidget.h"
 #include "LinkGraphicsItem.h"
 #include "NodeGraphicsItem.h"
@@ -29,7 +30,7 @@ MainWindow::MainWindow(QWidget *parent)
 	connect(ui->openAction, &QAction::triggered, this, &MainWindow::showOpenFileDialog);
 	connect(ui->saveAction, &QAction::triggered, this, &MainWindow::save);
 
-	m_scene = new QGraphicsScene();
+	m_scene = new NodeGraphScene();
 	m_model = new NodeGraphModel();
 
 	QString filename = QDir::tempPath() + "/gogh_sample.gog";

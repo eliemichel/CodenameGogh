@@ -2,6 +2,7 @@
 #define H_NODEGRAPHVIEW
 
 #include <QGraphicsView>
+#include <QModelIndex>
 #include <vector>
 
 class Slot;
@@ -10,6 +11,7 @@ class SlotGraphicsItem;
 class NodeGraphicsItem;
 class QAbstractItemModel;
 class QItemSelectionModel;
+class NodeGraphScene;
 
 /**
  * Node view, handles zooming/panning
@@ -31,11 +33,14 @@ public:
 	};
 
 private:
-	struct SelectionItem {
-		NodeGraphicsItem *nodeItem;
+	struct NodeMoveData {
+		QModelIndex posXIndex;
+		QModelIndex posYIndex;
 		QPointF startPos;
 
-		SelectionItem(NodeGraphicsItem *_nodeItem, QPointF _startPos) : nodeItem(_nodeItem), startPos(_startPos) {}
+		NodeMoveData(const QModelIndex & _posXIndex, const QModelIndex & _posYIndex, QPointF _startPos)
+			: posXIndex(_posXIndex), posYIndex(_posYIndex), startPos(_startPos)
+		{}
 	};
 
 public:
@@ -48,6 +53,12 @@ public:
 	QItemSelectionModel * selectionModel() const { return m_selectionModel; }
 	void setSelectionModel(QItemSelectionModel *selectionModel);
 
+	NodeGraphScene * nodeGraphScene() const;
+	void setScene(NodeGraphScene *scene);
+
+	NodeGraphicsItem * toNodeItem(QGraphicsItem *item) const;
+	SlotGraphicsItem * toSlotItem(QGraphicsItem *item) const;
+
 protected:
 	void drawBackground(QPainter *painter, const QRectF &rect) override;
 	void mouseMoveEvent(QMouseEvent *event) override;
@@ -59,6 +70,9 @@ protected:
 	void dragMoveEvent(QDragMoveEvent *event) override;
 	void dropEvent(QDropEvent *event) override;
 
+private:
+	void setScene(QGraphicsScene *scene) {} // remove from public API
+
 private slots:
 	void onDataChanged();
 	void onCurrentChanged();
@@ -66,7 +80,7 @@ private slots:
 private:
 	QAbstractItemModel *m_model;
 	QItemSelectionModel *m_selectionModel;
-	std::vector<QPointF> m_selectionStartPos;
+	std::vector<NodeMoveData> m_nodeMoveData;
 
 	float m_zoom;
 	bool m_isPanning;

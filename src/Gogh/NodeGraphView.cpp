@@ -6,6 +6,7 @@
 #include "SlotGraphicsItem.h"
 #include "NodeGraphicsItem.h"
 #include "NodeGraphModel.h"
+#include "NodeGraphScene.h"
 
 #include <QPainter>
 #include <QMouseEvent>
@@ -56,6 +57,44 @@ void NodeGraphView::setSelectionModel(QItemSelectionModel *selectionModel)
 	}
 	m_selectionModel = selectionModel;
 	connect(m_selectionModel, &QItemSelectionModel::currentChanged, this, &NodeGraphView::onCurrentChanged);
+}
+
+NodeGraphScene * NodeGraphView::nodeGraphScene() const
+{
+	return static_cast<NodeGraphScene*>(scene());
+}
+
+void NodeGraphView::setScene(NodeGraphScene * scene)
+{
+	QGraphicsView::setScene(scene);
+}
+
+NodeGraphicsItem * NodeGraphView::toNodeItem(QGraphicsItem *item) const
+{
+	QVariant v = item->data(RoleData);
+	if (v.isValid() && v.toInt() == NodeControlRole)
+	{
+		NodeGraphicsItem *nodeItem = item->data(NodePointerData).value<NodeGraphicsItem*>();
+		return nodeItem;
+	}
+	else
+	{
+		return nullptr;
+	}
+}
+
+SlotGraphicsItem * NodeGraphView::toSlotItem(QGraphicsItem *item) const
+{
+	QVariant v = item->data(RoleData);
+	if (v.isValid() && v.toInt() == SlotRole)
+	{
+		SlotGraphicsItem *slotItem = static_cast<SlotGraphicsItem*>(item);
+		return slotItem;
+	}
+	else
+	{
+		return nullptr;
+	}
 }
 
 void NodeGraphView::drawBackground(QPainter *painter, const QRectF &rect)
@@ -115,16 +154,12 @@ void NodeGraphView::mouseMoveEvent(QMouseEvent *event)
 	else if (m_isMovingNodes)
 	{
 		QPointF delta = mapToScene(m_moveStartPos) - mapToScene(event->pos());
-		size_t i = 0;
-		for (const QModelIndex & index : m_selectionModel->selectedIndexes())
+		if (model())
 		{
-			if (model())
+			for (const NodeMoveData & data : m_nodeMoveData)
 			{
-				const QModelIndex & colX = model()->index(index.row(), NodeGraphModel::PosXColumn, index.parent());
-				const QModelIndex & colY = model()->index(index.row(), NodeGraphModel::PosYColumn, index.parent());
-				QPointF startPos = m_selectionStartPos[i++];
-				model()->setData(colX, startPos.x() - delta.x());
-				model()->setData(colY, startPos.y() - delta.y());
+				model()->setData(data.posXIndex, data.startPos.x() - delta.x());
+				model()->setData(data.posYIndex, data.startPos.y() - delta.y());
 			}
 		}
 	}
@@ -145,25 +180,28 @@ void NodeGraphView::mousePressEvent(QMouseEvent *event)
 	else if (event->button() == Qt::LeftButton)
 	{
 		QGraphicsItem *item = itemAt(event->pos());
-		QVariant v = item->data(RoleData);
-		if (v.isValid() && v.toInt() == NodeControlRole)
+		if (NodeGraphicsItem *nodeItem = toNodeItem(item))
 		{
-			NodeGraphicsItem *nodeItem = item->data(NodePointerData).value<NodeGraphicsItem*>();
-			// If press on a slot, start moving nodes
+			if (!m_selectionModel)
+			{
+				return;
+			}
 
-			const QModelIndex & index = nodeItem->modelIndex();
-			m_selectionModel->select(index, QItemSelectionModel::ClearAndSelect);
-			const QModelIndex & colX = model()->index(index.row(), NodeGraphModel::PosXColumn, index.parent());
-			const QModelIndex & colY = model()->index(index.row(), NodeGraphModel::PosYColumn, index.parent());
-			QPointF startPos = QPointF(model()->data(colX).toFloat(), model()->data(colY).toFloat());
-			m_selectionStartPos.clear();
-			m_selectionStartPos.push_back(startPos);
-			m_moveStartPos = event->pos();
-			m_isMovingNodes = true;
+			m_selectionModel->select(nodeItem->modelIndex(), QItemSelectionModel::ClearAndSelect);
+
+			m_nodeMoveData.clear();
+			for (const QModelIndex & index : m_selectionModel->selectedIndexes())
+			{
+				const QModelIndex & colX = model()->index(index.row(), NodeGraphModel::PosXColumn, index.parent());
+				const QModelIndex & colY = model()->index(index.row(), NodeGraphModel::PosYColumn, index.parent());
+				QPointF startPos = QPointF(model()->data(colX).toFloat(), model()->data(colY).toFloat());
+				m_nodeMoveData.push_back(NodeMoveData(colX, colY, startPos));
+				m_moveStartPos = event->pos();
+				m_isMovingNodes = true;
+			}
 		}
-		else if (v.isValid() && v.toInt() == SlotRole)
+		else if (SlotGraphicsItem *slotItem = toSlotItem(item))
 		{
-			SlotGraphicsItem *slotItem = static_cast<SlotGraphicsItem*>(item);
 			// If press on a slot, start dragging link
 
 			// create pending link
