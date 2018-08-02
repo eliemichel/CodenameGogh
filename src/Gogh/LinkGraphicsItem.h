@@ -6,6 +6,8 @@
 class LinkGraphicsItem : public QGraphicsItem
 {
 public:
+	explicit LinkGraphicsItem(QGraphicsItem *parent = nullptr);
+
 	void setStartPos(QPointF pos);
 	void setEndPos(QPointF pos);
 

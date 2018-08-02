@@ -1,5 +1,5 @@
 #include "SlotGraphicsItem.h"
-#include "NodeGraphView.h"
+#include "NodeGraphScene.h"
 #include "LinkGraphicsItem.h"
 #include "Slot.h"
 #include "Logger.h"
@@ -11,9 +11,10 @@ SlotGraphicsItem::SlotGraphicsItem(QGraphicsItem *parent)
 	, m_slot(nullptr)
 	, m_inputLink(nullptr)
 {
-	setData(NodeGraphView::RoleData, NodeGraphView::SlotRole);
+	setData(NodeGraphScene::RoleData, NodeGraphScene::SlotRole);
 	setPen(QPen(Qt::black));
 	setBrush(QBrush(QColor(99, 99, 199)));
+	setZValue(NodeGraphScene::SlotLayer);
 }
 
 void SlotGraphicsItem::setSlot(Slot *slot)

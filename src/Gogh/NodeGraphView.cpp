@@ -76,34 +76,6 @@ void NodeGraphView::setScene(NodeGraphScene * scene)
 	QGraphicsView::setScene(scene);
 }
 
-NodeGraphicsItem * NodeGraphView::toNodeItem(QGraphicsItem *item) const
-{
-	QVariant v = item->data(RoleData);
-	if (v.isValid() && v.toInt() == NodeControlRole)
-	{
-		NodeGraphicsItem *nodeItem = item->data(NodePointerData).value<NodeGraphicsItem*>();
-		return nodeItem;
-	}
-	else
-	{
-		return nullptr;
-	}
-}
-
-SlotGraphicsItem * NodeGraphView::toSlotItem(QGraphicsItem *item) const
-{
-	QVariant v = item->data(RoleData);
-	if (v.isValid() && v.toInt() == SlotRole)
-	{
-		SlotGraphicsItem *slotItem = static_cast<SlotGraphicsItem*>(item);
-		return slotItem;
-	}
-	else
-	{
-		return nullptr;
-	}
-}
-
 void NodeGraphView::drawBackground(QPainter *painter, const QRectF &rect)
 {
 	painter->setBrush(backgroundBrush());
@@ -178,6 +150,11 @@ void NodeGraphView::mouseMoveEvent(QMouseEvent *event)
 
 void NodeGraphView::mousePressEvent(QMouseEvent *event)
 {
+	if (!nodeGraphScene())
+	{
+		return;
+	}
+
 	if (event->button() == Qt::MiddleButton)
 	{
 		m_isPanning = true;
@@ -187,7 +164,7 @@ void NodeGraphView::mousePressEvent(QMouseEvent *event)
 	else if (event->button() == Qt::LeftButton)
 	{
 		QGraphicsItem *item = itemAt(event->pos());
-		if (NodeGraphicsItem *nodeItem = toNodeItem(item))
+		if (NodeGraphicsItem *nodeItem = nodeGraphScene()->toNodeItem(item))
 		{
 			if (!m_selectionModel)
 			{
@@ -211,7 +188,7 @@ void NodeGraphView::mousePressEvent(QMouseEvent *event)
 				m_isMovingNodes = true;
 			}
 		}
-		else if (SlotGraphicsItem *slotItem = toSlotItem(item))
+		else if (SlotGraphicsItem *slotItem = nodeGraphScene()->toSlotItem(item))
 		{
 			// If press on a slot, start dragging link
 
@@ -296,10 +273,15 @@ void NodeGraphView::dragEnterEvent(QDragEnterEvent *event)
 
 void NodeGraphView::dragMoveEvent(QDragMoveEvent *event)
 {
+	if (!nodeGraphScene())
+	{
+		return;
+	}
+
 	if (event->mimeData()->hasFormat("application/x-gogh-slot") && event->source() == this)
 	{
 		QGraphicsItem *item = itemAt(event->pos());
-		bool isOnSlot = toSlotItem(item) != nullptr;
+		bool isOnSlot = nodeGraphScene()->toSlotItem(item) != nullptr;
 		QPointF p = isOnSlot ? item->sceneBoundingRect().center() : mapToScene(event->pos());
 
 		for (LinkGraphicsItem *l : m_pendingLinks)
@@ -317,11 +299,16 @@ void NodeGraphView::dragMoveEvent(QDragMoveEvent *event)
 
 void NodeGraphView::dropEvent(QDropEvent *event)
 {
+	if (!nodeGraphScene())
+	{
+		return;
+	}
+
 	if (event->mimeData()->hasFormat("application/x-gogh-slot") && event->source() == this)
 	{
 		QGraphicsItem *item = itemAt(event->pos());
 		QPointF p = mapToScene(event->pos());
-		if (SlotGraphicsItem *slotItem = toSlotItem(item))
+		if (SlotGraphicsItem *slotItem = nodeGraphScene()->toSlotItem(item))
 		{
 			// Create actual links in place of temporary pending links if possible
 			Slot *slot = slotItem->slot();

@@ -21,18 +21,6 @@ class NodeGraphView : public QGraphicsView
 {
 	Q_OBJECT
 
-public:
-	enum CustomData {
-		RoleData,
-		NodePointerData,
-	};
-	enum ItemRole {
-		NoneRole,
-		NodeControlRole,
-		NodeContentRole,
-		SlotRole,
-	};
-
 private:
 	struct NodeMoveData {
 		QModelIndex posXIndex;
@@ -56,10 +44,6 @@ public:
 
 	NodeGraphScene * nodeGraphScene() const;
 	void setScene(NodeGraphScene *scene);
-
-	// TODO: move to nodegraphscene
-	NodeGraphicsItem * toNodeItem(QGraphicsItem *item) const;
-	SlotGraphicsItem * toSlotItem(QGraphicsItem *item) const;
 
 protected:
 	void drawBackground(QPainter *painter, const QRectF &rect) override;

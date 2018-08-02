@@ -5,6 +5,7 @@
 #include "NodeGraphView.h"
 #include "SlotGraphicsItem.h"
 #include "NodeGraphModel.h"
+#include "NodeGraphScene.h"
 
 #include <QWidget>
 #include <QGraphicsRectItem>
@@ -26,15 +27,17 @@ NodeGraphicsItem::NodeGraphicsItem(QGraphicsScene *scene, NodeWidget *content)
 	m_control->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
 
 	// data
-	m_control->setData(NodeGraphView::RoleData, NodeGraphView::NodeControlRole);
+	m_control->setData(NodeGraphScene::RoleData, NodeGraphScene::NodeControlRole);
 	QVariant v;
 	v.setValue<NodeGraphicsItem*>(this);
-	m_control->setData(NodeGraphView::NodePointerData, v);
+	m_control->setData(NodeGraphScene::NodePointerData, v);
+	m_control->setZValue(NodeGraphScene::NodeLayer);
 
 	m_proxy = scene->addWidget(content);
-	m_proxy->setData(NodeGraphView::RoleData, NodeGraphView::NodeContentRole);
+	m_proxy->setData(NodeGraphScene::RoleData, NodeGraphScene::NodeContentRole);
 	m_proxy->setPos(0, m_control->rect().height());
 	m_proxy->setParentItem(m_control);
+	m_proxy->setZValue(NodeGraphScene::NodeLayer);
 
 	// Wrap a SlotGraphiscItem around all the slots of the content node
 	int offset = 30;

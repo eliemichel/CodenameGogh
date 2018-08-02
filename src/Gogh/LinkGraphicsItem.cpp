@@ -1,8 +1,15 @@
 #include "LinkGraphicsItem.h"
+#include "NodeGraphScene.h"
 
 #include <QPainter>
 
 #include <cmath>
+
+LinkGraphicsItem::LinkGraphicsItem(QGraphicsItem *parent)
+	: QGraphicsItem(parent)
+{
+	setZValue(NodeGraphScene::LinkLayer);
+}
 
 void LinkGraphicsItem::setStartPos(QPointF pos) {
 	prepareGeometryChange();
