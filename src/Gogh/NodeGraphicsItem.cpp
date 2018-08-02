@@ -22,7 +22,6 @@ NodeGraphicsItem::NodeGraphicsItem(QGraphicsScene *scene, NodeWidget *content)
 	m_control->setRect(0, 0, content->width(), 20);
 	m_control->setPen(Qt::NoPen);
 	m_control->setBrush(QBrush(QColor(41, 41, 41)));
-	//setFlag(ItemIsMovable, true);
 	m_control->setFlag(QGraphicsItem::ItemIsSelectable, true);
 	m_control->setFlag(QGraphicsItem::ItemSendsGeometryChanges, true);
 
@@ -75,6 +74,13 @@ void NodeGraphicsItem::setModelIndex(const QModelIndex & modelIndex)
 	}
 }
 
+void NodeGraphicsItem::setSelected(bool selected)
+{
+	m_isSelected = selected;
+	//m_control->setBrush(QBrush(m_isSelected ? QColor(64, 64, 64) : QColor(41, 41, 41)));
+	m_control->setPen(m_isSelected ? QPen(QColor(255, 128, 0)) : Qt::NoPen);
+}
+
 void NodeGraphicsItem::updateLinks() const
 {
 	for (SlotGraphicsItem *item : m_slotItems)
@@ -82,15 +88,7 @@ void NodeGraphicsItem::updateLinks() const
 		item->updateLinks();
 	}
 }
-/*
-QVariant NodeGraphicsItem::itemChange(QGraphicsItemChange change, const QVariant &value)
-{
-	if (change == ItemPositionChange && scene()) {
-		updateLinks();
-	}
-	return QGraphicsItem::itemChange(change, value);
-}
-*/
+
 void NodeGraphicsItem::onDataChanged(const QModelIndex & topLeft, const QModelIndex & bottomRight)
 {
 	const QModelIndex & currentIndex = modelIndex();

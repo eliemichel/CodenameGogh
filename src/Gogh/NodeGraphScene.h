@@ -4,13 +4,15 @@
 #include <QGraphicsScene>
 
 class NodeGraphicsItem;
-class SlotGraphicsItem;
 
 class NodeGraphScene : public QGraphicsScene
 {
 	Q_OBJECT
 
 public:
+	NodeGraphicsItem * toNodeItem(QGraphicsItem *item) const;
+
+	NodeGraphicsItem * nodeItemAtIndex(const QModelIndex & index);
 };
 
 #endif // H_NODEGRAPHSCENE

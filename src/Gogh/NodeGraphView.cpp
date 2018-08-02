@@ -46,7 +46,10 @@ void NodeGraphView::setModel(QAbstractItemModel *model)
 		disconnect(m_model, 0, this, 0);
 	}
 	m_model = model;
-	connect(m_model, &QAbstractItemModel::dataChanged, this, &NodeGraphView::onDataChanged);
+	if (m_model)
+	{
+		connect(m_model, &QAbstractItemModel::dataChanged, this, &NodeGraphView::onDataChanged);
+	}
 }
 
 void NodeGraphView::setSelectionModel(QItemSelectionModel *selectionModel)
@@ -56,7 +59,11 @@ void NodeGraphView::setSelectionModel(QItemSelectionModel *selectionModel)
 		disconnect(m_selectionModel, 0, this, 0);
 	}
 	m_selectionModel = selectionModel;
-	connect(m_selectionModel, &QItemSelectionModel::currentChanged, this, &NodeGraphView::onCurrentChanged);
+	if (m_selectionModel)
+	{
+		connect(m_selectionModel, &QItemSelectionModel::currentChanged, this, &NodeGraphView::onCurrentChanged);
+		connect(m_selectionModel, &QItemSelectionModel::selectionChanged, this, &NodeGraphView::onSelectionChanged);
+	}
 }
 
 NodeGraphScene * NodeGraphView::nodeGraphScene() const
@@ -187,7 +194,11 @@ void NodeGraphView::mousePressEvent(QMouseEvent *event)
 				return;
 			}
 
-			m_selectionModel->select(nodeItem->modelIndex(), QItemSelectionModel::ClearAndSelect);
+			if (!m_selectionModel->isSelected(nodeItem->modelIndex()))
+			{
+				bool addToSelection = (event->modifiers() & Qt::ShiftModifier) == Qt::ShiftModifier;
+				m_selectionModel->select(nodeItem->modelIndex(), addToSelection ? QItemSelectionModel::Select : QItemSelectionModel::ClearAndSelect);
+			}
 
 			m_nodeMoveData.clear();
 			for (const QModelIndex & index : m_selectionModel->selectedIndexes())
@@ -230,6 +241,7 @@ void NodeGraphView::mousePressEvent(QMouseEvent *event)
 		}
 		else
 		{
+			m_selectionModel->select(QItemSelection(), QItemSelectionModel::Clear);
 			QGraphicsView::mousePressEvent(event);
 		}
 	}
@@ -287,8 +299,7 @@ void NodeGraphView::dragMoveEvent(QDragMoveEvent *event)
 	if (event->mimeData()->hasFormat("application/x-gogh-slot") && event->source() == this)
 	{
 		QGraphicsItem *item = itemAt(event->pos());
-		QVariant v = item->data(RoleData);
-		bool isOnSlot = v.isValid() && v.toInt() == SlotRole;
+		bool isOnSlot = toSlotItem(item) != nullptr;
 		QPointF p = isOnSlot ? item->sceneBoundingRect().center() : mapToScene(event->pos());
 
 		for (LinkGraphicsItem *l : m_pendingLinks)
@@ -309,13 +320,10 @@ void NodeGraphView::dropEvent(QDropEvent *event)
 	if (event->mimeData()->hasFormat("application/x-gogh-slot") && event->source() == this)
 	{
 		QGraphicsItem *item = itemAt(event->pos());
-		QVariant v = item->data(RoleData);
-		bool isOnSlot = v.isValid() && v.toInt() == SlotRole;
-
-		if (isOnSlot)
+		QPointF p = mapToScene(event->pos());
+		if (SlotGraphicsItem *slotItem = toSlotItem(item))
 		{
 			// Create actual links in place of temporary pending links if possible
-			SlotGraphicsItem *slotItem = static_cast<SlotGraphicsItem*>(item);
 			Slot *slot = slotItem->slot();
 			for (SlotGraphicsItem *otherSlotItem : m_pendingLinksSources)
 			{
@@ -338,8 +346,9 @@ void NodeGraphView::dropEvent(QDropEvent *event)
 					destinationSlot->setSourceSlot(sourceSlot);
 				}
 			}
+
+			p = item->sceneBoundingRect().center();
 		}
-		QPointF p = isOnSlot ? item->sceneBoundingRect().center() : mapToScene(event->pos());
 
 		for (LinkGraphicsItem *l : m_pendingLinks)
 		{
@@ -360,4 +369,28 @@ void NodeGraphView::onDataChanged()
 
 void NodeGraphView::onCurrentChanged()
 {
+}
+
+void NodeGraphView::onSelectionChanged(const QItemSelection & selected, const QItemSelection & deselected)
+{
+	if (!nodeGraphScene())
+	{
+		return;
+	}
+
+	for (const QModelIndex & index : deselected.indexes())
+	{
+		if (NodeGraphicsItem *nodeItem = nodeGraphScene()->nodeItemAtIndex(index))
+		{
+			nodeItem->setSelected(false);
+		}
+	}
+
+	for (const QModelIndex & index : selected.indexes())
+	{
+		if (NodeGraphicsItem *nodeItem = nodeGraphScene()->nodeItemAtIndex(index))
+		{
+			nodeItem->setSelected(true);
+		}
+	}
 }

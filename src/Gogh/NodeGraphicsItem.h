@@ -22,11 +22,13 @@ public:
 
 	const std::vector<SlotGraphicsItem*> & slotItems() const { return m_slotItems; }
 
-	// TODO: listen for item position update
 	const QModelIndex & modelIndex() const { return m_modelIndex; }
 	void setModelIndex(const QModelIndex & modelIndex);
 
 	void setPos(QPointF pos) { if (m_control) m_control->setPos(pos); }
+
+	void setSelected(bool selected);
+	bool isSelected() const { return m_isSelected; }
 
 	void updateLinks() const;
 
@@ -42,6 +44,7 @@ private:
 	QGraphicsProxyWidget *m_proxy;
 	std::vector<SlotGraphicsItem*> m_slotItems;
 	QModelIndex m_modelIndex;
+	bool m_isSelected;
 };
 
 #endif // H_NODEGRAPHICSITEM

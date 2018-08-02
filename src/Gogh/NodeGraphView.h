@@ -3,6 +3,7 @@
 
 #include <QGraphicsView>
 #include <QModelIndex>
+#include <QItemSelection>
 #include <vector>
 
 class Slot;
@@ -56,6 +57,7 @@ public:
 	NodeGraphScene * nodeGraphScene() const;
 	void setScene(NodeGraphScene *scene);
 
+	// TODO: move to nodegraphscene
 	NodeGraphicsItem * toNodeItem(QGraphicsItem *item) const;
 	SlotGraphicsItem * toSlotItem(QGraphicsItem *item) const;
 
@@ -76,6 +78,7 @@ private:
 private slots:
 	void onDataChanged();
 	void onCurrentChanged();
+	void onSelectionChanged(const QItemSelection & selected, const QItemSelection & deselected);
 
 private:
 	QAbstractItemModel *m_model;
