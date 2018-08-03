@@ -2,6 +2,7 @@
 #include "NodeGraphicsItem.h"
 #include "NodeGraphView.h"
 #include "SlotGraphicsItem.h"
+#include "LinkGraphicsItem.h"
 
 #include <QModelIndex>
 
@@ -26,6 +27,20 @@ SlotGraphicsItem * NodeGraphScene::toSlotItem(QGraphicsItem *item) const
 	{
 		SlotGraphicsItem *slotItem = static_cast<SlotGraphicsItem*>(item);
 		return slotItem;
+	}
+	else
+	{
+		return nullptr;
+	}
+}
+
+LinkGraphicsItem * NodeGraphScene::toLinkItem(QGraphicsItem *item) const
+{
+	QVariant v = item->data(RoleData);
+	if (v.isValid() && v.toInt() == LinkRole)
+	{
+		LinkGraphicsItem *linkItem = static_cast<LinkGraphicsItem*>(item);
+		return linkItem;
 	}
 	else
 	{

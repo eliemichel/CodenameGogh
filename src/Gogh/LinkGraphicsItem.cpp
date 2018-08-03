@@ -2,23 +2,27 @@
 #include "NodeGraphScene.h"
 
 #include <QPainter>
+#include <QPainterPath>
 
 #include <cmath>
+#include <algorithm>
 
 LinkGraphicsItem::LinkGraphicsItem(QGraphicsItem *parent)
 	: QGraphicsItem(parent)
+	, m_endSlotItem(nullptr)
 {
+	setData(NodeGraphScene::RoleData, NodeGraphScene::LinkRole);
 	setZValue(NodeGraphScene::LinkLayer);
 }
 
 void LinkGraphicsItem::setStartPos(QPointF pos) {
-	prepareGeometryChange();
 	m_startPos = pos;
+	updateShape();
 }
 
 void LinkGraphicsItem::setEndPos(QPointF pos) {
-	prepareGeometryChange();
 	m_endPos = pos;
+	updateShape();
 }
 
 QRectF LinkGraphicsItem::boundingRect() const
@@ -34,29 +38,22 @@ QRectF LinkGraphicsItem::boundingRect() const
 void LinkGraphicsItem::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
 {
 	painter->setPen(QPen(QColor(192, 192, 192), 1));
-	float dx = m_endPos.x() - m_startPos.x();
-	float dy = m_endPos.y() - m_startPos.y();
-	float x = m_startPos.x();
-	float y = m_startPos.y();
-	int n = std::max(std::abs(dx), std::abs(dy)) / 2;
-	QPointF *points = new QPointF[n + 1];
-	for (int i = 0; i <= n; ++i)
-	{
-		float t = i / (float)n;
-		points[i].setX(x + t * dx);
-		points[i].setY(y + (1.f - cos(t * 3.141593)) / 2 * dy);
-	}
-	painter->drawPolyline(points, n + 1);
-	delete[] points;
-}
-
-bool LinkGraphicsItem::collidesWithItem(const QGraphicsItem *other, Qt::ItemSelectionMode mode) const
-{
-	return false;
+	painter->drawPath(m_shape);
 }
 
 QPainterPath LinkGraphicsItem::shape() const
 {
-	QPainterPath path;
-	return path;
+	return m_shape;
+}
+
+void LinkGraphicsItem::updateShape()
+{
+	prepareGeometryChange();
+	m_shape = QPainterPath();
+	m_shape.moveTo(m_startPos);
+	double dx = std::max(-200.0, m_endPos.x() - m_startPos.x());
+	double lx = std::max(50.0, std::abs(dx));
+	QPointF a(m_startPos.x() + lx * 0.5, m_startPos.y());
+	QPointF b(m_endPos.x() - lx * 0.5, m_endPos.y());
+	m_shape.cubicTo(a, b, m_endPos);
 }

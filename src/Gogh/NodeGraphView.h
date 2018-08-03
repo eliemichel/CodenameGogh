@@ -22,6 +22,12 @@ class NodeGraphView : public QGraphicsView
 	Q_OBJECT
 
 private:
+	enum Tool {
+		DefaultTool,
+		CutTool,
+	};
+
+private:
 	struct NodeMoveData {
 		QModelIndex posXIndex;
 		QModelIndex posYIndex;
@@ -47,10 +53,14 @@ public:
 
 protected:
 	void drawBackground(QPainter *painter, const QRectF &rect) override;
+
 	void mouseMoveEvent(QMouseEvent *event) override;
 	void mousePressEvent(QMouseEvent *event) override;
 	void mouseReleaseEvent(QMouseEvent *event) override;
 	void wheelEvent(QWheelEvent *event) override;
+
+	void keyPressEvent(QKeyEvent *event) override;
+	void keyReleaseEvent(QKeyEvent *event) override;
 
 	void dragEnterEvent(QDragEnterEvent *event) override;
 	void dragMoveEvent(QDragMoveEvent *event) override;
@@ -58,6 +68,10 @@ protected:
 
 private:
 	void setScene(QGraphicsScene *scene) {} // remove from public API
+
+	void startCut(QPoint position);
+	void updateCut(QPoint position);
+	void finishCut();
 
 private slots:
 	void onDataChanged();
@@ -71,6 +85,7 @@ private:
 
 	float m_zoom;
 	bool m_isPanning;
+	bool m_isCutting;
 
 	// no need for initialization
 	QPoint m_pressPos;
@@ -83,6 +98,9 @@ private:
 	// Data for moving nodes
 	bool m_isMovingNodes;
 	QPoint m_moveStartPos;
+
+	Tool m_currentTool;
+	QPainterPath m_cutShape;
 };
 
 #endif // H_NODEGRAPHVIEW

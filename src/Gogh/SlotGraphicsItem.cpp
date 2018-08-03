@@ -11,9 +11,10 @@ SlotGraphicsItem::SlotGraphicsItem(QGraphicsItem *parent)
 	, m_slot(nullptr)
 	, m_inputLink(nullptr)
 {
-	setData(NodeGraphScene::RoleData, NodeGraphScene::SlotRole);
 	setPen(QPen(Qt::black));
 	setBrush(QBrush(QColor(99, 99, 199)));
+
+	setData(NodeGraphScene::RoleData, NodeGraphScene::SlotRole);
 	setZValue(NodeGraphScene::SlotLayer);
 }
 
@@ -38,6 +39,11 @@ void SlotGraphicsItem::setInputLink(LinkGraphicsItem *link)
 		delete m_inputLink;
 	}
 	m_inputLink = link;
+
+	if (slot())
+	{
+		slot()->setSourceSlot(nullptr);
+	}
 }
 
 void SlotGraphicsItem::removeOutputLink(LinkGraphicsItem *link)

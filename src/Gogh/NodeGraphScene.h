@@ -5,6 +5,7 @@
 
 class NodeGraphicsItem;
 class SlotGraphicsItem;
+class LinkGraphicsItem;
 
 class NodeGraphScene : public QGraphicsScene
 {
@@ -19,6 +20,7 @@ public:
 		NoneRole,
 		NodeControlRole,
 		NodeContentRole,
+		LinkRole,
 		SlotRole,
 	};
 	enum Layer {
@@ -30,6 +32,7 @@ public:
 public:
 	NodeGraphicsItem * toNodeItem(QGraphicsItem *item) const;
 	SlotGraphicsItem * toSlotItem(QGraphicsItem *item) const;
+	LinkGraphicsItem * toLinkItem(QGraphicsItem *item) const;
 
 	NodeGraphicsItem * nodeItemAtIndex(const QModelIndex & index);
 };

@@ -27,7 +27,9 @@ NodeGraphView::NodeGraphView(QWidget *parent)
 	, m_selectionModel(nullptr)
 	, m_zoom(1.f)
 	, m_isPanning(false)
+	, m_isCutting(false)
 	, m_isMovingNodes(false)
+	, m_currentTool(DefaultTool)
 {
 	setBackgroundBrush(QColor(57, 57, 57));
 	setRenderHint(QPainter::Antialiasing);
@@ -120,6 +122,11 @@ void NodeGraphView::drawBackground(QPainter *painter, const QRectF &rect)
 		painter->drawLine(rect.left(), y, rect.right(), y);
 		painter->setPen(pen);
 	}
+
+	// Cut shape
+	painter->setBrush(Qt::NoBrush);
+	painter->setPen(QPen(QColor(128, 128, 128), 1, Qt::DotLine));
+	painter->drawPath(m_cutShape);
 }
 
 void NodeGraphView::mouseMoveEvent(QMouseEvent *event)
@@ -142,6 +149,10 @@ void NodeGraphView::mouseMoveEvent(QMouseEvent *event)
 			}
 		}
 	}
+	else if (m_isCutting)
+	{
+		updateCut(event->pos());
+	}
 	else
 	{
 		QGraphicsView::mouseMoveEvent(event);
@@ -163,63 +174,75 @@ void NodeGraphView::mousePressEvent(QMouseEvent *event)
 	}
 	else if (event->button() == Qt::LeftButton)
 	{
-		QGraphicsItem *item = itemAt(event->pos());
-		if (NodeGraphicsItem *nodeItem = nodeGraphScene()->toNodeItem(item))
+		switch (m_currentTool) {
+		case DefaultTool:
 		{
-			if (!m_selectionModel)
+			QGraphicsItem *item = itemAt(event->pos());
+			if (NodeGraphicsItem *nodeItem = nodeGraphScene()->toNodeItem(item))
 			{
-				return;
-			}
+				if (!m_selectionModel)
+				{
+					return;
+				}
 
-			if (!m_selectionModel->isSelected(nodeItem->modelIndex()))
-			{
-				bool addToSelection = (event->modifiers() & Qt::ShiftModifier) == Qt::ShiftModifier;
-				m_selectionModel->select(nodeItem->modelIndex(), addToSelection ? QItemSelectionModel::Select : QItemSelectionModel::ClearAndSelect);
-			}
+				if (!m_selectionModel->isSelected(nodeItem->modelIndex()))
+				{
+					bool addToSelection = (event->modifiers() & Qt::ShiftModifier) == Qt::ShiftModifier;
+					m_selectionModel->select(nodeItem->modelIndex(), addToSelection ? QItemSelectionModel::Select : QItemSelectionModel::ClearAndSelect);
+				}
 
-			m_nodeMoveData.clear();
-			for (const QModelIndex & index : m_selectionModel->selectedIndexes())
-			{
-				const QModelIndex & colX = model()->index(index.row(), NodeGraphModel::PosXColumn, index.parent());
-				const QModelIndex & colY = model()->index(index.row(), NodeGraphModel::PosYColumn, index.parent());
-				QPointF startPos = QPointF(model()->data(colX).toFloat(), model()->data(colY).toFloat());
-				m_nodeMoveData.push_back(NodeMoveData(colX, colY, startPos));
-				m_moveStartPos = event->pos();
-				m_isMovingNodes = true;
+				m_nodeMoveData.clear();
+				for (const QModelIndex & index : m_selectionModel->selectedIndexes())
+				{
+					const QModelIndex & colX = model()->index(index.row(), NodeGraphModel::PosXColumn, index.parent());
+					const QModelIndex & colY = model()->index(index.row(), NodeGraphModel::PosYColumn, index.parent());
+					QPointF startPos = QPointF(model()->data(colX).toFloat(), model()->data(colY).toFloat());
+					m_nodeMoveData.push_back(NodeMoveData(colX, colY, startPos));
+					m_moveStartPos = event->pos();
+					m_isMovingNodes = true;
+				}
 			}
+			else if (SlotGraphicsItem *slotItem = nodeGraphScene()->toSlotItem(item))
+			{
+				// If press on a slot, start dragging link
+
+				// create pending link
+				LinkGraphicsItem *link = new LinkGraphicsItem();
+				link->setStartPos(item->sceneBoundingRect().center());
+				link->setEndPos(mapToScene(event->pos()));
+				scene()->addItem(link);
+				m_pendingLinks.push_back(link);
+				m_pendingLinksSources.push_back(slotItem);
+
+				// create drag action
+				QMimeData *mimeData = new QMimeData();
+				mimeData->setData("application/x-gogh-slot", QByteArray());
+				QDrag *drag = new QDrag(this);
+				drag->setMimeData(mimeData);
+				drag->setHotSpot(event->pos());
+				drag->exec();
+
+				for (LinkGraphicsItem *l : m_pendingLinks)
+				{
+					scene()->removeItem(l);
+					delete l;
+				}
+				m_pendingLinks.clear();
+				m_pendingLinksSources.clear();
+			}
+			else
+			{
+				m_selectionModel->select(QItemSelection(), QItemSelectionModel::Clear);
+				QGraphicsView::mousePressEvent(event);
+			}
+			break;
 		}
-		else if (SlotGraphicsItem *slotItem = nodeGraphScene()->toSlotItem(item))
+
+		case CutTool:
 		{
-			// If press on a slot, start dragging link
-
-			// create pending link
-			LinkGraphicsItem *link = new LinkGraphicsItem();
-			link->setStartPos(item->sceneBoundingRect().center());
-			link->setEndPos(mapToScene(event->pos()));
-			scene()->addItem(link);
-			m_pendingLinks.push_back(link);
-			m_pendingLinksSources.push_back(slotItem);
-
-			// create drag action
-			QMimeData *mimeData = new QMimeData();
-			mimeData->setData("application/x-gogh-slot", QByteArray());
-			QDrag *drag = new QDrag(this);
-			drag->setMimeData(mimeData);
-			drag->setHotSpot(event->pos());
-			drag->exec();
-
-			for (LinkGraphicsItem *l : m_pendingLinks)
-			{
-				scene()->removeItem(l);
-				delete l;
-			}
-			m_pendingLinks.clear();
-			m_pendingLinksSources.clear();
+			startCut(event->pos());
+			break;
 		}
-		else
-		{
-			m_selectionModel->select(QItemSelection(), QItemSelectionModel::Clear);
-			QGraphicsView::mousePressEvent(event);
 		}
 	}
 	else
@@ -234,14 +257,18 @@ void NodeGraphView::mouseReleaseEvent(QMouseEvent *event)
 	{
 		m_isPanning = false;
 	}
-	else
+	else if (event->button() == Qt::LeftButton)
 	{
-		if (event->button() == Qt::LeftButton)
+		if (m_isCutting)
 		{
-			m_isMovingNodes = false;
+			updateCut(event->pos());
+			finishCut();
 		}
-		QGraphicsView::mouseReleaseEvent(event);
+		m_isMovingNodes = false;
+		m_isCutting = false;
 	}
+
+	QGraphicsView::mouseReleaseEvent(event);
 }
 
 void NodeGraphView::wheelEvent(QWheelEvent *event)
@@ -257,6 +284,22 @@ void NodeGraphView::wheelEvent(QWheelEvent *event)
 	scale(s, s);
 
 	update();
+}
+
+void NodeGraphView::keyPressEvent(QKeyEvent *event)
+{
+	if (event->key() == Qt::Key_X)
+	{
+		m_currentTool = CutTool;
+	}
+}
+
+void NodeGraphView::keyReleaseEvent(QKeyEvent *event)
+{
+	if (event->key() == Qt::Key_X)
+	{
+		m_currentTool = DefaultTool;
+	}
 }
 
 void NodeGraphView::dragEnterEvent(QDragEnterEvent *event)
@@ -323,6 +366,7 @@ void NodeGraphView::dropEvent(QDropEvent *event)
 					SlotGraphicsItem *sourceSlotItem = otherSlot->isInput() ? slotItem : otherSlotItem;
 
 					LinkGraphicsItem *link = new LinkGraphicsItem();
+					link->setEndSlotItem(destinationSlotItem);
 					scene()->addItem(link);
 					destinationSlotItem->setInputLink(link);
 					sourceSlotItem->addOutputLink(link);
@@ -348,6 +392,50 @@ void NodeGraphView::dropEvent(QDropEvent *event)
 	{
 		event->ignore();
 	}
+}
+
+void NodeGraphView::startCut(QPoint position)
+{
+	m_isCutting = true;
+	m_cutShape = QPainterPath();
+	m_cutShape.moveTo(mapToScene(position));
+}
+
+void NodeGraphView::updateCut(QPoint position)
+{
+	QPointF oldPos = m_cutShape.currentPosition();
+	QPointF curPos = mapToScene(position);
+	m_cutShape.lineTo(curPos);
+	QPointF topLeft(std::min(curPos.x(), oldPos.x()), std::min(curPos.y(), oldPos.y()));
+	QSizeF size(std::abs(curPos.x() - oldPos.x()), std::abs(curPos.y() - oldPos.y()));
+	scene()->update(QRectF(topLeft, size));
+
+	// test collision
+	QPainterPath edge;
+	edge.moveTo(oldPos);
+	edge.lineTo(curPos);
+	QList<QGraphicsItem*> items = scene()->items(edge);
+	for (QGraphicsItem *item : items)
+	{
+		if (LinkGraphicsItem *linkItem = nodeGraphScene()->toLinkItem(item))
+		{
+			if (SlotGraphicsItem *slotItem = linkItem->endSlotItem())
+			{
+				DEBUG_LOG << "remove link";
+				slotItem->setInputLink(nullptr);
+			}
+			else
+			{
+				scene()->removeItem(item);
+				delete item;
+			}
+		}
+	}
+}
+
+void NodeGraphView::finishCut()
+{
+	m_cutShape = QPainterPath();
 }
 
 void NodeGraphView::onDataChanged()

@@ -3,6 +3,8 @@
 
 #include <QGraphicsItem>
 
+class SlotGraphicsItem;
+
 class LinkGraphicsItem : public QGraphicsItem
 {
 public:
@@ -11,15 +13,22 @@ public:
 	void setStartPos(QPointF pos);
 	void setEndPos(QPointF pos);
 
+	SlotGraphicsItem * endSlotItem() const { return m_endSlotItem; }
+	void setEndSlotItem(SlotGraphicsItem * slotItem) { m_endSlotItem = slotItem; }
+
 	QRectF boundingRect() const override;
 	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget) override;
 
-	bool collidesWithItem(const QGraphicsItem *other, Qt::ItemSelectionMode mode = Qt::IntersectsItemShape) const override;
 	QPainterPath shape() const override;
+
+private:
+	void updateShape();
 
 private:
 	QPointF m_startPos;
 	QPointF m_endPos;
+	QPainterPath m_shape;
+	SlotGraphicsItem *m_endSlotItem;
 };
 
 #endif // H_LINKGRAPHICSITEM
