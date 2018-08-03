@@ -73,6 +73,8 @@ private:
 	void updateCut(QPoint position);
 	void finishCut();
 
+	void selectAll();
+
 private slots:
 	void onDataChanged();
 	void onCurrentChanged();

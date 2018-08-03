@@ -292,6 +292,10 @@ void NodeGraphView::keyPressEvent(QKeyEvent *event)
 	{
 		m_currentTool = CutTool;
 	}
+	if (event->key() == Qt::Key_A && event->modifiers() & Qt::ControlModifier)
+	{
+		selectAll();
+	}
 }
 
 void NodeGraphView::keyReleaseEvent(QKeyEvent *event)
@@ -436,6 +440,19 @@ void NodeGraphView::updateCut(QPoint position)
 void NodeGraphView::finishCut()
 {
 	m_cutShape = QPainterPath();
+}
+
+void NodeGraphView::selectAll()
+{
+	if (!selectionModel() || !model())
+	{
+		return;
+	}
+
+	int n = model()->rowCount();
+	const QModelIndex & topLeft = model()->index(0, 0);
+	const QModelIndex & bottomRight = model()->index(n - 1, 0);
+	selectionModel()->select(QItemSelection(topLeft, bottomRight), QItemSelectionModel::Select);
 }
 
 void NodeGraphView::onDataChanged()
