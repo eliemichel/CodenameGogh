@@ -26,10 +26,10 @@ NodeGraphView::NodeGraphView(QWidget *parent)
 	, m_model(nullptr)
 	, m_selectionModel(nullptr)
 	, m_zoom(1.f)
-	, m_isPanning(false)
-	, m_isCutting(false)
 	, m_isMovingNodes(false)
-	, m_currentTool(DefaultTool)
+	, m_currentToolState(DefaultToolState)
+	, m_panTool(this)
+	, m_cutTool(this)
 {
 	setBackgroundBrush(QColor(57, 57, 57));
 	setRenderHint(QPainter::Antialiasing);
@@ -126,22 +126,23 @@ void NodeGraphView::drawBackground(QPainter *painter, const QRectF &rect)
 	// Cut shape
 	painter->setBrush(Qt::NoBrush);
 	painter->setPen(QPen(QColor(128, 128, 128), 1, Qt::DotLine));
-	painter->drawPath(m_cutShape);
+	painter->drawPath(m_cutTool.cutShape());
 }
 
 void NodeGraphView::mouseMoveEvent(QMouseEvent *event)
 {
-	if (m_isPanning)
+	if (m_panTool.isActive())
 	{
-		updatePan(event->pos());
+		//updatePan(event->pos());
+		m_panTool.update(event->pos());
 	}
 	else if (m_isMovingNodes)
 	{
 		updateMoveNodes(event->pos());
 	}
-	else if (m_isCutting)
+	else if (m_cutTool.isActive())
 	{
-		updateCut(event->pos());
+		m_cutTool.update(event->pos());
 	}
 	else
 	{
@@ -158,12 +159,13 @@ void NodeGraphView::mousePressEvent(QMouseEvent *event)
 
 	if (event->button() == Qt::MiddleButton)
 	{
-		startPan(event->pos());
+		//startPan(event->pos());
+		m_panTool.start(event->pos());
 	}
 	else if (event->button() == Qt::LeftButton)
 	{
-		switch (m_currentTool) {
-		case DefaultTool:
+		switch (m_currentToolState) {
+		case DefaultToolState:
 		{
 			QGraphicsItem *item = itemAt(event->pos());
 			if (NodeGraphicsItem *nodeItem = nodeGraphScene()->toNodeItem(item))
@@ -217,9 +219,9 @@ void NodeGraphView::mousePressEvent(QMouseEvent *event)
 			break;
 		}
 
-		case CutTool:
+		case CutToolState:
 		{
-			startCut(event->pos());
+			m_cutTool.start(event->pos());
 			break;
 		}
 		}
@@ -234,14 +236,16 @@ void NodeGraphView::mouseReleaseEvent(QMouseEvent *event)
 {
 	if (event->button() == Qt::MiddleButton)
 	{
-		finishPan();
+		if (m_panTool.isActive())
+		{
+			m_panTool.finish(event->pos());
+		}
 	}
 	else if (event->button() == Qt::LeftButton)
 	{
-		if (m_isCutting)
+		if (m_cutTool.isActive())
 		{
-			updateCut(event->pos());
-			finishCut();
+			m_cutTool.finish(event->pos());
 		}
 		if (m_isMovingNodes)
 		{
@@ -271,7 +275,7 @@ void NodeGraphView::keyPressEvent(QKeyEvent *event)
 {
 	if (event->key() == Qt::Key_X)
 	{
-		m_currentTool = CutTool;
+		m_currentToolState = CutToolState;
 	}
 	if (event->key() == Qt::Key_A && event->modifiers() & Qt::ControlModifier)
 	{
@@ -283,7 +287,7 @@ void NodeGraphView::keyReleaseEvent(QKeyEvent *event)
 {
 	if (event->key() == Qt::Key_X)
 	{
-		m_currentTool = DefaultTool;
+		m_currentToolState = DefaultToolState;
 	}
 }
 
@@ -379,25 +383,6 @@ void NodeGraphView::dropEvent(QDropEvent *event)
 	}
 }
 
-void NodeGraphView::startPan(QPoint position)
-{
-	m_isPanning = true;
-	m_pressPos = position;
-	m_pressCenter = mapToScene(viewport()->rect().center());
-}
-
-void NodeGraphView::updatePan(QPoint position)
-{
-	QPointF c = mapToScene(viewport()->rect().center());
-	QPointF delta = mapToScene(m_pressPos) - mapToScene(position);
-	centerOn(m_pressCenter + delta);
-}
-
-void NodeGraphView::finishPan()
-{
-	m_isPanning = false;
-}
-
 void NodeGraphView::startMoveNodes(QPoint position)
 {
 	if (!selectionModel())
@@ -433,51 +418,6 @@ void NodeGraphView::updateMoveNodes(QPoint position)
 void NodeGraphView::finishMoveNodes()
 {
 	m_isMovingNodes = false;
-}
-
-void NodeGraphView::startCut(QPoint position)
-{
-	m_isCutting = true;
-	m_cutShape = QPainterPath();
-	m_cutShape.moveTo(mapToScene(position));
-}
-
-void NodeGraphView::updateCut(QPoint position)
-{
-	QPointF oldPos = m_cutShape.currentPosition();
-	QPointF curPos = mapToScene(position);
-	m_cutShape.lineTo(curPos);
-	QPointF topLeft(std::min(curPos.x(), oldPos.x()), std::min(curPos.y(), oldPos.y()));
-	QSizeF size(std::abs(curPos.x() - oldPos.x()), std::abs(curPos.y() - oldPos.y()));
-	scene()->update(QRectF(topLeft, size));
-
-	// test collision
-	QPainterPath edge;
-	edge.moveTo(oldPos);
-	edge.lineTo(curPos);
-	QList<QGraphicsItem*> items = scene()->items(edge);
-	for (QGraphicsItem *item : items)
-	{
-		if (LinkGraphicsItem *linkItem = nodeGraphScene()->toLinkItem(item))
-		{
-			if (SlotGraphicsItem *slotItem = linkItem->endSlotItem())
-			{
-				DEBUG_LOG << "remove link";
-				slotItem->setInputLink(nullptr);
-			}
-			else
-			{
-				scene()->removeItem(item);
-				delete item;
-			}
-		}
-	}
-}
-
-void NodeGraphView::finishCut()
-{
-	m_cutShape = QPainterPath();
-	m_isCutting = false;
 }
 
 void NodeGraphView::selectAll()

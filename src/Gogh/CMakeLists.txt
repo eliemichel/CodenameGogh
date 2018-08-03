@@ -57,6 +57,12 @@ add_executable(
 	Nodes/CodecNode.ui
 	Nodes/CodecNode.cpp
 
+	Tools/AbstractGraphTool.h
+	Tools/PanTool.h
+	Tools/PanTool.cpp
+	Tools/CutTool.h
+	Tools/CutTool.cpp
+
 	main.cpp
 )
 

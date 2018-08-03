@@ -1,6 +1,9 @@
 #ifndef H_NODEGRAPHVIEW
 #define H_NODEGRAPHVIEW
 
+#include "Tools/PanTool.h"
+#include "Tools/CutTool.h"
+
 #include <QGraphicsView>
 #include <QModelIndex>
 #include <QItemSelection>
@@ -22,9 +25,9 @@ class NodeGraphView : public QGraphicsView
 	Q_OBJECT
 
 private:
-	enum Tool {
-		DefaultTool,
-		CutTool,
+	enum ToolState {
+		DefaultToolState,
+		CutToolState,
 	};
 
 private:
@@ -69,17 +72,10 @@ protected:
 private:
 	void setScene(QGraphicsScene *scene) {} // remove from public API
 
-	void startPan(QPoint position);
-	void updatePan(QPoint position);
-	void finishPan();
-
+	// TODO: move to a tool
 	void startMoveNodes(QPoint position);
 	void updateMoveNodes(QPoint position);
 	void finishMoveNodes();
-
-	void startCut(QPoint position);
-	void updateCut(QPoint position);
-	void finishCut();
 
 	void selectAll();
 
@@ -94,15 +90,6 @@ private:
 	std::vector<NodeMoveData> m_nodeMoveData;
 
 	float m_zoom;
-	bool m_isPanning;
-
-	// cut tool
-	bool m_isCutting;
-	QPainterPath m_cutShape;
-
-	// no need for initialization
-	QPoint m_pressPos;
-	QPointF m_pressCenter;
 
 	/// Links that are currently being dragged
 	std::vector<LinkGraphicsItem*> m_pendingLinks;
@@ -112,7 +99,10 @@ private:
 	bool m_isMovingNodes;
 	QPoint m_moveStartPos;
 
-	Tool m_currentTool;
+	ToolState m_currentToolState;
+
+	PanTool m_panTool;
+	CutTool m_cutTool;
 };
 
 #endif // H_NODEGRAPHVIEW
