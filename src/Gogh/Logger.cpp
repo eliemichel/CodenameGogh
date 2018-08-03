@@ -39,6 +39,7 @@ size_t Logger::align_width = 0;
 bool EnableVTMode()
 {
 #ifdef _WIN32
+#ifndef __MINGW32__
 	// Set output mode to handle virtual terminal sequences
 	HANDLE hOut = GetStdHandle(STD_OUTPUT_HANDLE);
 	if (hOut == INVALID_HANDLE_VALUE)
@@ -57,7 +58,8 @@ bool EnableVTMode()
 	{
 		return false;
 	}
-#endif
+#endif // __MINGW32__
+#endif // WIN32
 	return true;
 }
 
