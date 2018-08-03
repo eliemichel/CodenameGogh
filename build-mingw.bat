@@ -4,7 +4,7 @@
 mkdir build-mingw
 cd build-mingw
 
-:: Call cmake to generate the all configured Visual Studio solution
+:: Call cmake to generate the MinGW solution, check the path to your Qt
 cmake .. -G "MinGW Makefiles" -DQt5_DIR=E:/Qt/5.9.2/mingw53_32/lib/cmake/Qt5
 
 @echo off
