@@ -29,6 +29,7 @@ private slots:
 	void onProcessFinished();
 	void readStdout();
 	void readStderr();
+	void cancel();
 
 private:
 	bool m_isRunning;
@@ -37,6 +38,7 @@ private:
 	QScrollArea *m_scrollArea;
 	QLabel *m_processOutputLabel;
 	QPushButton *m_closeButton;
+	QPushButton *m_cancelButton;
 };
 
 #endif // H_RENDERDIALOG

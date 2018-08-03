@@ -8,6 +8,7 @@
 #include <QScrollBar>
 #include <QCloseEvent>
 #include <QPushButton>
+#include <QMessageBox>
 
 #include <QFontDatabase>
 #include <QtGlobal>
@@ -36,14 +37,19 @@ RenderDialog::RenderDialog(std::string cmd, QWidget *parent)
 	layout->addWidget(m_scrollArea);
 
 	QHBoxLayout *buttonLayout = new QHBoxLayout();
+	buttonLayout->addStretch();
+	m_cancelButton = new QPushButton("Cancel");
+	connect(m_cancelButton, &QPushButton::clicked, this, &RenderDialog::cancel);
+	buttonLayout->addWidget(m_cancelButton);
 	m_closeButton = new QPushButton("Close");
 	connect(m_closeButton, &QPushButton::clicked, this, &QDialog::close);
-	buttonLayout->addStretch();
 	buttonLayout->addWidget(m_closeButton);
 	layout->addLayout(buttonLayout);
 
 	this->setLayout(layout);
 	this->setMinimumSize(600, 300);
+
+	setRunning(false);
 }
 
 RenderDialog::~RenderDialog()
@@ -96,6 +102,7 @@ void RenderDialog::setRunning(bool running)
 {
 	m_isRunning = running;
 	m_closeButton->setEnabled(!running);
+	m_cancelButton->setEnabled(running);
 }
 
 void RenderDialog::onProcessFinished()
@@ -115,5 +122,26 @@ void RenderDialog::readStderr()
 {
 	m_processOutputLabel->setText(m_processOutputLabel->text() + m_ffmpegProcess->readAllStandardError());
 	m_scrollArea->verticalScrollBar()->setValue(m_scrollArea->verticalScrollBar()->maximum());
+}
+
+void RenderDialog::cancel()
+{
+	if (!m_ffmpegProcess)
+	{
+		return;
+	}
+
+	QMessageBox confirmationDialog;
+	confirmationDialog.setText("Cancel render");
+	confirmationDialog.setInformativeText("Do you want to kill the current render job?");
+	confirmationDialog.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+	confirmationDialog.setDefaultButton(QMessageBox::No);
+	if (confirmationDialog.exec() == QMessageBox::No)
+	{
+		return;
+	}
+
+	// TODO: try to terminate() first, if not on windows
+	m_ffmpegProcess->kill();
 }
 
