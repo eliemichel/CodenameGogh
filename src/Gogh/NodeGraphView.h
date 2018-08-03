@@ -69,6 +69,14 @@ protected:
 private:
 	void setScene(QGraphicsScene *scene) {} // remove from public API
 
+	void startPan(QPoint position);
+	void updatePan(QPoint position);
+	void finishPan();
+
+	void startMoveNodes(QPoint position);
+	void updateMoveNodes(QPoint position);
+	void finishMoveNodes();
+
 	void startCut(QPoint position);
 	void updateCut(QPoint position);
 	void finishCut();
@@ -87,7 +95,10 @@ private:
 
 	float m_zoom;
 	bool m_isPanning;
+
+	// cut tool
 	bool m_isCutting;
+	QPainterPath m_cutShape;
 
 	// no need for initialization
 	QPoint m_pressPos;
@@ -102,7 +113,6 @@ private:
 	QPoint m_moveStartPos;
 
 	Tool m_currentTool;
-	QPainterPath m_cutShape;
 };
 
 #endif // H_NODEGRAPHVIEW

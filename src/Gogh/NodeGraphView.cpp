@@ -133,21 +133,11 @@ void NodeGraphView::mouseMoveEvent(QMouseEvent *event)
 {
 	if (m_isPanning)
 	{
-		QPointF c = mapToScene(viewport()->rect().center());
-		QPointF delta = mapToScene(m_pressPos) - mapToScene(event->pos());
-		centerOn(m_pressCenter + delta);
+		updatePan(event->pos());
 	}
 	else if (m_isMovingNodes)
 	{
-		QPointF delta = mapToScene(m_moveStartPos) - mapToScene(event->pos());
-		if (model())
-		{
-			for (const NodeMoveData & data : m_nodeMoveData)
-			{
-				model()->setData(data.posXIndex, data.startPos.x() - delta.x());
-				model()->setData(data.posYIndex, data.startPos.y() - delta.y());
-			}
-		}
+		updateMoveNodes(event->pos());
 	}
 	else if (m_isCutting)
 	{
@@ -168,9 +158,7 @@ void NodeGraphView::mousePressEvent(QMouseEvent *event)
 
 	if (event->button() == Qt::MiddleButton)
 	{
-		m_isPanning = true;
-		m_pressPos = event->pos();
-		m_pressCenter = mapToScene(viewport()->rect().center());
+		startPan(event->pos());
 	}
 	else if (event->button() == Qt::LeftButton)
 	{
@@ -191,16 +179,7 @@ void NodeGraphView::mousePressEvent(QMouseEvent *event)
 					m_selectionModel->select(nodeItem->modelIndex(), addToSelection ? QItemSelectionModel::Select : QItemSelectionModel::ClearAndSelect);
 				}
 
-				m_nodeMoveData.clear();
-				for (const QModelIndex & index : m_selectionModel->selectedIndexes())
-				{
-					const QModelIndex & colX = model()->index(index.row(), NodeGraphModel::PosXColumn, index.parent());
-					const QModelIndex & colY = model()->index(index.row(), NodeGraphModel::PosYColumn, index.parent());
-					QPointF startPos = QPointF(model()->data(colX).toFloat(), model()->data(colY).toFloat());
-					m_nodeMoveData.push_back(NodeMoveData(colX, colY, startPos));
-					m_moveStartPos = event->pos();
-					m_isMovingNodes = true;
-				}
+				startMoveNodes(event->pos());
 			}
 			else if (SlotGraphicsItem *slotItem = nodeGraphScene()->toSlotItem(item))
 			{
@@ -255,7 +234,7 @@ void NodeGraphView::mouseReleaseEvent(QMouseEvent *event)
 {
 	if (event->button() == Qt::MiddleButton)
 	{
-		m_isPanning = false;
+		finishPan();
 	}
 	else if (event->button() == Qt::LeftButton)
 	{
@@ -264,8 +243,10 @@ void NodeGraphView::mouseReleaseEvent(QMouseEvent *event)
 			updateCut(event->pos());
 			finishCut();
 		}
-		m_isMovingNodes = false;
-		m_isCutting = false;
+		if (m_isMovingNodes)
+		{
+			finishMoveNodes();
+		}
 	}
 
 	QGraphicsView::mouseReleaseEvent(event);
@@ -398,6 +379,62 @@ void NodeGraphView::dropEvent(QDropEvent *event)
 	}
 }
 
+void NodeGraphView::startPan(QPoint position)
+{
+	m_isPanning = true;
+	m_pressPos = position;
+	m_pressCenter = mapToScene(viewport()->rect().center());
+}
+
+void NodeGraphView::updatePan(QPoint position)
+{
+	QPointF c = mapToScene(viewport()->rect().center());
+	QPointF delta = mapToScene(m_pressPos) - mapToScene(position);
+	centerOn(m_pressCenter + delta);
+}
+
+void NodeGraphView::finishPan()
+{
+	m_isPanning = false;
+}
+
+void NodeGraphView::startMoveNodes(QPoint position)
+{
+	if (!selectionModel())
+	{
+		return;
+	}
+
+	m_nodeMoveData.clear();
+	for (const QModelIndex & index : selectionModel()->selectedIndexes())
+	{
+		const QModelIndex & colX = model()->index(index.row(), NodeGraphModel::PosXColumn, index.parent());
+		const QModelIndex & colY = model()->index(index.row(), NodeGraphModel::PosYColumn, index.parent());
+		QPointF startPos = QPointF(model()->data(colX).toFloat(), model()->data(colY).toFloat());
+		m_nodeMoveData.push_back(NodeMoveData(colX, colY, startPos));
+		m_moveStartPos = position;
+		m_isMovingNodes = true;
+	}
+}
+
+void NodeGraphView::updateMoveNodes(QPoint position)
+{
+	QPointF delta = mapToScene(m_moveStartPos) - mapToScene(position);
+	if (model())
+	{
+		for (const NodeMoveData & data : m_nodeMoveData)
+		{
+			model()->setData(data.posXIndex, data.startPos.x() - delta.x());
+			model()->setData(data.posYIndex, data.startPos.y() - delta.y());
+		}
+	}
+}
+
+void NodeGraphView::finishMoveNodes()
+{
+	m_isMovingNodes = false;
+}
+
 void NodeGraphView::startCut(QPoint position)
 {
 	m_isCutting = true;
@@ -440,6 +477,7 @@ void NodeGraphView::updateCut(QPoint position)
 void NodeGraphView::finishCut()
 {
 	m_cutShape = QPainterPath();
+	m_isCutting = false;
 }
 
 void NodeGraphView::selectAll()
