@@ -38,7 +38,6 @@ NodeGraphView::NodeGraphView(QWidget *parent)
 
 NodeGraphView::~NodeGraphView()
 {
-
 }
 
 void NodeGraphView::setModel(QAbstractItemModel *model)
@@ -281,6 +280,10 @@ void NodeGraphView::keyPressEvent(QKeyEvent *event)
 	{
 		selectAll();
 	}
+	else
+	{
+		QGraphicsView::keyPressEvent(event);
+	}
 }
 
 void NodeGraphView::keyReleaseEvent(QKeyEvent *event)
@@ -288,6 +291,10 @@ void NodeGraphView::keyReleaseEvent(QKeyEvent *event)
 	if (event->key() == Qt::Key_X)
 	{
 		m_currentToolState = DefaultToolState;
+	}
+	else
+	{
+		QGraphicsView::keyReleaseEvent(event);
 	}
 }
 

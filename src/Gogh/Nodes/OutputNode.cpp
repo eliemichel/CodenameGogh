@@ -16,6 +16,11 @@ OutputNode::OutputNode(QWidget *parent)
 
 	// Add slots
 	newInputSlot();
+
+	//Quick tests with video samples
+	ui->filenameInput->setText("/Users/felixdavid/Documents/Logiciels/Tunnel/data/GoghTestSample_h264.mp4");
+	//DEBUG_LOG << ui->filenameInput->text().toStdString();
+	ui->filenameInput->setPlaceholderText("Path/to/output_file");
 }
 
 OutputNode::~OutputNode()
@@ -34,7 +39,7 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		return false;
 	}
 
-	cmd.cmd = cmd.cmd + " " + ui->filenameInput->text().toStdString();
+	cmd.cmd.push_back(ui->filenameInput->text().toStdString());
 	return true;
 }
 
@@ -82,7 +87,8 @@ void OutputNode::render()
 	RenderCommand cmd;
 	if (buildRenderCommand(-1, cmd))
 	{
-		DEBUG_LOG << "Render command: ffmpeg " << cmd.cmd;
+		std::string cmdString;
+		for (auto const& s : cmd.cmd) { cmdString += s; }
 		RenderDialog renderDialog(cmd.cmd);
 		renderDialog.exec();
 	}

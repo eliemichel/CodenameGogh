@@ -15,6 +15,11 @@ InputNode::InputNode(QWidget *parent)
 
 	// Add slots
 	newOutputSlot();
+
+	//Quick tests with video samples
+	ui->filenameInput->setText("/Users/felixdavid/Documents/Logiciels/Tunnel/data/GoghTestSample.mp4");
+	//DEBUG_LOG << ui->filenameInput->text().toStdString();
+	ui->filenameInput->setPlaceholderText("Path/to/input_file");
 }
 
 InputNode::~InputNode()
@@ -37,7 +42,7 @@ bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		return false;
 	}
 
-	cmd.cmd = "-i " + filename.toStdString();
+	cmd.cmd.push_back("-i " + filename.toStdString());
 	return true;
 }
 
@@ -79,4 +84,3 @@ void InputNode::setParm(int parm, QVariant value)
 		break;
 	}
 }
-

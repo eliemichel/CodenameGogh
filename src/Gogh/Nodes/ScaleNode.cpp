@@ -30,10 +30,11 @@ bool ScaleNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	{
 		return false;
 	}
-	
+
 	std::ostringstream ss;
-	ss << cmd.cmd << " -vf scale=" << ui->widthInput->value() << ":" << ui->heightInput->value();
-	cmd.cmd = ss.str();
+	ss << "-vf scale=" << ui->widthInput->value() << ":" << ui->heightInput->value();
+	//cmd.cmd = ss.str();
+	cmd.cmd.push_back(ss.str());
 	return true;
 }
 
@@ -82,4 +83,3 @@ void ScaleNode::setParm(int parm, QVariant value)
 		break;
 	}
 }
-

@@ -15,7 +15,7 @@ public:
 	static std::string locateFfmpeg();
 
 public:
-	RenderDialog(std::string cmd, QWidget *parent = nullptr);
+	RenderDialog(std::vector<std::string> cmd, QWidget *parent = nullptr);
 	~RenderDialog();
 
 protected:
@@ -33,7 +33,7 @@ private slots:
 
 private:
 	bool m_isRunning;
-	std::string m_cmd;
+	std::vector<std::string> m_cmd;
 	QProcess *m_ffmpegProcess;
 	QScrollArea *m_scrollArea;
 	QLabel *m_processOutputLabel;

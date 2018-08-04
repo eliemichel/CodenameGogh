@@ -16,10 +16,11 @@
 
 std::string RenderDialog::locateFfmpeg()
 {
-	return "E:/Program Files/ffmpeg/bin/ffmpeg";
+	return "ffmpeg";
+	//return "E:/Program Files/ffmpeg/bin/ffmpeg";
 }
 
-RenderDialog::RenderDialog(std::string cmd, QWidget *parent)
+RenderDialog::RenderDialog(std::vector<std::string> cmd, QWidget *parent)
 	: QDialog(parent)
 	, m_cmd(cmd)
 	, m_isRunning(false)
@@ -62,6 +63,7 @@ RenderDialog::~RenderDialog()
 
 void RenderDialog::closeEvent(QCloseEvent *event)
 {
+	DEBUG_LOG << "closeEvent";
 	if (m_isRunning)
 	{
 		event->ignore();
@@ -74,13 +76,19 @@ void RenderDialog::closeEvent(QCloseEvent *event)
 
 void RenderDialog::showEvent(QShowEvent *event)
 {
+	DEBUG_LOG << "showEvent";
 	if (m_isRunning)
 	{
 		return;
 	}
 
-	QString program = QString::fromStdString(RenderDialog::locateFfmpeg());
-	QStringList arguments = QString::fromStdString(m_cmd).split(" ");
+	QString program = QString::fromStdString(RenderDialog::locateFfmpeg()) + " ";
+	QStringList arguments;
+	for (int i = 0; i < m_cmd.size(); i ++)
+	{
+		arguments.append(QString::fromStdString(m_cmd[i]) + " ");
+	}
+
 
 	if (m_ffmpegProcess)
 	{
@@ -93,6 +101,9 @@ void RenderDialog::showEvent(QShowEvent *event)
 
 	setRunning(true);
 
+	//Prompts the command sent to ffmpeg right before
+	DEBUG_LOG << program.toStdString() << arguments.join("").toStdString();
+
 	m_ffmpegProcess->start(program, arguments);
 
 	QDialog::showEvent(event);
@@ -100,6 +111,7 @@ void RenderDialog::showEvent(QShowEvent *event)
 
 void RenderDialog::setRunning(bool running)
 {
+	DEBUG_LOG << "setRunning";
 	m_isRunning = running;
 	m_closeButton->setEnabled(!running);
 	m_cancelButton->setEnabled(running);
@@ -114,18 +126,21 @@ void RenderDialog::onProcessFinished()
 
 void RenderDialog::readStdout()
 {
+	DEBUG_LOG << "readStdout";
 	m_processOutputLabel->setText(m_processOutputLabel->text() + m_ffmpegProcess->readAllStandardOutput());
 	m_scrollArea->verticalScrollBar()->setValue(m_scrollArea->verticalScrollBar()->maximum());
 }
 
 void RenderDialog::readStderr()
 {
+	DEBUG_LOG << "readStderr";
 	m_processOutputLabel->setText(m_processOutputLabel->text() + m_ffmpegProcess->readAllStandardError());
 	m_scrollArea->verticalScrollBar()->setValue(m_scrollArea->verticalScrollBar()->maximum());
 }
 
 void RenderDialog::cancel()
 {
+	DEBUG_LOG << "cancel";
 	if (!m_ffmpegProcess)
 	{
 		return;
@@ -144,4 +159,3 @@ void RenderDialog::cancel()
 	// TODO: try to terminate() first, if not on windows
 	m_ffmpegProcess->kill();
 }
-

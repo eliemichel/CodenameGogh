@@ -18,7 +18,7 @@ class LinkGraphicsItem;
  */
 struct RenderCommand {
 	// raw command being built
-	std::string cmd;
+	std::vector<std::string> cmd;
 
 	// error message that may be filled when returning false in buildRenderCommand
 	std::string err;
