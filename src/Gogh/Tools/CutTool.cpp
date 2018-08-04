@@ -6,6 +6,8 @@
 #include "LinkGraphicsItem.h"
 #include "Logger.h"
 
+#include <cmath>
+
 void CutTool::start(QPoint position)
 {
 	setActive(true);
