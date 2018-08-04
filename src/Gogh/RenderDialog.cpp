@@ -91,9 +91,9 @@ void RenderDialog::showEvent(QShowEvent *event)
 	connect(m_ffmpegProcess, &QProcess::readyReadStandardOutput, this, &RenderDialog::readStdout);
 	connect(m_ffmpegProcess, &QProcess::readyReadStandardError, this, &RenderDialog::readStderr);
 
-	setRunning(true);
-
 	m_ffmpegProcess->start(program, arguments);
+
+	setRunning(m_ffmpegProcess->isOpen());
 
 	QDialog::showEvent(event);
 }

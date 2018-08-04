@@ -63,6 +63,12 @@ add_executable(
 	Tools/CutTool.h
 	Tools/CutTool.cpp
 
+	EnvModel.h
+	EnvModel.cpp
+	Dialogs/EnvDialog.h
+	Dialogs/EnvDialog.ui
+	Dialogs/EnvDialog.cpp
+
 	main.cpp
 )
 
