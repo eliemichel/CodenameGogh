@@ -22,6 +22,9 @@ Gogh was born.
 
 Build
 -----
+### Dependencies
+>- C++ 11
+>- Qt 5.9
 
 ### Windows 64bit with Visual Studio 15 (2017)
 
