@@ -42,7 +42,8 @@ bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		return false;
 	}
 
-	cmd.cmd.push_back("-i " + filename.toStdString());
+	cmd.cmd.push_back("-i");
+	cmd.cmd.push_back(filename.toStdString());
 	return true;
 }
 

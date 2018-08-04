@@ -31,9 +31,9 @@ bool ScaleNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		return false;
 	}
 
+	cmd.cmd.push_back("-vf");
 	std::ostringstream ss;
-	ss << "-vf scale=" << ui->widthInput->value() << ":" << ui->heightInput->value();
-	//cmd.cmd = ss.str();
+	ss << "scale=" << ui->widthInput->value() << ":" << ui->heightInput->value();
 	cmd.cmd.push_back(ss.str());
 	return true;
 }

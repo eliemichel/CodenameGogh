@@ -35,9 +35,7 @@ bool CodecNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		return false;
 	}
 
-	std::ostringstream ss;
- 	ss << "-c:v "<< ui->codecBox->currentText().toStdString();
-	//std::cout << ui->codecBox->currentText();
-	cmd.cmd.push_back(ss.str());
+	cmd.cmd.push_back("-c:v");
+	cmd.cmd.push_back(ui->codecBox->currentText().toStdString());
 	return true;
 }

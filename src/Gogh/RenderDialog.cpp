@@ -86,7 +86,7 @@ void RenderDialog::showEvent(QShowEvent *event)
 	QStringList arguments;
 	for (int i = 0; i < m_cmd.size(); i ++)
 	{
-		arguments.append(" " + QString::fromStdString(m_cmd[i]));
+		arguments.append(QString::fromStdString(m_cmd[i]));
 	}
 
 	if (m_ffmpegProcess)
