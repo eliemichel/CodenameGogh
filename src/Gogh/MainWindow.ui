@@ -85,7 +85,14 @@
     <addaction name="separator"/>
     <addaction name="quitAction"/>
    </widget>
+   <widget class="QMenu" name="menuEdit">
+    <property name="title">
+     <string>Edit</string>
+    </property>
+    <addaction name="envAction"/>
+   </widget>
    <addaction name="menuFile"/>
+   <addaction name="menuEdit"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="openAction">
@@ -123,6 +130,11 @@
   <action name="saveAsAction">
    <property name="text">
     <string>Save As...</string>
+   </property>
+  </action>
+  <action name="envAction">
+   <property name="text">
+    <string>Environment Variables...</string>
    </property>
   </action>
  </widget>

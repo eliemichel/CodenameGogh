@@ -22,7 +22,8 @@ public:
 private slots:
 	void showOpenFileDialog();
 	void save();
-	
+	void showEnvDialog();
+
 private:
 	Ui::MainWindow *ui;
 	NodeGraphScene *m_scene;
