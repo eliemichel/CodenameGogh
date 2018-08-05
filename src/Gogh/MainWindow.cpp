@@ -87,7 +87,7 @@ void MainWindow::save()
 
 void MainWindow::showSaveAsFileDialog()
 {
-	filename = QFileDialog::getSaveFileName(this, tr("Save as Gogh Graph"), "", tr("Gogh files (*.gog)"));
+	filename = QFileDialog::getSaveFileName(this, tr("Save as Gogh Graph"), filename, tr("Gogh files (*.gog)"));
 	m_model->SaveGraph(filename);
 }
 
