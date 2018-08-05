@@ -18,10 +18,12 @@ class MainWindow :
 public:
 	explicit MainWindow(QWidget *parent = 0);
 	~MainWindow();
+	QString filename;
 
 private slots:
 	void showOpenFileDialog();
 	void save();
+	void showSaveAsFileDialog();
 	void showEnvDialog();
 
 private:

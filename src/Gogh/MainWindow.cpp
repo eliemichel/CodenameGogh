@@ -25,17 +25,21 @@ MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
 	, ui(new Ui::MainWindow)
 {
+	//Temporary fixes the MenuBar issue by setting it in the Mainwindow
+	QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
+
 	ui->setupUi(this);
 
 	connect(ui->quitAction, &QAction::triggered, this, &QWidget::close);
 	connect(ui->openAction, &QAction::triggered, this, &MainWindow::showOpenFileDialog);
 	connect(ui->saveAction, &QAction::triggered, this, &MainWindow::save);
+	connect(ui->saveAsAction, &QAction::triggered, this, &MainWindow::showSaveAsFileDialog);
 	connect(ui->envAction, &QAction::triggered, this, &MainWindow::showEnvDialog);
 
 	m_scene = new NodeGraphScene();
 	m_model = new NodeGraphModel();
 
-	QString filename = QDir::tempPath() + "/gogh_sample.gog";
+	filename = QDir::tempPath() + "/gogh_sample.gog";
 	if (!m_model->LoadGraph(filename))
 	{
 		m_model->LoadDefaultGraph();
@@ -71,13 +75,19 @@ MainWindow::~MainWindow()
 
 void MainWindow::showOpenFileDialog()
 {
-	QString filename = QFileDialog::getOpenFileName(this, tr("Open Gogh Graph"), "", tr("Gogh files (*.gog)"));
+	filename = QFileDialog::getOpenFileName(this, tr("Open Gogh Graph"), "", tr("Gogh files (*.gog)"));
 	m_model->LoadGraph(filename);
 }
 
 void MainWindow::save()
 {
-	QString filename = QDir::tempPath() + "/gogh_sample.gog";
+	//filename = QDir::tempPath() + "/gogh_sample.gog";
+	m_model->SaveGraph(filename);
+}
+
+void MainWindow::showSaveAsFileDialog()
+{
+	filename = QFileDialog::getSaveFileName(this, tr("Save as Gogh Graph"), "", tr("Gogh files (*.gog)"));
 	m_model->SaveGraph(filename);
 }
 
