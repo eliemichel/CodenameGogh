@@ -115,7 +115,7 @@ QString NodeWidget::parmFullEval(int parm) const
 {
 	QString value = parmEval(parm).toString();
 	if (EnvModel *env = envModel()) {
-		for (auto it = env->begin(); it != env->end(); ++it)
+		for (auto it = env->env().cbegin(); it != env->env().cend(); ++it)
 		{
 			value = value.replace(QString::fromStdString("$" + it->first), QString::fromStdString(it->second));
 		}

@@ -17,9 +17,11 @@ class MainWindow :
 	Q_OBJECT
 
 public:
-	explicit MainWindow(QWidget *parent = 0);
+	explicit MainWindow(QString graphFilename = QString(), QWidget *parent = 0);
 	~MainWindow();
-	QString filename;
+
+	EnvModel *envModel() const { return m_envModel; }
+	NodeGraphModel *model() const { return m_model; }
 
 private slots:
 	void showOpenFileDialog();
@@ -32,6 +34,7 @@ private:
 	NodeGraphScene *m_scene;
 	NodeGraphModel *m_model;
 	EnvModel *m_envModel;
+	QString m_currentFilename;
 };
 
 #endif // H_MAINWINDOW

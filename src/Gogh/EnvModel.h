@@ -18,10 +18,8 @@ public:
 public:
 	EnvModel();
 
-	std::string eval(std::string var) const;
-	const std::vector<std::string> & keys() const { return m_orderedKeys; }
-	std::map<std::string, std::string>::const_iterator begin() { return m_env.cbegin(); }
-	std::map<std::string, std::string>::const_iterator end() { return m_env.cend(); }
+	std::map<std::string, std::string> & env() { return m_env; }
+	const std::map<std::string, std::string> & env() const { return m_env; }
 
 public: // overrides from QAbstractItemModel
 	QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
