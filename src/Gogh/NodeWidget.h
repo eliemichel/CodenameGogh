@@ -10,6 +10,7 @@
 #include <string>
 
 class LinkGraphicsItem;
+class EnvModel;
 
 /**
  * This structure is transmitted among the graph nodes while building the
@@ -38,6 +39,9 @@ public:
 	const std::vector<Slot*> outputSlots() const { return m_outputSlots; }
 	Slot* newOutputSlot();
 
+	EnvModel *envModel() const { return m_envModel; }
+	void setEnvModel(EnvModel *envModel) { m_envModel = envModel; }
+
 	/**
 	 * Function that contains the logic of the node. This must be reimplemented
 	 * in each node and is called when building the render command.
@@ -59,7 +63,9 @@ public:
 
 	/**
 	 * I/O function, used to save and load scenes.
-	 * Reimplement this in subclasses to symmetrically write and read back raw node data.
+	 * The default implementation relies on parmCount, parmEval and setParm.
+	 * Reimplement this in subclasses to symmetrically write and read back raw
+	 * node data in a custom way.
 	 */
 	virtual void read(QDataStream & stream);
 	virtual void write(QDataStream & stream) const;
@@ -70,9 +76,13 @@ public: // data model
 	virtual QVariant parmEval(int parm) const { return QVariant(); }
 	virtual void setParm(int parm, QVariant value) {}
 
+	/// This should be called parmEval and the current parmEval should be parmRawValue but I don't want to break the API yet
+	QString parmFullEval(int parm) const;
+
 private:
 	std::vector<Slot*> m_inputSlots;
 	std::vector<Slot*> m_outputSlots;
+	EnvModel *m_envModel;
 };
 
 #endif // H_NODEWIDGET

@@ -1,4 +1,5 @@
 #include "NodeWidget.h"
+#include "EnvModel.h"
 #include "Logger.h"
 
 #include <QHBoxLayout>
@@ -10,6 +11,7 @@
 
 NodeWidget::NodeWidget(QWidget *parent)
 	: QWidget(parent)
+	, m_envModel(nullptr)
 {
 }
 
@@ -107,4 +109,16 @@ void NodeWidget::write(QDataStream & stream) const
 	{
 		stream << parmEval(i);
 	}
+}
+
+QString NodeWidget::parmFullEval(int parm) const
+{
+	QString value = parmEval(parm).toString();
+	if (EnvModel *env = envModel()) {
+		for (auto it = env->begin(); it != env->end(); ++it)
+		{
+			value = value.replace(QString::fromStdString("$" + it->first), QString::fromStdString(it->second));
+		}
+	}
+	return value;
 }

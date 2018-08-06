@@ -8,6 +8,7 @@
 #include "LinkGraphicsItem.h"
 #include "NodeGraphicsItem.h"
 #include "SlotGraphicsItem.h"
+#include "EnvModel.h"
 #include "Dialogs/EnvDialog.h"
 
 #include <QFileDialog>
@@ -38,6 +39,9 @@ MainWindow::MainWindow(QWidget *parent)
 
 	m_scene = new NodeGraphScene();
 	m_model = new NodeGraphModel();
+	m_envModel = new EnvModel();
+
+	m_model->setEnvModel(m_envModel);
 
 	filename = QDir::tempPath() + "/gogh_sample.gog";
 	if (!m_model->LoadGraph(filename))
@@ -71,6 +75,9 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
+	delete m_model;
+	delete m_envModel;
+	delete m_scene;
 }
 
 void MainWindow::showOpenFileDialog()
@@ -93,6 +100,6 @@ void MainWindow::showSaveAsFileDialog()
 
 void MainWindow::showEnvDialog()
 {
-	EnvDialog envDialog;
+	EnvDialog envDialog(m_envModel);
 	envDialog.exec();
 }

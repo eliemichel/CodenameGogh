@@ -11,6 +11,11 @@
 #include <QDataStream>
 #include <QModelIndex>
 
+NodeGraphModel::NodeGraphModel()
+	: QAbstractItemModel()
+	, m_envModel(nullptr)
+{}
+
 NodeWidget * NodeGraphModel::buildNode(int type)
 {
 	switch (type)
@@ -293,10 +298,24 @@ Qt::ItemFlags NodeGraphModel::flags(const QModelIndex & index) const
 
 void NodeGraphModel::LoadDefaultGraph()
 {
-	addNode(new InputNode(), NODE_INPUT, -300, -200);
-	addNode(new ScaleNode(), NODE_SCALE, 0, -250);
-	addNode(new CodecNode(), NODE_CODEC, -0, -100);
-	addNode(new OutputNode(), NODE_OUTPUT, 300, -200);
+	NodeWidget *node;
+
+	node = new InputNode();
+	node->setEnvModel(envModel());
+	addNode(node, NODE_INPUT, -300, -200);
+
+	node = new ScaleNode();
+	node->setEnvModel(envModel());
+	addNode(node, NODE_SCALE, 0, -250);
+
+	node = new CodecNode();
+	node->setEnvModel(envModel());
+	addNode(node, NODE_CODEC, 0, -100);
+
+	node = new OutputNode();
+	node->setEnvModel(envModel());
+	addNode(node, NODE_OUTPUT, 300, -200);
+
 	emit dataChanged(QModelIndex(), QModelIndex());
 }
 
@@ -326,6 +345,7 @@ bool NodeGraphModel::LoadGraph(QString filename)
 			return false;
 		}
 
+		node->setEnvModel(envModel());
 		node->read(in);
 
 		addNode(node, type, x, y);

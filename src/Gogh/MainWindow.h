@@ -5,6 +5,7 @@
 
 class NodeGraphScene;
 class NodeGraphModel;
+class EnvModel;
 
 namespace Ui {
 class MainWindow;
@@ -30,6 +31,7 @@ private:
 	Ui::MainWindow *ui;
 	NodeGraphScene *m_scene;
 	NodeGraphModel *m_model;
+	EnvModel *m_envModel;
 };
 
 #endif // H_MAINWINDOW

@@ -3,7 +3,7 @@
 
 #include "EnvModel.h"
 
-EnvDialog::EnvDialog(QWidget *parent)
+EnvDialog::EnvDialog(EnvModel *envModel, QWidget *parent)
 	: QDialog(parent)
 	, ui(new Ui::EnvDialog)
 {
@@ -11,11 +11,5 @@ EnvDialog::EnvDialog(QWidget *parent)
 
 	connect(ui->closeButton, &QPushButton::clicked, this, &QDialog::close);
 
-	m_model = new EnvModel();
-	ui->envView->setModel(m_model);
-}
-
-EnvDialog::~EnvDialog()
-{
-	delete m_model;
+	ui->envView->setModel(envModel);
 }

@@ -13,6 +13,19 @@ EnvModel::EnvModel()
 	m_orderedKeys.push_back("FFMPEG");
 }
 
+std::string EnvModel::eval(std::string var) const
+{
+	std::map<std::string, std::string>::const_iterator it = m_env.find(var);
+	if (it != m_env.end())
+	{
+		return it->second;
+	}
+	else
+	{
+		return "";
+	}
+}
+
 QModelIndex EnvModel::index(int row, int column, const QModelIndex & parent) const
 {
 	if (!isRoot(parent))

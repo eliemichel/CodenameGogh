@@ -9,6 +9,8 @@
 #include <string>
 #include <vector>
 
+class EnvModel;
+
 class NodeGraphModel : public QAbstractItemModel
 {
 public:
@@ -53,6 +55,12 @@ public:
 	 */
 	static bool isRoot(QModelIndex index);
 
+public:
+	NodeGraphModel();
+
+	EnvModel *envModel() const { return m_envModel; }
+	void setEnvModel(EnvModel *envModel) { m_envModel = envModel; }
+
 public: // overrides from QAbstractItemModel
 	QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
 	QModelIndex parent(const QModelIndex &index) const override;
@@ -84,6 +92,7 @@ private:
 	 * to add new node type.
 	 */
 	std::vector<NodeEntry> m_nodes;
+	EnvModel *m_envModel;
 };
 
 #endif // H_NODEGRAPHMODEL

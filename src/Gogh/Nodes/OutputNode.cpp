@@ -39,7 +39,7 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		return false;
 	}
 
-	cmd.cmd.push_back(ui->filenameInput->text().toStdString());
+	cmd.cmd.push_back(parmFullEval(0).toStdString());
 	return true;
 }
 
