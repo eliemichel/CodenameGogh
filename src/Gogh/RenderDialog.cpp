@@ -63,7 +63,6 @@ RenderDialog::~RenderDialog()
 
 void RenderDialog::closeEvent(QCloseEvent *event)
 {
-	DEBUG_LOG << "closeEvent";
 	if (m_isRunning)
 	{
 		event->ignore();
@@ -76,7 +75,6 @@ void RenderDialog::closeEvent(QCloseEvent *event)
 
 void RenderDialog::showEvent(QShowEvent *event)
 {
-	DEBUG_LOG << "showEvent";
 	if (m_isRunning)
 	{
 		return;
@@ -110,7 +108,6 @@ void RenderDialog::showEvent(QShowEvent *event)
 
 void RenderDialog::setRunning(bool running)
 {
-	DEBUG_LOG << "setRunning";
 	m_isRunning = running;
 	m_closeButton->setEnabled(!running);
 	m_cancelButton->setEnabled(running);
@@ -125,21 +122,18 @@ void RenderDialog::onProcessFinished()
 
 void RenderDialog::readStdout()
 {
-	DEBUG_LOG << "readStdout";
 	m_processOutputLabel->setText(m_processOutputLabel->text() + m_ffmpegProcess->readAllStandardOutput());
 	m_scrollArea->verticalScrollBar()->setValue(m_scrollArea->verticalScrollBar()->maximum());
 }
 
 void RenderDialog::readStderr()
 {
-	DEBUG_LOG << "readStderr";
 	m_processOutputLabel->setText(m_processOutputLabel->text() + m_ffmpegProcess->readAllStandardError());
 	m_scrollArea->verticalScrollBar()->setValue(m_scrollArea->verticalScrollBar()->maximum());
 }
 
 void RenderDialog::cancel()
 {
-	DEBUG_LOG << "cancel";
 	if (!m_ffmpegProcess)
 	{
 		return;
