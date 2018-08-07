@@ -25,7 +25,7 @@ public:
 	const Slot * sourceSlot() const { return m_sourceSlot; }
 	void setSourceSlot(Slot *sourceSlot) { m_sourceSlot = sourceSlot; }
 
-	const NodeWidget * parentNode() const { return m_parentNode; }
+	NodeWidget * parentNode() const { return m_parentNode; }
 	void setParentNode(NodeWidget *parentNode) { m_parentNode = parentNode; }
 
 	bool isInput() const { return m_isInput; }

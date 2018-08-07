@@ -30,6 +30,27 @@ class NodeWidget : public QWidget
 	Q_OBJECT;
 
 public:
+	class SlotEvent
+	{
+		friend class NodeWidget;
+
+	public:
+		/// index in inputSlots() or outputSlots() of the slot that has been connected
+		int slotIndex() const { return m_slotIndex; };
+		/// true if the connected slot is an input slot, false if it is an output
+		bool isInputSlot() const { return m_isInputSlot; };
+
+	private:
+		SlotEvent(int slotIndex, bool isInputSlot)
+			: m_slotIndex(slotIndex), m_isInputSlot(isInputSlot)
+		{}
+
+	private:
+		int m_slotIndex;
+		bool m_isInputSlot;
+	};
+
+public:
 	explicit NodeWidget(QWidget *parent = 0);
 	~NodeWidget();
 
@@ -70,6 +91,12 @@ public:
 	virtual void read(QDataStream & stream);
 	virtual void write(QDataStream & stream) const;
 
+	/**
+	 * This is used in graphics view to initiate slotConnectEvent() propagation.
+	 * This should ultimately be modified so do not use this method anywhere else
+	 */
+	void fireSlotConnectEvent(Slot *slot, bool isInput);
+
 public: // data model
 	virtual int parmCount() const { return 0; }
 	virtual QString parmName(int parm) const { return QString(); }
@@ -78,6 +105,9 @@ public: // data model
 
 	/// This should be called parmEval and the current parmEval should be parmRawValue but I don't want to break the API yet
 	QString parmFullEval(int parm) const;
+
+protected:
+	virtual void slotConnectEvent(SlotEvent *event) {}
 
 private:
 	std::vector<Slot*> m_inputSlots;

@@ -111,6 +111,20 @@ void NodeWidget::write(QDataStream & stream) const
 	}
 }
 
+void NodeWidget::fireSlotConnectEvent(Slot *slot, bool isInput)
+{
+	int i = 0;
+	for (Slot * s : isInput ? inputSlots() : outputSlots())
+	{
+		if (s == slot)
+		{
+			SlotEvent event(i, isInput);
+			slotConnectEvent(&event);
+		}
+		++i;
+	}
+}
+
 QString NodeWidget::parmFullEval(int parm) const
 {
 	QString value = parmEval(parm).toString();

@@ -371,6 +371,14 @@ void NodeGraphView::dropEvent(QDropEvent *event)
 					sourceSlotItem->updateLinks();
 
 					destinationSlot->setSourceSlot(sourceSlot);
+					if (NodeWidget *node = sourceSlot->parentNode())
+					{
+						node->fireSlotConnectEvent(sourceSlot, false /* isInput */);
+					}
+					if (NodeWidget *node = destinationSlot->parentNode())
+					{
+						node->fireSlotConnectEvent(destinationSlot, true /* isInput */);
+					}
 				}
 			}
 
