@@ -56,6 +56,9 @@ add_executable(
 	Nodes/CodecNode.h
 	Nodes/CodecNode.ui
 	Nodes/CodecNode.cpp
+	Nodes/MixNode.h
+	Nodes/MixNode.ui
+	Nodes/MixNode.cpp
 
 	Tools/AbstractGraphTool.h
 	Tools/PanTool.h

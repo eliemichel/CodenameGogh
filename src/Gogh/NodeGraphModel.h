@@ -27,6 +27,7 @@ public:
 		NODE_INPUT  = 1,
 		NODE_SCALE  = 2,
 		NODE_CODEC  = 3,
+		NODE_MIX    = 4,
 	};
 
 	enum Column
