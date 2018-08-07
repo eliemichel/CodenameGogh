@@ -12,13 +12,36 @@
 #include <QGraphicsScene>
 #include <QGraphicsRectItem>
 #include <QGraphicsProxyWidget>
+#include <QPainter>
+
+void NodeGraphicsItemControl::paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget)
+{
+	qreal round = 5;
+
+	QRectF r = rect();
+	painter->setPen(pen());
+	painter->setBrush(brush());
+	painter->drawRoundedRect(r.x(), r.y(), r.width(), r.height(), round, round);
+
+	painter->setPen(Qt::NoPen);
+	painter->drawRect(r.x(), r.y() + round, r.width(), r.height() - round);
+
+	painter->setPen(pen());
+	painter->setBrush(Qt::NoBrush);
+	painter->drawLine(r.x(), r.y() + round, r.x(), r.y() + r.height());
+	painter->drawLine(r.x(), r.y() + r.height(), r.x() + r.width(), r.y() + r.height());
+	painter->drawLine(r.x() + r.width(), r.y() + r.height(), r.x() + r.width(), r.y() + round);
+	
+	painter->setPen(pen() == Qt::NoPen ? QPen(Qt::white) : pen());
+	painter->drawText(r.x() + 5, r.y() + 2, r.width() - 10, r.height() - 4, Qt::AlignLeft || Qt::AlignVCenter, name());
+}
 
 NodeGraphicsItem::NodeGraphicsItem(QGraphicsScene *scene, NodeWidget *content)
 	: m_content(content)
 {
 	content->resize(content->sizeHint());
 
-	m_control = new QGraphicsRectItem();
+	m_control = new NodeGraphicsItemControl();
 	scene->addItem(m_control);
 	m_control->setRect(0, 0, content->width(), 20);
 	m_control->setPen(Qt::NoPen);
@@ -102,10 +125,13 @@ void NodeGraphicsItem::onDataChanged(const QModelIndex & topLeft, const QModelIn
 	{
 		float x;
 		float y;
+		QString name;
 		const QAbstractItemModel *model = modelIndex().model();
 		x = model->data(model->index(modelIndex().row(), NodeGraphModel::PosXColumn, modelIndex().parent())).toInt();
 		y = model->data(model->index(modelIndex().row(), NodeGraphModel::PosYColumn, modelIndex().parent())).toInt();
+		name = model->data(model->index(modelIndex().row(), NodeGraphModel::NameColumn, modelIndex().parent())).toString();
 		setPos(QPointF(x, y));
+		m_control->setName(name);
 		updateLinks();
 	}
 }

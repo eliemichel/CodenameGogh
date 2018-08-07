@@ -32,7 +32,7 @@ bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		return false;
 	}
 
-	QString filename = ui->filenameInput->text();
+	QString filename = parmFullEval(0);
 	QFileInfo fileinfo(filename);
 	if (!fileinfo.isFile())
 	{

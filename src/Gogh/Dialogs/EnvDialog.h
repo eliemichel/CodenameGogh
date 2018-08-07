@@ -14,12 +14,10 @@ class EnvDialog : public QDialog
 	Q_OBJECT
 
 public:
-	explicit EnvDialog(QWidget *parent = nullptr);
-	~EnvDialog();
+	explicit EnvDialog(EnvModel *envModel, QWidget *parent = nullptr);
 
 private:
 	Ui::EnvDialog *ui;
-	EnvModel *m_model;
 };
 
 #endif // H_ENVDIALOG

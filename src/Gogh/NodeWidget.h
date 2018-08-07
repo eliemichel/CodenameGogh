@@ -10,6 +10,7 @@
 #include <string>
 
 class LinkGraphicsItem;
+class EnvModel;
 
 /**
  * This structure is transmitted among the graph nodes while building the
@@ -29,6 +30,27 @@ class NodeWidget : public QWidget
 	Q_OBJECT;
 
 public:
+	class SlotEvent
+	{
+		friend class NodeWidget;
+
+	public:
+		/// index in inputSlots() or outputSlots() of the slot that has been connected
+		int slotIndex() const { return m_slotIndex; };
+		/// true if the connected slot is an input slot, false if it is an output
+		bool isInputSlot() const { return m_isInputSlot; };
+
+	private:
+		SlotEvent(int slotIndex, bool isInputSlot)
+			: m_slotIndex(slotIndex), m_isInputSlot(isInputSlot)
+		{}
+
+	private:
+		int m_slotIndex;
+		bool m_isInputSlot;
+	};
+
+public:
 	explicit NodeWidget(QWidget *parent = 0);
 	~NodeWidget();
 
@@ -37,6 +59,9 @@ public:
 
 	const std::vector<Slot*> outputSlots() const { return m_outputSlots; }
 	Slot* newOutputSlot();
+
+	EnvModel *envModel() const { return m_envModel; }
+	void setEnvModel(EnvModel *envModel) { m_envModel = envModel; }
 
 	/**
 	 * Function that contains the logic of the node. This must be reimplemented
@@ -59,10 +84,18 @@ public:
 
 	/**
 	 * I/O function, used to save and load scenes.
-	 * Reimplement this in subclasses to symmetrically write and read back raw node data.
+	 * The default implementation relies on parmCount, parmEval and setParm.
+	 * Reimplement this in subclasses to symmetrically write and read back raw
+	 * node data in a custom way.
 	 */
 	virtual void read(QDataStream & stream);
 	virtual void write(QDataStream & stream) const;
+
+	/**
+	 * This is used in graphics view to initiate slotConnectEvent() propagation.
+	 * This should ultimately be modified so do not use this method anywhere else
+	 */
+	void fireSlotConnectEvent(Slot *slot, bool isInput);
 
 public: // data model
 	virtual int parmCount() const { return 0; }
@@ -70,9 +103,16 @@ public: // data model
 	virtual QVariant parmEval(int parm) const { return QVariant(); }
 	virtual void setParm(int parm, QVariant value) {}
 
+	/// This should be called parmEval and the current parmEval should be parmRawValue but I don't want to break the API yet
+	QString parmFullEval(int parm) const;
+
+protected:
+	virtual void slotConnectEvent(SlotEvent *event) {}
+
 private:
 	std::vector<Slot*> m_inputSlots;
 	std::vector<Slot*> m_outputSlots;
+	EnvModel *m_envModel;
 };
 
 #endif // H_NODEWIDGET

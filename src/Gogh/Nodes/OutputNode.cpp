@@ -5,14 +5,17 @@
 #include "Logger.h"
 
 #include <QMessageBox>
+#include <QFont>
 
 OutputNode::OutputNode(QWidget *parent)
 	: NodeWidget(parent)
 	, ui(new Ui::OutputNode)
+	, m_isFilenameUserDefined(false)
 {
 	ui->setupUi(this);
 
 	connect(ui->renderButton, &QPushButton::clicked, this, &OutputNode::render);
+	connect(ui->filenameInput, &QLineEdit::textEdited, this, &OutputNode::setUserDefined);
 
 	// Add slots
 	newInputSlot();
@@ -39,7 +42,7 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		return false;
 	}
 
-	cmd.cmd.push_back(ui->filenameInput->text().toStdString());
+	cmd.cmd.push_back(parmFullEval(0).toStdString());
 	return true;
 }
 
@@ -78,7 +81,20 @@ void OutputNode::setParm(int parm, QVariant value)
 	{
 	case 0:
 		ui->filenameInput->setText(value.toString());
+		setUserDefined();
 		break;
+	}
+}
+
+void OutputNode::slotConnectEvent(SlotEvent *event)
+{
+	if (event->isInputSlot() && event->slotIndex() == 0)
+	{
+		if (!m_isFilenameUserDefined)
+		{
+			// TODO: auto name output
+			setParm(0, "[auto generated name]");
+		}
 	}
 }
 
@@ -102,3 +118,13 @@ void OutputNode::render()
 		errDialog.exec();
 	}
 }
+
+void OutputNode::setUserDefined()
+{
+	m_isFilenameUserDefined = !ui->filenameInput->text().isEmpty();
+
+	QFont font = ui->filenameInput->font();
+	font.setBold(m_isFilenameUserDefined);
+	ui->filenameInput->setFont(font);
+}
+

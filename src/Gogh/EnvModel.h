@@ -18,6 +18,9 @@ public:
 public:
 	EnvModel();
 
+	std::map<std::string, std::string> & env() { return m_env; }
+	const std::map<std::string, std::string> & env() const { return m_env; }
+
 public: // overrides from QAbstractItemModel
 	QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
 	QModelIndex parent(const QModelIndex &index) const override;

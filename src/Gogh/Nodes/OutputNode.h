@@ -23,11 +23,19 @@ public: // data model
 	QVariant parmEval(int parm) const override;
 	void setParm(int parm, QVariant value) override;
 
+protected:
+	void slotConnectEvent(SlotEvent *event) override;
+
 private slots:
 	void render();
+	void setUserDefined();
 
 private:
 	Ui::OutputNode *ui;
+
+	/// Used to keep track of whether the user set the filename or whether it has been auto generated and must hence be updated
+	/// if filename is user-defined, it is displayed in bold
+	bool m_isFilenameUserDefined;
 };
 
 #endif // H_OUTPUTNODE
