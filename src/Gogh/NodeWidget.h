@@ -54,9 +54,11 @@ public:
 	explicit NodeWidget(QWidget *parent = 0);
 	~NodeWidget();
 
+	int inputSlotsCount() const { return static_cast<int>(m_inputSlots.size()); }
 	const std::vector<Slot*> inputSlots() const { return m_inputSlots; }
 	Slot* newInputSlot();
 
+	int outputSlotsCount() const { return static_cast<int>(m_outputSlots.size()); }
 	const std::vector<Slot*> outputSlots() const { return m_outputSlots; }
 	Slot* newOutputSlot();
 

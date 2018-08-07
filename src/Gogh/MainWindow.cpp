@@ -64,13 +64,15 @@ MainWindow::MainWindow(QString graphFilename, QWidget *parent)
 
 	// Node creation has been moved to NodeGraphModel::LoadGraph
 	NodeGraphicsItem *nodeItem;
-	int i = 0;
-	for (NodeGraphModel::NodeEntry entry : m_model->nodes())
+	for (int i = 0 ; i < m_model->rowCount() ; ++i)
 	{
-		nodeItem = new NodeGraphicsItem(m_scene, entry.node);
-		nodeItem->setModelIndex(m_model->index(i++, 0));
-		nodeItem->setPos(QPointF(entry.x, entry.y));
+		float x = m_model->data(m_model->index(i, NodeGraphModel::PosXColumn)).toFloat();
+		float y = m_model->data(m_model->index(i, NodeGraphModel::PosYColumn)).toFloat();
+		nodeItem = new NodeGraphicsItem(m_scene, m_model->nodeData(i));
+		nodeItem->setModelIndex(m_model->index(i, 0));
+		nodeItem->setPos(QPointF(x, y));
 	}
+
 	m_scene->setSceneRect(-1000, -1000, 2000, 2000);
 
 	ui->splitter->setSizes(QList<int>() << 300 << 10);

@@ -60,9 +60,9 @@ bool NodeGraphModel::inParentBounds(const QModelIndex & index) const
 	return index.row() >= 0 && index.row() < rowCount(index.parent()) && index.column() >= 0 && index.column() < columnCount(index.parent());
 }
 
-bool NodeGraphModel::isNodeIndex(const QModelIndex & index) const
+NodeGraphModel::IndexData * NodeGraphModel::indexData(const QModelIndex & index) const
 {
-	return isRoot(index.parent()) && inParentBounds(index);
+	return index.isValid() ? static_cast<IndexData*>(index.internalPointer()) : nullptr;
 }
 
 QModelIndex NodeGraphModel::index(int row, int column, const QModelIndex & parent) const
@@ -71,120 +71,186 @@ QModelIndex NodeGraphModel::index(int row, int column, const QModelIndex & paren
 	{
 		return QModelIndex();
 	}
-	
-	if (isRoot(parent))
+
+	IndexData *data = indexData(parent);
+	IndexLevel level = data ? data->level : RootLevel;
+	Node *node = data ? nodes()[data->parentNodeIndex].node : nullptr;
+	switch (level)
 	{
-		return createIndex(row, column, -1);
-	}
-	else if (isNodeIndex(parent))
-	{
-		NodeEntry entry = nodes()[parent.row()];
-		return createIndex(row, column, parent.row());
-	}
-	else
-	{
+
+	case RootLevel:
+		return createIndex(row, column, &m_nodes[row].nodeIndex);
+
+	case NodeLevel:
+		return createIndex(row, column, &m_nodes[parent.row()].blockIndex);
+
+	case BlockLevel:
+		return createIndex(row, column, &m_nodes[data->parentNodeIndex].elementIndex[parent.row()]);
+
+	default:
 		return QModelIndex();
+
 	}
 }
 
 QModelIndex NodeGraphModel::parent(const QModelIndex & index) const
 {
-	if (!index.isValid() || index.internalId() == -1)
+	if (!index.isValid() || !index.internalPointer())
 	{
 		return QModelIndex();
 	}
 	else
 	{
-		return createIndex(index.internalId(), 0, -1);
+		IndexData *data = static_cast<IndexData*>(index.internalPointer());
+		NodeEntry & entry = m_nodes[data->parentNodeIndex];
+		switch (data->level)
+		{
+		case NodeLevel:
+			return QModelIndex();
+		case BlockLevel:
+			return createIndex(data->parentNodeIndex, 0, &entry.nodeIndex);
+		case ElementLevel:
+			return createIndex(data->parentBlockIndex, 0, &entry.blockIndex);
+		default:
+			return QModelIndex();
+		}
 	}
 }
 
 int NodeGraphModel::rowCount(const QModelIndex & parent) const
 {
-	if (isRoot(parent))
+	IndexData *data = indexData(parent);
+	IndexLevel level = data ? data->level : RootLevel;
+	Node *node = data ? nodes()[data->parentNodeIndex].node : nullptr;
+	switch (level)
 	{
+
+	case RootLevel:
 		return static_cast<int>(m_nodes.size());
-	}
-	else if (isNodeIndex(parent))
-	{
-		NodeEntry entry = nodes()[parent.row()];
-		return entry.node->parmCount();
-	}
-	else
-	{
+
+	case NodeLevel:
+		return _BlockCount;
+
+	case BlockLevel:
+		switch (parent.row())
+		{
+		case ParamBlock:
+			return node->parmCount();
+		case InputSlotBlock:
+			return node->inputSlotsCount();
+		case OutputSlotBlock:
+			return node->outputSlotsCount();
+		}
+
+	default:
 		return 0;
+
 	}
 }
 
 int NodeGraphModel::columnCount(const QModelIndex & parent) const
 {
-	if (isRoot(parent))
+	IndexData *data = indexData(parent);
+	IndexLevel level = data ? data->level : RootLevel;
+	Node *node = data ? nodes()[data->parentNodeIndex].node : nullptr;
+	switch (level)
 	{
+
+	case RootLevel:
 		return _ColumnCount;
-	}
-	else if (isNodeIndex(parent))
-	{
-		return 2; // parmName and parmEval
-	}
-	else
-	{
+
+	case NodeLevel:
+		return 1;
+
+	case BlockLevel:
+		switch (parent.row())
+		{
+		case ParamBlock:
+			return 2; // parmName and parmEval
+		case InputSlotBlock:
+			return 1; // link origin
+		case OutputSlotBlock:
+			return 1; // link destination
+		}
+
+	default:
 		return 0;
+
 	}
 }
 
 QVariant NodeGraphModel::data(const QModelIndex & index, int role) const
 {
-	if (!index.isValid())
+	if (role != Qt::DisplayRole && role != Qt::ToolTipRole && role != Qt::WhatsThisRole && role != Qt::UserRole && role != Qt::EditRole)
 	{
 		return QVariant();
 	}
 
-	if (role == Qt::DisplayRole || role == Qt::ToolTipRole || role == Qt::WhatsThisRole || role == Qt::UserRole || role == Qt::EditRole)
+	IndexData *data = indexData(index);
+	IndexLevel level = data ? data->level : RootLevel;
+	Node *node = data ? nodes()[data->parentNodeIndex].node : nullptr;
+	switch (level)
 	{
-		if (isRoot(index.parent()))
+
+	case RootLevel:
+		return QVariant();
+
+	case NodeLevel:
+	{
+		NodeEntry entry = nodes()[index.row()];
+		switch (index.column())
 		{
-			NodeEntry entry = nodes()[index.row()];
-			switch (index.column())
+		case TypeColumn:
+			if (role == Qt::UserRole || role == Qt::EditRole)
 			{
-			case TypeColumn:
-				if (role == Qt::UserRole || role == Qt::EditRole)
-				{
-					return entry.type;
-				}
-				else
-				{
-					return QString::fromStdString(nodeTypeToString(entry.type));
-				}
-			case PosXColumn:
-				return entry.x;
-			case PosYColumn:
-				return entry.y;
-			case NameColumn:
-				return QString::fromStdString(entry.name);
-			default:
-				return QVariant();
+				return entry.type;
 			}
-		}
-		else if (isNodeIndex(index.parent()))
-		{
-			NodeEntry entry = nodes()[index.internalId()];
-			switch (index.column())
+			else
 			{
-			case 0:
-				return entry.node->parmName(index.row());
-			case 1:
-				return entry.node->parmEval(index.row());
-			default:
-				return QVariant();
+				return QString::fromStdString(nodeTypeToString(entry.type));
 			}
-		}
-		else
-		{
+		case PosXColumn:
+			return entry.x;
+		case PosYColumn:
+			return entry.y;
+		case NameColumn:
+			return QString::fromStdString(entry.name);
+		default:
 			return QVariant();
 		}
 	}
-	else
-	{
+
+	case BlockLevel:
+		switch (index.row())
+		{
+		case ParamBlock:
+			return "Parameters";
+		case InputSlotBlock:
+			return "Input Slots";
+		case OutputSlotBlock:
+			return "Output Slots";
+		}
+
+	case ElementLevel:
+		switch (index.parent().row())
+		{
+		case ParamBlock:
+			switch (index.column())
+			{
+			case 0: // name
+				return node->parmName(index.row());
+			case 1: // value
+				return node->parmEval(index.row());
+			default:
+				return QVariant();
+			}
+		case InputSlotBlock:
+			return "TODO input";
+		case OutputSlotBlock:
+			return "TODO output";
+		}
+
+	default:
 		return QVariant();
 	}
 }
@@ -220,51 +286,61 @@ bool NodeGraphModel::setData(const QModelIndex & index, const QVariant & value, 
 		return false;
 	}
 
-	if (isRoot(index))
+	IndexData *data = indexData(index);
+	IndexLevel level = data ? data->level : RootLevel;
+	switch (level)
 	{
+
+	case RootLevel:
 		return false;
-	}
-	else if (isNodeIndex(index))
+
+	case NodeLevel:
 	{
-		if (index.column() != TypeColumn)
-		{
-			// TODO: merge PosX and PosY columns
-			NodeEntry & entry = m_nodes[index.row()];
-			switch (index.column())
-			{
-			case PosXColumn:
-				entry.x = value.toFloat();
-				break;
-			case PosYColumn:
-				entry.y = value.toFloat();
-				break;
-			case NameColumn:
-				entry.name = value.toString().toStdString();
-				break;
-			}
-			emit dataChanged(index, index);
-			return true;
-		}
-		else
-		{
-			return false;
-		}
-	}
-	else if (isNodeIndex(index.parent()))
-	{
-		const NodeEntry & entry = m_nodes[index.internalId()];
+		NodeEntry & entry = m_nodes[index.row()];
 		switch (index.column())
 		{
-		case 1:
-			entry.node->setParm(index.row(), value);
-			emit dataChanged(index, index);
-			return true;
+		case PosXColumn:
+			entry.x = value.toFloat();
+			break;
+		case PosYColumn:
+			entry.y = value.toFloat();
+			break;
+		case NameColumn:
+			entry.name = value.toString().toStdString();
+			break;
 		default:
 			return false;
 		}
+		emit dataChanged(index, index);
+		return true;
 	}
-	else
+
+	case BlockLevel:
+		return false;
+
+	case ElementLevel:
 	{
+		Node * node = data ? nodes()[data->parentNodeIndex].node : nullptr;
+		switch (index.parent().row())
+		{
+		case ParamBlock:
+			switch (index.column())
+			{
+			case 1: // value
+				node->setParm(index.row(), value);
+				emit dataChanged(index, index);
+				return true;
+			default:
+				return false;
+			}
+		case InputSlotBlock:
+			return false; // TODO
+		case OutputSlotBlock:
+			return false;
+		}
+	}
+
+	default:
 		return false;
 	}
 }
@@ -273,33 +349,48 @@ Qt::ItemFlags NodeGraphModel::flags(const QModelIndex & index) const
 {
 	Qt::ItemFlags f = QAbstractItemModel::flags(index);
 
-	if (isRoot(index))
+	IndexData *data = indexData(index);
+	IndexLevel level = data ? data->level : RootLevel;
+	switch (level)
 	{
+
+	case RootLevel:
 		return f;
-	}
-	else if (isNodeIndex(index))
-	{
-		if (index.column() == PosXColumn || index.column() == PosYColumn)
-		{
-			return f | Qt::ItemIsEditable;
-		}
-		else
-		{
-			return f;
-		}
-	}
-	else if (isNodeIndex(index.parent()))
-	{
+
+	case NodeLevel:
 		switch (index.column())
 		{
-		case 1:
+		case PosXColumn:
+		case PosYColumn:
+		case NameColumn:
 			return f | Qt::ItemIsEditable;
 		default:
 			return f;
 		}
-	}
-	else
+
+	case BlockLevel:
+		return f;
+
+	case ElementLevel:
 	{
+		switch (index.parent().row())
+		{
+		case ParamBlock:
+			switch (index.column())
+			{
+			case 1: // value
+				return f | Qt::ItemIsEditable;
+			default:
+				return f;
+			}
+		case InputSlotBlock:
+			return f | Qt::ItemIsEditable;
+		case OutputSlotBlock:
+			return f;
+		}
+	}
+
+	default:
 		return f;
 	}
 }
@@ -385,13 +476,28 @@ bool NodeGraphModel::SaveGraph(QString filename)
 	return true;
 }
 
-void NodeGraphModel::addNode(NodeWidget *node, int type, float x, float y, std::string name)
+void NodeGraphModel::addNode(Node *node, int type, float x, float y, std::string name)
 {
+	// /!\ not thread-safe
+	int nodeIndex = static_cast<int>(m_nodes.size());
+
 	NodeEntry entry;
 	entry.node = node;
 	entry.type = type;
 	entry.x = x;
 	entry.y = y;
 	entry.name = name;
+	entry.nodeIndex.level = NodeLevel;
+	entry.nodeIndex.parentNodeIndex = nodeIndex;
+	entry.nodeIndex.parentBlockIndex = -1;
+	entry.blockIndex.level = BlockLevel;
+	entry.blockIndex.parentNodeIndex = nodeIndex;
+	entry.blockIndex.parentBlockIndex = -1;
+	for (int i = 0; i < _BlockCount; ++i)
+	{
+		entry.elementIndex[i].level = ElementLevel;
+		entry.elementIndex[i].parentNodeIndex = nodeIndex;
+		entry.elementIndex[i].parentBlockIndex = i;
+	}
 	m_nodes.push_back(entry);
 }
