@@ -23,6 +23,9 @@ public: // data model
 
 	bool buildRenderCommand(int outputIndex, RenderCommand & cmd) const override;
 
+protected:
+	void slotConnectEvent(SlotEvent *event) override;
+
 private:
 	Ui::MixNode *ui;
 };

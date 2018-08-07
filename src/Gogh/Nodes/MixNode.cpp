@@ -76,3 +76,11 @@ void MixNode::setParm(int parm, QVariant value)
 		ui->streamLineEdit1->setText(value.toString());
 	}
 }
+
+void MixNode::slotConnectEvent(SlotEvent *event)
+{
+	if (event->isInputSlot() && event->slotIndex() == 0)
+	{
+		newInputSlot();
+	}
+}
