@@ -159,6 +159,8 @@ QVariant NodeGraphModel::data(const QModelIndex & index, int role) const
 				return entry.x;
 			case PosYColumn:
 				return entry.y;
+			case NameColumn:
+				return QString::fromStdString(entry.name);
 			default:
 				return QVariant();
 			}
@@ -199,6 +201,8 @@ QVariant NodeGraphModel::headerData(int section, Qt::Orientation orientation, in
 			return "x";
 		case PosYColumn:
 			return "y";
+		case NameColumn:
+			return "name";
 		default:
 			return QVariant();
 		}
@@ -222,17 +226,21 @@ bool NodeGraphModel::setData(const QModelIndex & index, const QVariant & value, 
 	}
 	else if (isNodeIndex(index))
 	{
-		if (index.column() == PosXColumn || index.column() == PosYColumn)
+		if (index.column() != TypeColumn)
 		{
 			// TODO: merge PosX and PosY columns
 			NodeEntry & entry = m_nodes[index.row()];
-			if (index.column() == PosXColumn)
+			switch (index.column())
 			{
+			case PosXColumn:
 				entry.x = value.toFloat();
-			}
-			else
-			{
+				break;
+			case PosYColumn:
 				entry.y = value.toFloat();
+				break;
+			case NameColumn:
+				entry.name = value.toString().toStdString();
+				break;
 			}
 			emit dataChanged(index, index);
 			return true;
@@ -302,19 +310,19 @@ void NodeGraphModel::LoadDefaultGraph()
 
 	node = new InputNode();
 	node->setEnvModel(envModel());
-	addNode(node, NODE_INPUT, -300, -200);
+	addNode(node, NODE_INPUT, -300, -200, "Input");
 
 	node = new ScaleNode();
 	node->setEnvModel(envModel());
-	addNode(node, NODE_SCALE, 0, -250);
+	addNode(node, NODE_SCALE, 0, -250, "Scale");
 
 	node = new CodecNode();
 	node->setEnvModel(envModel());
-	addNode(node, NODE_CODEC, 0, -100);
+	addNode(node, NODE_CODEC, 0, -100, "Codec");
 
 	node = new OutputNode();
 	node->setEnvModel(envModel());
-	addNode(node, NODE_OUTPUT, 300, -200);
+	addNode(node, NODE_OUTPUT, 300, -200, "Output");
 
 	emit dataChanged(QModelIndex(), QModelIndex());
 }
@@ -336,7 +344,8 @@ bool NodeGraphModel::LoadGraph(QString filename)
 	{
 		int type;
 		float x, y;
-		in >> type >> x >> y;
+		QString name;
+		in >> type >> x >> y >> name;
 
 		NodeWidget *node = buildNode(type);
 		if (!node)
@@ -348,7 +357,7 @@ bool NodeGraphModel::LoadGraph(QString filename)
 		node->setEnvModel(envModel());
 		node->read(in);
 
-		addNode(node, type, x, y);
+		addNode(node, type, x, y, name.toStdString());
 	}
 
 	emit dataChanged(QModelIndex(), QModelIndex());
@@ -370,18 +379,19 @@ bool NodeGraphModel::SaveGraph(QString filename)
 	out << n;
 	for (NodeEntry entry : nodes())
 	{
-		out << entry.type << entry.x << entry.y;
+		out << entry.type << entry.x << entry.y << QString::fromStdString(entry.name);
 		entry.node->write(out);
 	}
 	return true;
 }
 
-void NodeGraphModel::addNode(NodeWidget *node, int type, float x, float y)
+void NodeGraphModel::addNode(NodeWidget *node, int type, float x, float y, std::string name)
 {
 	NodeEntry entry;
 	entry.node = node;
 	entry.type = type;
 	entry.x = x;
 	entry.y = y;
+	entry.name = name;
 	m_nodes.push_back(entry);
 }

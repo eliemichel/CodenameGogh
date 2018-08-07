@@ -14,6 +14,19 @@ class QGraphicsRectItem;
 class QGraphicsProxyWidget;
 class SlotGraphicsItem;
 
+// TODO: move this in its own file
+class NodeGraphicsItemControl : public QGraphicsRectItem
+{
+public:
+	void paint(QPainter *painter, const QStyleOptionGraphicsItem *option, QWidget *widget);
+
+	const QString & name() const { return m_name; }
+	void setName(const QString & name) { m_name = name; }
+
+private:
+	QString m_name;
+};
+
 class NodeGraphicsItem : public QObject
 {
 	Q_OBJECT
@@ -39,7 +52,7 @@ private slots:
 	void onDataChanged(const QModelIndex & topLeft, const QModelIndex & bottomRight);
 
 private:
-	QGraphicsRectItem *m_control;
+	NodeGraphicsItemControl *m_control;
 	NodeWidget * m_content;
 	QGraphicsProxyWidget *m_proxy;
 	std::vector<SlotGraphicsItem*> m_slotItems;

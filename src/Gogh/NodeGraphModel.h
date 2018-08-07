@@ -20,6 +20,7 @@ public:
 		NodeWidget *node;
 		int type;
 		float x, y;
+		std::string name;
 	};
 
 	// When adding a new type here, handle it in the body of buildNode() and nodeTypeToString() as well
@@ -36,6 +37,7 @@ public:
 		TypeColumn,
 		PosXColumn,
 		PosYColumn,
+		NameColumn,
 		_ColumnCount, // special item, must remain the last one
 	};
 
@@ -78,7 +80,7 @@ public:
 	bool LoadGraph(QString filename);
 	bool SaveGraph(QString filename);
 
-	void addNode(NodeWidget *node, int type, float x, float y);
+	void addNode(NodeWidget *node, int type, float x, float y, std::string name);
 	const std::vector<NodeEntry> & nodes() const { return m_nodes; }
 
 private:
