@@ -325,6 +325,10 @@ void NodeGraphModel::LoadDefaultGraph()
 	node->setEnvModel(envModel());
 	addNode(node, NODE_CODEC, 0, -100, "Codec");
 
+	node = new MixNode();
+	node->setEnvModel(envModel());
+	addNode(node, NODE_MIX, -100, -100, "Mix");
+
 	node = new OutputNode();
 	node->setEnvModel(envModel());
 	addNode(node, NODE_OUTPUT, 300, -200, "Output");
