@@ -10,19 +10,12 @@
 #include <vector>
 
 class EnvModel;
+class Link;
+typedef NodeWidget Node;
 
 class NodeGraphModel : public QAbstractItemModel
 {
 public:
-	// This is a temprary structure, while we don't have a proper Node type
-	struct NodeEntry
-	{
-		NodeWidget *node;
-		int type;
-		float x, y;
-		std::string name;
-	};
-
 	// When adding a new type here, handle it in the body of buildNode() and nodeTypeToString() as well
 	enum NodeType
 	{
@@ -42,11 +35,48 @@ public:
 		_ColumnCount, // special item, must remain the last one
 	};
 
+private:
+	// Data blocks are blocks of data associated to nodes that have a variable size.
+	// They are the direct children of the node indices
+	enum IndexLevel
+	{
+		RootLevel,
+		NodeLevel,
+		BlockLevel,
+		ElementLevel,
+	};
+
+	enum NodeBlocType
+	{
+		ParamBlock,
+		InputSlotBlock,
+		OutputSlotBlock,
+		_BlockCount, // special item, must remain the last one
+	};
+
+	struct IndexData
+	{
+		IndexLevel level = RootLevel;
+		int parentNodeIndex;
+		int parentBlockIndex;
+	};
+
+	struct NodeEntry
+	{
+		Node *node;
+		int type;
+		float x, y;
+		std::string name;
+		IndexData nodeIndex;
+		IndexData blockIndex;
+		IndexData elementIndex[_BlockCount];
+	};
+
 public:
 	// Factory function building a new node from a given type.
 	// This is the only place holding a mapping from type enum to type classes
 	// and must be updated any time a new node type is defined
-	static NodeWidget * buildNode(int type);
+	static Node * buildNode(int type);
 
 	/**
 	 * Convert node type to a string, for display purpose only
@@ -81,20 +111,22 @@ public:
 	bool LoadGraph(QString filename);
 	bool SaveGraph(QString filename);
 
-	void addNode(NodeWidget *node, int type, float x, float y, std::string name);
+	void addNode(Node *node, int type, float x, float y, std::string name);
 	const std::vector<NodeEntry> & nodes() const { return m_nodes; }
+	Node * nodeData(int i) { return m_nodes[i].node; }
 
 private:
 	bool inParentBounds(const QModelIndex & index) const;
-	bool isNodeIndex(const QModelIndex & index) const;
+	IndexData *indexData(const QModelIndex & index) const;
 
 private:
 	/**
-	 * This should be a vector of non GUI objects, but for now we don't have a
+	 * This should be a list of non GUI objects, but for now we don't have a
 	 * node widget generator from node definition, and I want to keep it simple
 	 * to add new node type.
 	 */
-	std::vector<NodeEntry> m_nodes;
+	mutable std::vector<NodeEntry> m_nodes;
+	std::vector<Link*> m_link;
 	EnvModel *m_envModel;
 };
 
