@@ -370,8 +370,12 @@ void NodeGraphView::dropEvent(QDropEvent *event)
 					destinationSlotItem->updateLinks();
 					sourceSlotItem->updateLinks();
 
-					// TODO: add link in model
-					//model()->setData(model()->index(id, 0))
+					// TODO: get rid of cast
+					int originSlotIndex = sourceSlot->parentNode()->outputSlotIndex(sourceSlot);
+					int originNodeIndex = static_cast<NodeGraphModel*>(model())->nodeIndex(sourceSlot->parentNode());
+					int destinationSlotIndex = destinationSlot->parentNode()->inputSlotIndex(destinationSlot);
+					int destinationNodeIndex = static_cast<NodeGraphModel*>(model())->nodeIndex(destinationSlot->parentNode());
+					static_cast<NodeGraphModel*>(model())->addLink(originNodeIndex, originSlotIndex, destinationNodeIndex, destinationSlotIndex);
 
 					destinationSlot->setSourceSlot(sourceSlot);
 					if (NodeWidget *node = sourceSlot->parentNode())

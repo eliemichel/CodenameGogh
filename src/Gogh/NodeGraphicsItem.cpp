@@ -39,6 +39,8 @@ void NodeGraphicsItemControl::paint(QPainter *painter, const QStyleOptionGraphic
 NodeGraphicsItem::NodeGraphicsItem(QGraphicsScene *scene, NodeWidget *content)
 	: m_content(content)
 {
+	// TODO: add links
+
 	content->resize(content->sizeHint());
 
 	m_control = new NodeGraphicsItemControl();

@@ -77,7 +77,7 @@ private:
 		float x, y;
 		std::string name;
 		std::vector<SlotIndex> inputLinks;
-		std::vector<SlotIndex> outputLinks;
+		std::vector<SlotIndex> outputLinks; // /!\ Problem: there can be several output links per output slot
 
 		IndexData nodeIndex;
 		IndexData blockIndex;
@@ -126,6 +126,12 @@ public:
 	void addNode(Node *node, int type, float x, float y, std::string name);
 	const std::vector<NodeEntry> & nodes() const { return m_nodes; }
 	Node * nodeData(int i) { return m_nodes[i].node; }
+
+	bool canAddLink(int originNode, int originSlot, int destinationNode, int destinationSlot);
+	bool addLink(int originNode, int originSlot, int destinationNode, int destinationSlot);
+
+	// TODO: remove me
+	int nodeIndex(const Node *node) { return m_nodeLUT.at(node); }
 
 private:
 	bool inParentBounds(const QModelIndex & index) const;

@@ -60,6 +60,61 @@ bool NodeGraphModel::isRoot(QModelIndex index)
 	return !index.isValid();
 }
 
+bool NodeGraphModel::canAddLink(int originNode, int originSlot, int destinationNode, int destinationSlot)
+{
+	if (originNode < 0 || originNode >= m_nodes.size() || destinationNode < 0 || destinationNode >= m_nodes.size())
+	{
+		return false;
+	}
+	const NodeEntry & originEntry = m_nodes[originNode];
+	const NodeEntry & destinationEntry = m_nodes[destinationNode];
+	if (originSlot < 0 || originSlot >= originEntry.outputLinks.size() || destinationSlot < 0 || destinationSlot >= destinationEntry.inputLinks.size())
+	{
+		return false;
+	}
+	// TODO: check for graph loops
+	return true;
+}
+
+bool NodeGraphModel::addLink(int originNode, int originSlot, int destinationNode, int destinationSlot)
+{
+	if (!canAddLink(originNode, originSlot, destinationNode, destinationSlot))
+	{
+		return false;
+	}
+	NodeEntry & originEntry = m_nodes[originNode];
+	NodeEntry & destinationEntry = m_nodes[destinationNode];
+
+	// unplug previous link
+	SlotIndex oldOrigin = destinationEntry.inputLinks[destinationSlot];
+	bool wasConnected = oldOrigin.isConnected();
+	if (wasConnected)
+	{
+		m_nodes[oldOrigin.node].outputLinks[oldOrigin.slot].node = -1;
+	}
+
+	// plug new link
+	SlotIndex & output = originEntry.outputLinks[originSlot];
+	output.node = destinationNode;
+	output.slot = destinationSlot;
+	SlotIndex & input = destinationEntry.inputLinks[destinationSlot];
+	input.node = originNode;
+	input.slot = originSlot;
+
+	// signal change
+	const QModelIndex & oldSourceIndex = index(oldOrigin.node, 0);
+	if (wasConnected)
+	{
+		emit dataChanged(oldSourceIndex, oldSourceIndex);
+	}
+	const QModelIndex & newSourceIndex = index(originNode, 0);
+	const QModelIndex & destinationIndex = index(destinationNode, 0);
+	emit dataChanged(newSourceIndex, newSourceIndex);
+	emit dataChanged(destinationIndex, destinationIndex);
+
+	return true;
+}
+
 bool NodeGraphModel::inParentBounds(const QModelIndex & index) const
 {
 	return index.row() >= 0 && index.row() < rowCount(index.parent()) && index.column() >= 0 && index.column() < columnCount(index.parent());
