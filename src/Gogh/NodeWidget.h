@@ -65,6 +65,9 @@ public:
 	EnvModel *envModel() const { return m_envModel; }
 	void setEnvModel(EnvModel *envModel) { m_envModel = envModel; }
 
+	int outputSlotIndex(const Slot *slot) const;
+	int inputSlotIndex(const Slot *slot) const;
+
 	/**
 	 * Function that contains the logic of the node. This must be reimplemented
 	 * in each node and is called when building the render command.

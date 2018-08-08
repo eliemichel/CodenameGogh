@@ -168,9 +168,9 @@ int NodeGraphModel::columnCount(const QModelIndex & parent) const
 		case ParamBlock:
 			return 2; // parmName and parmEval
 		case InputSlotBlock:
-			return 1; // link origin
+			return 2; // link origin node and slot
 		case OutputSlotBlock:
-			return 1; // link destination
+			return 2; // link destination node and slot
 		}
 
 	default:
@@ -181,7 +181,7 @@ int NodeGraphModel::columnCount(const QModelIndex & parent) const
 
 QVariant NodeGraphModel::data(const QModelIndex & index, int role) const
 {
-	if (role != Qt::DisplayRole && role != Qt::ToolTipRole && role != Qt::WhatsThisRole && role != Qt::UserRole && role != Qt::EditRole)
+	if (role != Qt::DisplayRole && role != Qt::ToolTipRole && role != Qt::WhatsThisRole && role != Qt::EditRole)
 	{
 		return QVariant();
 	}
@@ -201,7 +201,7 @@ QVariant NodeGraphModel::data(const QModelIndex & index, int role) const
 		switch (index.column())
 		{
 		case TypeColumn:
-			if (role == Qt::UserRole || role == Qt::EditRole)
+			if (role == Qt::EditRole)
 			{
 				return entry.type;
 			}
@@ -245,9 +245,110 @@ QVariant NodeGraphModel::data(const QModelIndex & index, int role) const
 				return QVariant();
 			}
 		case InputSlotBlock:
-			return "TODO input";
+		{
+			/*
+			if (const Slot *slot = node->inputSlots()[index.row()])
+			{
+				if (const Slot *sourceSlot = slot->sourceSlot())
+				{
+					if (const Node *sourceNode = sourceSlot->parentNode())
+					{
+						int nodeId = m_nodeLUT.at(sourceNode);
+						int slotId = sourceNode->outputSlotIndex(sourceSlot);
+						if (role == Qt::EditRole)
+						{
+							switch (index.column())
+							{
+							case 0: // node
+								return nodeId;
+							case 1: // slot
+								return slotId;
+							default:
+								return QVariant();
+							}
+						}
+						else
+						{
+							switch (index.column())
+							{
+							case 0: // node
+								return QString("Node #") + QString::number(nodeId);
+							case 1: // slot
+								return QString("Output Slot #") + QString::number(slotId);
+							default:
+								return QVariant();
+							}
+						}
+					}
+				}
+			}
+			return index.column() == 0 ? "<not connected>" : QVariant();
+			*/
+
+			SlotIndex & sourceSlot = m_nodes[data->parentNodeIndex].inputLinks[index.row()];
+			
+			if (role == Qt::EditRole)
+			{
+				switch (index.column())
+				{
+				case 0: // node
+					return sourceSlot.node;
+				case 1: // slot
+					return sourceSlot.slot;
+				default:
+					return QVariant();
+				}
+			}
+			else
+			{
+				if (!sourceSlot.isConnected())
+				{
+					return index.column() == 0 ? "<not connected>" : QVariant();
+				}
+
+				switch (index.column())
+				{
+				case 0: // node
+					return QString("Node #") + QString::number(sourceSlot.node);
+				case 1: // slot
+					return QString("Output Slot #") + QString::number(sourceSlot.slot);
+				default:
+					return QVariant();
+				}
+			}
+		}
 		case OutputSlotBlock:
-			return "TODO output";
+			SlotIndex & sourceSlot = m_nodes[data->parentNodeIndex].outputLinks[index.row()];
+
+			if (role == Qt::EditRole)
+			{
+				switch (index.column())
+				{
+				case 0: // node
+					return sourceSlot.node;
+				case 1: // slot
+					return sourceSlot.slot;
+				default:
+					return QVariant();
+				}
+			}
+			else
+			{
+				if (!sourceSlot.isConnected())
+				{
+					return index.column() == 0 ? "<not connected>" : QVariant();
+				}
+
+				switch (index.column())
+				{
+				case 0: // node
+					return QString("Node #") + QString::number(sourceSlot.node);
+				case 1: // slot
+					return QString("Input Slot #") + QString::number(sourceSlot.slot);
+				default:
+					return QVariant();
+				}
+			}
 		}
 
 	default:
@@ -334,7 +435,93 @@ bool NodeGraphModel::setData(const QModelIndex & index, const QVariant & value, 
 				return false;
 			}
 		case InputSlotBlock:
-			return false; // TODO
+		{
+			if (!value.canConvert<int>())
+			{
+				return false;
+			}
+			int id = value.toInt();
+
+			SlotIndex & sourceSlot = m_nodes[data->parentNodeIndex].inputLinks[index.row()];
+
+			switch (index.column())
+			{
+			case 0: // node
+			{
+				if (id < 0 || id >= nodes().size() || id == sourceSlot.node)
+				{
+					return false;
+				}
+
+				const QModelIndex & oldSourceIndex = this->index(sourceSlot.node, 0);
+				const QModelIndex & newSourceIndex = this->index(id, 0);
+				const QModelIndex & nodeIndex = this->index(data->parentNodeIndex, 0);
+
+				// deconnect previous parent
+				bool wasConnected = sourceSlot.isConnected();
+				if (wasConnected)
+				{
+					m_nodes[sourceSlot.node].outputLinks[sourceSlot.slot].node = -1;
+				}
+
+				// update
+				int n = m_nodes[id].outputLinks.size();
+				if (n == 0)
+				{
+					return false;
+				}
+				sourceSlot.node = id;
+				sourceSlot.slot = std::max(0, std::min(sourceSlot.slot, n - 1));
+
+				// register to new parent
+				SlotIndex & destinationSlot = m_nodes[sourceSlot.node].outputLinks[sourceSlot.slot];
+				destinationSlot.node = data->parentNodeIndex;
+				destinationSlot.slot = index.row();
+
+				// signal changes
+				if (wasConnected)
+				{
+					emit dataChanged(oldSourceIndex, oldSourceIndex);
+				}
+				emit dataChanged(newSourceIndex, newSourceIndex);
+				emit dataChanged(nodeIndex, nodeIndex);
+				return true;
+			}
+			case 1: // slot
+			{
+				if (!sourceSlot.isConnected())
+				{
+					return false;
+				}
+
+				int n = m_nodes[sourceSlot.node].outputLinks.size();
+				if (id < 0 || id >= n)
+				{
+					return false;
+				}
+
+				const QModelIndex & sourceIndex = this->index(sourceSlot.node, 0);
+				const QModelIndex & nodeIndex = this->index(data->parentNodeIndex, 0);
+
+				// deconnect previous parent
+				m_nodes[sourceSlot.node].outputLinks[sourceSlot.slot].node = -1;
+
+				// update
+				sourceSlot.slot = id;
+
+				// register to new parent
+				SlotIndex & destinationSlot = m_nodes[sourceSlot.node].outputLinks[sourceSlot.slot];
+				destinationSlot.node = data->parentNodeIndex;
+				destinationSlot.slot = index.row();
+
+				emit dataChanged(sourceIndex, sourceIndex);
+				emit dataChanged(nodeIndex, nodeIndex);
+				return true;
+			}
+			default:
+				return false;
+			}
+		}
 		case OutputSlotBlock:
 			return false;
 		}
@@ -487,6 +674,18 @@ void NodeGraphModel::addNode(Node *node, int type, float x, float y, std::string
 	entry.x = x;
 	entry.y = y;
 	entry.name = name;
+
+	// links
+	for (int i = 0; i < node->inputSlotsCount(); ++i)
+	{
+		entry.inputLinks.push_back(SlotIndex());
+	}
+	for (int i = 0; i < node->outputSlotsCount(); ++i)
+	{
+		entry.outputLinks.push_back(SlotIndex());
+	}
+
+	// blocks
 	entry.nodeIndex.level = NodeLevel;
 	entry.nodeIndex.parentNodeIndex = nodeIndex;
 	entry.nodeIndex.parentBlockIndex = -1;
@@ -499,5 +698,7 @@ void NodeGraphModel::addNode(Node *node, int type, float x, float y, std::string
 		entry.elementIndex[i].parentNodeIndex = nodeIndex;
 		entry.elementIndex[i].parentBlockIndex = i;
 	}
+
+	m_nodeLUT[node] = nodeIndex;
 	m_nodes.push_back(entry);
 }

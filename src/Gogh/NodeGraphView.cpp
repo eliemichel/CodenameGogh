@@ -370,6 +370,9 @@ void NodeGraphView::dropEvent(QDropEvent *event)
 					destinationSlotItem->updateLinks();
 					sourceSlotItem->updateLinks();
 
+					// TODO: add link in model
+					//model()->setData(model()->index(id, 0))
+
 					destinationSlot->setSourceSlot(sourceSlot);
 					if (NodeWidget *node = sourceSlot->parentNode())
 					{

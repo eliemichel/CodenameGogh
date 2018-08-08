@@ -51,18 +51,40 @@ Slot* NodeWidget::newOutputSlot()
 	return s;
 }
 
-bool NodeWidget::buildRenderCommand(const Slot *slot, RenderCommand  & cmd) const
+int NodeWidget::inputSlotIndex(const Slot *slot) const
+{
+	const std::vector<Slot*> & inputs = inputSlots();
+	for (int i = 0; i < inputs.size(); ++i)
+	{
+		if (inputs[i] == slot)
+		{
+			return i;
+		}
+	}
+	WARN_LOG << "Invalid slot pointer provided to NodeWidget::outputSlotIndex";
+	// TODO: assert(false)
+	return -1;
+}
+
+int NodeWidget::outputSlotIndex(const Slot *slot) const
 {
 	const std::vector<Slot*> & outputs = outputSlots();
 	for (int i = 0; i < outputs.size(); ++i)
 	{
 		if (outputs[i] == slot)
 		{
-			return buildRenderCommand(i, cmd);
+			return i;
 		}
 	}
-	WARN_LOG << "Invalid slot pointer provided to NodeWidget::buildRenderCommand";
-	return false;
+	WARN_LOG << "Invalid slot pointer provided to NodeWidget::outputSlotIndex";
+	// TODO: assert(false)
+	return -1;
+}
+
+bool NodeWidget::buildRenderCommand(const Slot *slot, RenderCommand  & cmd) const
+{
+	int i = outputSlotIndex(slot);
+	return i < 0 ? false : buildRenderCommand(i, cmd);
 }
 
 bool NodeWidget::parentBuildRenderCommand(int inputIndex, RenderCommand & cmd) const

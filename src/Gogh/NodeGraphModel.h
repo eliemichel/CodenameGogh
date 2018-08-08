@@ -8,6 +8,7 @@
 
 #include <string>
 #include <vector>
+#include <map>
 
 class EnvModel;
 class Link;
@@ -60,12 +61,23 @@ private:
 		int parentBlockIndex;
 	};
 
+	struct SlotIndex
+	{
+		int node = -1;
+		int slot;
+
+		bool isConnected() const { return node != -1; }
+	};
+
 	struct NodeEntry
 	{
 		Node *node;
 		int type;
 		float x, y;
 		std::string name;
+		std::vector<SlotIndex> inputLinks;
+		std::vector<SlotIndex> outputLinks;
+
 		IndexData nodeIndex;
 		IndexData blockIndex;
 		IndexData elementIndex[_BlockCount];
@@ -125,8 +137,9 @@ private:
 	 * to add new node type.
 	 */
 	mutable std::vector<NodeEntry> m_nodes;
-	std::vector<Link*> m_link;
 	EnvModel *m_envModel;
+	std::map<const Node*, int> m_nodeLUT;
+	std::map<int, std::map<int, std::pair<int, int>>> m_links;
 };
 
 #endif // H_NODEGRAPHMODEL
