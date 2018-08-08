@@ -257,14 +257,20 @@ void NodeGraphView::mouseReleaseEvent(QMouseEvent *event)
 
 void NodeGraphView::wheelEvent(QWheelEvent *event)
 {
+
+
 	float oldZoom = m_zoom;
 
 	// 1.1 ^ angle makes zoom exponential and reversible
 	m_zoom *= exp(event->angleDelta().y()/180.f * 2.f * log(1.1f));
 
+	if(m_zoom > 2) {m_zoom = 2;}
+	if(m_zoom < 0.1) {m_zoom = 0.1;}
+
 	// /!\ relative zoom has a risk of numerical error accumulation
 	// this would be changed if we would go for a manual management of the view transform
 	float s = m_zoom / oldZoom;
+
 	scale(s, s);
 
 	update();
