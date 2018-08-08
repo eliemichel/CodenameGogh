@@ -27,7 +27,7 @@ MainWindow::MainWindow(QString graphFilename, QWidget *parent)
 	, ui(new Ui::MainWindow)
 	, m_currentFilename(graphFilename)
 {
-	//Temporary fixes the MenuBar issue by setting it in the Mainwindow
+	//TODO: Temporary fixes the MenuBar issue by setting it in the Mainwindow, try to set back native menubar
 	QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
 
 	ui->setupUi(this);

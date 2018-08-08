@@ -6,6 +6,7 @@
 #include "Nodes/OutputNode.h"
 #include "Nodes/ScaleNode.h"
 #include "Nodes/CodecNode.h"
+#include "Nodes/MixNode.h"
 
 #include <QFile>
 #include <QDataStream>
@@ -28,6 +29,8 @@ NodeWidget * NodeGraphModel::buildNode(int type)
 		return new ScaleNode();
 	case NODE_CODEC:
 		return new CodecNode();
+	case NODE_MIX:
+		return new MixNode();
 	default:
 		return nullptr;
 	}
@@ -45,6 +48,8 @@ std::string NodeGraphModel::nodeTypeToString(int type)
 		return "NODE_SCALE";
 	case NODE_CODEC:
 		return "NODE_CODEC";
+	case NODE_MIX:
+		return "NODE_MIX";
 	default:
 		return nullptr;
 	}
@@ -597,6 +602,10 @@ void NodeGraphModel::LoadDefaultGraph()
 	node = new CodecNode();
 	node->setEnvModel(envModel());
 	addNode(node, NODE_CODEC, 0, -100, "Codec");
+
+	node = new MixNode();
+	node->setEnvModel(envModel());
+	addNode(node, NODE_MIX, -100, -100, "Mix");
 
 	node = new OutputNode();
 	node->setEnvModel(envModel());

@@ -8,9 +8,9 @@
 #include <QFont>
 
 OutputNode::OutputNode(QWidget *parent)
-	: NodeWidget(parent)
-	, ui(new Ui::OutputNode)
-	, m_isFilenameUserDefined(false)
+: NodeWidget(parent)
+, ui(new Ui::OutputNode)
+, m_isFilenameUserDefined(false)
 {
 	ui->setupUi(this);
 
@@ -21,7 +21,7 @@ OutputNode::OutputNode(QWidget *parent)
 	newInputSlot();
 
 	//Quick tests with video samples
-	ui->filenameInput->setText("/Users/felixdavid/Documents/Logiciels/Tunnel/data/GoghTestSample_h264.mp4");
+	//ui->filenameInput->setText("/Users/felixdavid/Documents/Logiciels/Tunnel/data/GoghTestSample_h264.mp4");
 	//DEBUG_LOG << ui->filenameInput->text().toStdString();
 	ui->filenameInput->setPlaceholderText("Path/to/output_file");
 }
@@ -57,9 +57,9 @@ QString OutputNode::parmName(int parm) const
 {
 	switch (parm)
 	{
-	case 0:
+		case 0:
 		return "filename";
-	default:
+		default:
 		return QString();
 	}
 }
@@ -68,9 +68,9 @@ QVariant OutputNode::parmEval(int parm) const
 {
 	switch (parm)
 	{
-	case 0:
+		case 0:
 		return ui->filenameInput->text();
-	default:
+		default:
 		return QVariant();
 	}
 }
@@ -79,9 +79,8 @@ void OutputNode::setParm(int parm, QVariant value)
 {
 	switch (parm)
 	{
-	case 0:
+		case 0:
 		ui->filenameInput->setText(value.toString());
-		setUserDefined();
 		break;
 	}
 }
@@ -93,7 +92,23 @@ void OutputNode::slotConnectEvent(SlotEvent *event)
 		if (!m_isFilenameUserDefined)
 		{
 			// TODO: auto name output
-			setParm(0, "[auto generated name]");
+			RenderCommand cmd;
+			std::string cmdString;
+			if (buildRenderCommand(-1, cmd))
+			{
+				int i = 0;
+				for (auto const& s : cmd.cmd)
+				{
+					cmdString = "/Users/felixdavid/Documents/Logiciels/Tunnel/data/GoghTestSample.mov";
+					if (i == 3)
+					{
+						cmdString = "/Users/felixdavid/Documents/Logiciels/Tunnel/data/GoghTestSample_" + s + ".mov";
+						break;
+					}
+					i++;
+				}
+			}
+			setParm(0, QString().fromStdString(cmdString));
 		}
 	}
 }
@@ -124,7 +139,6 @@ void OutputNode::setUserDefined()
 	m_isFilenameUserDefined = !ui->filenameInput->text().isEmpty();
 
 	QFont font = ui->filenameInput->font();
-	font.setBold(m_isFilenameUserDefined);
+	font.setBold(!m_isFilenameUserDefined);
 	ui->filenameInput->setFont(font);
 }
-
