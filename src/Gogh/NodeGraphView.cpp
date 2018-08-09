@@ -262,9 +262,12 @@ void NodeGraphView::wheelEvent(QWheelEvent *event)
 	// 1.1 ^ angle makes zoom exponential and reversible
 	m_zoom *= exp(event->angleDelta().y()/180.f * 2.f * log(1.1f));
 
+	m_zoom = std::max<double>(0.1, std::min<double>(m_zoom, 2.0));
+
 	// /!\ relative zoom has a risk of numerical error accumulation
 	// this would be changed if we would go for a manual management of the view transform
 	float s = m_zoom / oldZoom;
+
 	scale(s, s);
 
 	update();
