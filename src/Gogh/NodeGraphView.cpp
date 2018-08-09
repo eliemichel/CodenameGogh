@@ -356,6 +356,8 @@ void NodeGraphView::dropEvent(QDropEvent *event)
 				Slot *otherSlot = otherSlotItem->slot();
 				if (slot && otherSlot && slot->isInput() != otherSlot->isInput())
 				{
+					// TODO: cleanup
+
 					Slot *destinationSlot = otherSlot->isInput() ? otherSlot : slot;
 					Slot *sourceSlot = otherSlot->isInput() ? slot : otherSlot;
 					SlotGraphicsItem *destinationSlotItem = otherSlot->isInput() ? otherSlotItem : slotItem;

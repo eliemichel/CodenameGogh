@@ -37,6 +37,7 @@ void CutTool::update(QPoint position)
 			{
 				DEBUG_LOG << "remove link";
 				slotItem->setInputLink(nullptr);
+				// TODO: use new model
 			}
 			else
 			{

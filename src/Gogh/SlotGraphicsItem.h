@@ -8,11 +8,12 @@
 class Slot;
 class QGraphicsSceneMouseEvent;
 class LinkGraphicsItem;
+class NodeGraphicsItem;
 
 class SlotGraphicsItem : public QGraphicsEllipseItem
 {
 public:
-	SlotGraphicsItem(QGraphicsItem *parent = nullptr);
+	SlotGraphicsItem(NodeGraphicsItem *parentNodeItem, QGraphicsItem *parent = nullptr);
 
 	Slot *slot() const { return m_slot; }
 	void setSlot(Slot *slot);
@@ -27,6 +28,10 @@ public:
 	void updateLinks() const;
 
 private:
+	NodeGraphicsItem * parentNodeItem() const;
+
+private:
+	NodeGraphicsItem *m_parentNodeItem;
 	Slot *m_slot;
 	LinkGraphicsItem *m_inputLink;
 	std::vector<LinkGraphicsItem*> m_outputLinks;

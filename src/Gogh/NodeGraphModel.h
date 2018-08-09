@@ -8,11 +8,25 @@
 
 #include <string>
 #include <vector>
-#include <map>
+#include <unordered_map>
+#include <set>
 
 class EnvModel;
 class Link;
 typedef NodeWidget Node;
+
+struct SlotIndex
+{
+	SlotIndex() : node(-1) {}
+	SlotIndex(int _node, int _slot) : node(_node), slot(_slot) {}
+
+	int node;
+	int slot;
+
+	bool isConnected() const { return node != -1; }
+
+	bool operator<(const SlotIndex &other) const { return node < other.node || slot < other.slot; }
+};
 
 class NodeGraphModel : public QAbstractItemModel
 {
@@ -62,14 +76,6 @@ private:
 		int parentBlockIndex;
 	};
 
-	struct SlotIndex
-	{
-		int node = -1;
-		int slot;
-
-		bool isConnected() const { return node != -1; }
-	};
-
 	struct NodeEntry
 	{
 		Node *node;
@@ -77,7 +83,7 @@ private:
 		float x, y;
 		std::string name;
 		std::vector<SlotIndex> inputLinks;
-		std::vector<SlotIndex> outputLinks; // /!\ Problem: there can be several output links per output slot
+		std::vector<std::set<SlotIndex>> outputLinks; // /!\ Problem: there can be several output links per output slot
 
 		IndexData nodeIndex;
 		IndexData blockIndex;
@@ -129,6 +135,8 @@ public:
 
 	bool canAddLink(int originNode, int originSlot, int destinationNode, int destinationSlot);
 	bool addLink(int originNode, int originSlot, int destinationNode, int destinationSlot);
+	const SlotIndex & sourceSlot(int destinationNode, int destinationSlot) const;
+	const std::set<SlotIndex> & destinationSlots(int sourceNode, int sourceSlot) const;
 
 	// TODO: remove me
 	int nodeIndex(const Node *node) { return m_nodeLUT.at(node); }
@@ -145,8 +153,7 @@ private:
 	 */
 	mutable std::vector<NodeEntry> m_nodes;
 	EnvModel *m_envModel;
-	std::map<const Node*, int> m_nodeLUT;
-	std::map<int, std::map<int, std::pair<int, int>>> m_links;
+	std::unordered_map<const Node*, int> m_nodeLUT;
 };
 
 #endif // H_NODEGRAPHMODEL

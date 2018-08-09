@@ -1,4 +1,5 @@
 #include "SlotGraphicsItem.h"
+#include "NodeGraphicsItem.h"
 #include "NodeGraphScene.h"
 #include "LinkGraphicsItem.h"
 #include "Slot.h"
@@ -6,8 +7,9 @@
 
 #include <QGraphicsSceneMouseEvent>
 
-SlotGraphicsItem::SlotGraphicsItem(QGraphicsItem *parent)
+SlotGraphicsItem::SlotGraphicsItem(NodeGraphicsItem *parentNodeItem, QGraphicsItem *parent)
 	: QGraphicsEllipseItem(0, 0, 15, 15, parent)
+	, m_parentNodeItem(parentNodeItem)
 	, m_slot(nullptr)
 	, m_inputLink(nullptr)
 {
@@ -16,6 +18,11 @@ SlotGraphicsItem::SlotGraphicsItem(QGraphicsItem *parent)
 
 	setData(NodeGraphScene::RoleData, NodeGraphScene::SlotRole);
 	setZValue(NodeGraphScene::SlotLayer);
+}
+
+NodeGraphicsItem * SlotGraphicsItem::parentNodeItem() const
+{
+	return m_parentNodeItem;
 }
 
 void SlotGraphicsItem::setSlot(Slot *slot)
@@ -66,11 +73,6 @@ void SlotGraphicsItem::updateLinks() const
 	{
 		inputLink()->setEndPos(sceneBoundingRect().center());
 		inputLink()->update();
-	}
-	for (LinkGraphicsItem *l : outputLinks())
-	{
-		l->setStartPos(sceneBoundingRect().center());
-		l->update();
 	}
 }
 
