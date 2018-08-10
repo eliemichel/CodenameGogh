@@ -69,7 +69,7 @@ NodeGraphicsItem::NodeGraphicsItem(NodeGraphScene *scene, NodeWidget *content)
 	int offset = 30;
 	for (Slot *s : content->inputSlots())
 	{
-		SlotGraphicsItem *slotItem = new SlotGraphicsItem(this);
+		SlotGraphicsItem *slotItem = new SlotGraphicsItem();
 		scene->addItem(slotItem);
 		slotItem->setSlot(s);
 		slotItem->setPos(-7, offset);
@@ -80,7 +80,7 @@ NodeGraphicsItem::NodeGraphicsItem(NodeGraphScene *scene, NodeWidget *content)
 	offset = 30;
 	for (Slot *s : content->outputSlots())
 	{
-		SlotGraphicsItem *slotItem = new SlotGraphicsItem(this);
+		SlotGraphicsItem *slotItem = new SlotGraphicsItem();
 		scene->addItem(slotItem);
 		slotItem->setSlot(s);
 		slotItem->setPos(m_control->rect().width() - 8, offset);

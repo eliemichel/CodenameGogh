@@ -13,7 +13,7 @@ class NodeGraphicsItem;
 class SlotGraphicsItem : public QGraphicsEllipseItem
 {
 public:
-	SlotGraphicsItem(NodeGraphicsItem *parentNodeItem, QGraphicsItem *parent = nullptr);
+	SlotGraphicsItem(QGraphicsItem *parent = nullptr);
 
 	Slot *slot() const { return m_slot; }
 	void setSlot(Slot *slot);
@@ -21,20 +21,9 @@ public:
 	LinkGraphicsItem * inputLink() const { return m_inputLink; }
 	void setInputLink(LinkGraphicsItem *link);
 
-	const std::vector<LinkGraphicsItem*> outputLinks() const { return m_outputLinks; }
-	void addOutputLink(LinkGraphicsItem *link) { m_outputLinks.push_back(link); }
-	void removeOutputLink(LinkGraphicsItem *link);
-
-	void updateLinks() const;
-
 private:
-	NodeGraphicsItem * parentNodeItem() const;
-
-private:
-	NodeGraphicsItem *m_parentNodeItem;
 	Slot *m_slot;
 	LinkGraphicsItem *m_inputLink;
-	std::vector<LinkGraphicsItem*> m_outputLinks;
 };
 
 #endif // H_SLOTGRAPHICSITEM

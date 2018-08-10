@@ -1,6 +1,7 @@
 #include "NodeWidget.h"
 #include "EnvModel.h"
 #include "Logger.h"
+#include "NodeGraphModel.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -66,6 +67,11 @@ int NodeWidget::inputSlotIndex(const Slot *slot) const
 	return -1;
 }
 
+const NodeGraphModel * NodeWidget::graphModel() const
+{
+	return modelIndex().isValid() ? static_cast<const NodeGraphModel*>(modelIndex().model()) : nullptr;
+}
+
 int NodeWidget::outputSlotIndex(const Slot *slot) const
 {
 	const std::vector<Slot*> & outputs = outputSlots();
@@ -89,26 +95,32 @@ bool NodeWidget::buildRenderCommand(const Slot *slot, RenderCommand  & cmd) cons
 
 bool NodeWidget::parentBuildRenderCommand(int inputIndex, RenderCommand & cmd) const
 {
+	if (!graphModel())
+	{
+		ERR_LOG << "node has no model";
+	}
+
 	if (inputIndex >= inputSlots().size())
 	{
 		ERR_LOG << "Input " << inputIndex << " does not exist";
 		return false;
 	}
 
-	const Slot *sourceSlot = inputSlots()[inputIndex]->sourceSlot();
-	if (!sourceSlot)
+	const SlotIndex & origin = graphModel()->sourceSlot(modelIndex().row(), inputIndex);
+	if (!origin.isConnected())
 	{
 		ERR_LOG << "Input " << inputIndex << " is not connected, unable to render";
 		return false;
 	}
-	const NodeWidget *parentNode = sourceSlot->parentNode();
+
+	const NodeWidget *parentNode = graphModel()->nodeData(origin.node);
 	if (!parentNode)
 	{
-		ERR_LOG << "Input " << inputIndex << " is not connected to an orphan slot";
+		ERR_LOG << "Input " << inputIndex << " is connected to an orphan slot";
 		return false;
 	}
 
-	return parentNode->buildRenderCommand(sourceSlot, cmd);
+	return parentNode->buildRenderCommand(origin.slot, cmd);
 }
 
 void NodeWidget::read(QDataStream & stream)

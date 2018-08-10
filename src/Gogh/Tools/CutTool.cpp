@@ -36,7 +36,6 @@ void CutTool::update(QPoint position)
 		{
 			if (SlotGraphicsItem *slotItem = linkItem->endSlotItem())
 			{
-				DEBUG_LOG << "remove link";
 				slotItem->setInputLink(nullptr);
 				if (Slot *slot = slotItem->slot())
 				{

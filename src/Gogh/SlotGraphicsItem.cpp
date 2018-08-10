@@ -7,9 +7,8 @@
 
 #include <QGraphicsSceneMouseEvent>
 
-SlotGraphicsItem::SlotGraphicsItem(NodeGraphicsItem *parentNodeItem, QGraphicsItem *parent)
+SlotGraphicsItem::SlotGraphicsItem(QGraphicsItem *parent)
 	: QGraphicsEllipseItem(0, 0, 15, 15, parent)
-	, m_parentNodeItem(parentNodeItem)
 	, m_slot(nullptr)
 	, m_inputLink(nullptr)
 {
@@ -18,11 +17,6 @@ SlotGraphicsItem::SlotGraphicsItem(NodeGraphicsItem *parentNodeItem, QGraphicsIt
 
 	setData(NodeGraphScene::RoleData, NodeGraphScene::SlotRole);
 	setZValue(NodeGraphScene::SlotLayer);
-}
-
-NodeGraphicsItem * SlotGraphicsItem::parentNodeItem() const
-{
-	return m_parentNodeItem;
 }
 
 void SlotGraphicsItem::setSlot(Slot *slot)
@@ -38,41 +32,8 @@ void SlotGraphicsItem::setInputLink(LinkGraphicsItem *link)
 {
 	if (m_inputLink)
 	{
-		if (slot() && slot()->sourceSlot() && slot()->sourceSlot()->graphicItem())
-		{
-			slot()->sourceSlot()->graphicItem()->removeOutputLink(m_inputLink);
-		}
 		scene()->removeItem(m_inputLink);
 		delete m_inputLink;
 	}
 	m_inputLink = link;
-
-	if (slot())
-	{
-		slot()->setSourceSlot(nullptr);
-	}
 }
-
-void SlotGraphicsItem::removeOutputLink(LinkGraphicsItem *link)
-{
-	std::vector<LinkGraphicsItem*> newOutputs;
-	newOutputs.reserve(m_outputLinks.size());
-	for (LinkGraphicsItem *l : m_outputLinks)
-	{
-		if (l != link)
-		{
-			newOutputs.push_back(l);
-		}
-	}
-	m_outputLinks = newOutputs;
-}
-
-void SlotGraphicsItem::updateLinks() const
-{
-	if (inputLink())
-	{
-		inputLink()->setEndPos(sceneBoundingRect().center());
-		inputLink()->update();
-	}
-}
-

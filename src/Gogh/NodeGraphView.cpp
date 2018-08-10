@@ -370,10 +370,6 @@ void NodeGraphView::dropEvent(QDropEvent *event)
 					link->setEndSlotItem(destinationSlotItem);
 					scene()->addItem(link);
 					destinationSlotItem->setInputLink(link);
-					sourceSlotItem->addOutputLink(link);
-
-					destinationSlotItem->updateLinks();
-					sourceSlotItem->updateLinks();
 
 					// TODO: get rid of cast
 					int originSlotIndex = sourceSlot->parentNode()->outputSlotIndex(sourceSlot);

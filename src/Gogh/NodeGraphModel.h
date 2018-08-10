@@ -135,7 +135,7 @@ public:
 
 	void addNode(Node *node, int type, float x, float y, std::string name);
 	const std::vector<NodeEntry> & nodes() const { return m_nodes; }
-	Node * nodeData(int i) { return m_nodes[i].node; }
+	Node * nodeData(int i) const { return m_nodes[i].node; }
 
 	bool canAddLink(int originNode, int originSlot, int destinationNode, int destinationSlot);
 	bool addLink(int originNode, int originSlot, int destinationNode, int destinationSlot);

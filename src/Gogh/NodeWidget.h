@@ -6,12 +6,14 @@
 
 #include <QWidget>
 #include <QVariant>
+#include <QModelIndex>
 
 #include <vector>
 #include <string>
 
 class LinkGraphicsItem;
 class EnvModel;
+class NodeGraphModel;
 
 /**
  * This structure is transmitted among the graph nodes while building the
@@ -66,6 +68,10 @@ public:
 	EnvModel *envModel() const { return m_envModel; }
 	void setEnvModel(EnvModel *envModel) { m_envModel = envModel; }
 
+	const QModelIndex & modelIndex() const { return m_modelIndex; }
+	void setModelIndex(const QModelIndex & index) { m_modelIndex = index; }
+	const NodeGraphModel *graphModel() const;
+
 	int outputSlotIndex(const Slot *slot) const;
 	int inputSlotIndex(const Slot *slot) const;
 
@@ -117,13 +123,14 @@ public: // data model
 	QString parmFullEval(int parm) const;
 
 protected:
-	virtual void slotConnectEvent(SlotEvent *event) { DEBUG_LOG << "slotConnectEvent " << (event->isInputSlot() ? "input #" : "output #") << event->slotIndex(); }
-	virtual void slotDisconnectEvent(SlotEvent *event) { DEBUG_LOG << "slotDisconnectEvent " << (event->isInputSlot() ? "input #" : "output #") << event->slotIndex(); }
+	virtual void slotConnectEvent(SlotEvent *event) {}
+	virtual void slotDisconnectEvent(SlotEvent *event) {}
 
 private:
 	std::vector<Slot*> m_inputSlots;
 	std::vector<Slot*> m_outputSlots;
 	EnvModel *m_envModel;
+	QModelIndex m_modelIndex;
 };
 
 #endif // H_NODEWIDGET

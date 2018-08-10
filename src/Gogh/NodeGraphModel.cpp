@@ -406,45 +406,6 @@ QVariant NodeGraphModel::data(const QModelIndex & index, int role) const
 			}
 		case InputSlotBlock:
 		{
-			/*
-			if (const Slot *slot = node->inputSlots()[index.row()])
-			{
-				if (const Slot *sourceSlot = slot->sourceSlot())
-				{
-					if (const Node *sourceNode = sourceSlot->parentNode())
-					{
-						int nodeId = m_nodeLUT.at(sourceNode);
-						int slotId = sourceNode->outputSlotIndex(sourceSlot);
-						if (role == Qt::EditRole)
-						{
-							switch (index.column())
-							{
-							case 0: // node
-								return nodeId;
-							case 1: // slot
-								return slotId;
-							default:
-								return QVariant();
-							}
-						}
-						else
-						{
-							switch (index.column())
-							{
-							case 0: // node
-								return QString("Node #") + QString::number(nodeId);
-							case 1: // slot
-								return QString("Output Slot #") + QString::number(slotId);
-							default:
-								return QVariant();
-							}
-						}
-					}
-				}
-			}
-			return index.column() == 0 ? "<not connected>" : QVariant();
-			*/
-
 			SlotIndex & sourceSlot = m_nodes[data->parentNodeIndex].inputLinks[index.row()];
 			
 			if (role == Qt::EditRole)
@@ -825,4 +786,6 @@ void NodeGraphModel::addNode(Node *node, int type, float x, float y, std::string
 
 	m_nodeLUT[node] = nodeIndex;
 	m_nodes.push_back(entry);
+
+	node->setModelIndex(index(nodeIndex, 0));
 }
