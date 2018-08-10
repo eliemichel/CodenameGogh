@@ -2,6 +2,7 @@
 #define H_NODEWIDGET
 
 #include "Slot.h"
+#include "Logger.h"
 
 #include <QWidget>
 #include <QVariant>
@@ -99,8 +100,12 @@ public:
 	/**
 	 * This is used in graphics view to initiate slotConnectEvent() propagation.
 	 * This should ultimately be modified so do not use this method anywhere else
+	 * Reserved to NodeGraphModel
 	 */
 	void fireSlotConnectEvent(Slot *slot, bool isInput);
+	void fireSlotDisconnectEvent(Slot *slot, bool isInput);
+	void fireSlotConnectEvent(int slotIndex, bool isInput);
+	void fireSlotDisconnectEvent(int slotIndex, bool isInput);
 
 public: // data model
 	virtual int parmCount() const { return 0; }
@@ -112,7 +117,8 @@ public: // data model
 	QString parmFullEval(int parm) const;
 
 protected:
-	virtual void slotConnectEvent(SlotEvent *event) {}
+	virtual void slotConnectEvent(SlotEvent *event) { DEBUG_LOG << "slotConnectEvent " << (event->isInputSlot() ? "input #" : "output #") << event->slotIndex(); }
+	virtual void slotDisconnectEvent(SlotEvent *event) { DEBUG_LOG << "slotDisconnectEvent " << (event->isInputSlot() ? "input #" : "output #") << event->slotIndex(); }
 
 private:
 	std::vector<Slot*> m_inputSlots;

@@ -1,6 +1,7 @@
 #ifndef H_SLOT
 #define H_SLOT
 
+#include "Logger.h"
 #include <vector>
 
 class SlotGraphicsItem;
@@ -22,7 +23,7 @@ public:
 	int maxOutputs() const { return m_maxOutputs; }
 	void setMaxOutputs(int maxOutputs) { m_maxOutputs = maxOutputs; }
 
-	const Slot * sourceSlot() const { return m_sourceSlot; }
+	const Slot * sourceSlot() const { WARN_LOG << "sourceSlot() is depreciated"; return m_sourceSlot; }
 	void setSourceSlot(Slot *sourceSlot) { m_sourceSlot = sourceSlot; }
 
 	NodeWidget * parentNode() const { return m_parentNode; }

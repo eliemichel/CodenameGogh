@@ -4,6 +4,7 @@
 #include "NodeGraphScene.h"
 #include "SlotGraphicsItem.h"
 #include "LinkGraphicsItem.h"
+#include "NodeGraphModel.h"
 #include "Logger.h"
 
 #include <cmath>
@@ -37,6 +38,13 @@ void CutTool::update(QPoint position)
 			{
 				DEBUG_LOG << "remove link";
 				slotItem->setInputLink(nullptr);
+				if (Slot *slot = slotItem->slot())
+				{
+					NodeGraphModel *model = static_cast<NodeGraphModel*>(view()->model());
+					int destinationSlotIndex = slot->parentNode()->inputSlotIndex(slot);
+					int destinationNodeIndex = model->nodeIndex(slot->parentNode());
+					model->removeLink(destinationNodeIndex, destinationSlotIndex);
+				}
 				// TODO: use new model
 			}
 			else

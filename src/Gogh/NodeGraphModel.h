@@ -107,6 +107,10 @@ public:
 	static bool isRoot(QModelIndex index);
 
 public:
+	static SlotIndex invalidSlot;
+	static std::set<SlotIndex> invalidSlotSet;
+
+public:
 	NodeGraphModel();
 
 	EnvModel *envModel() const { return m_envModel; }
@@ -135,6 +139,7 @@ public:
 
 	bool canAddLink(int originNode, int originSlot, int destinationNode, int destinationSlot);
 	bool addLink(int originNode, int originSlot, int destinationNode, int destinationSlot);
+	bool removeLink(int destinationNode, int destinationSlot);
 	const SlotIndex & sourceSlot(int destinationNode, int destinationSlot) const;
 	const std::set<SlotIndex> & destinationSlots(int sourceNode, int sourceSlot) const;
 

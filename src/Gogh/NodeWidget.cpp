@@ -140,11 +140,35 @@ void NodeWidget::fireSlotConnectEvent(Slot *slot, bool isInput)
 	{
 		if (s == slot)
 		{
-			SlotEvent event(i, isInput);
-			slotConnectEvent(&event);
+			fireSlotConnectEvent(i, isInput);
 		}
 		++i;
 	}
+}
+
+void NodeWidget::fireSlotConnectEvent(int slotIndex, bool isInput)
+{
+	SlotEvent event(slotIndex, isInput);
+	slotConnectEvent(&event);
+}
+
+void NodeWidget::fireSlotDisconnectEvent(Slot *slot, bool isInput)
+{
+	int i = 0;
+	for (Slot * s : isInput ? inputSlots() : outputSlots())
+	{
+		if (s == slot)
+		{
+			fireSlotDisconnectEvent(i, isInput);
+		}
+		++i;
+	}
+}
+
+void NodeWidget::fireSlotDisconnectEvent(int slotIndex, bool isInput)
+{
+	SlotEvent event(slotIndex, isInput);
+	slotDisconnectEvent(&event);
 }
 
 QString NodeWidget::parmFullEval(int parm) const

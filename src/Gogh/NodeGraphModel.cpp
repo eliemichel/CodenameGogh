@@ -12,6 +12,9 @@
 #include <QDataStream>
 #include <QModelIndex>
 
+SlotIndex NodeGraphModel::invalidSlot = SlotIndex();
+std::set<SlotIndex> NodeGraphModel::invalidSlotSet = std::set<SlotIndex>();
+
 NodeGraphModel::NodeGraphModel()
 	: QAbstractItemModel()
 	, m_envModel(nullptr)
@@ -93,14 +96,15 @@ bool NodeGraphModel::addLink(int originNode, int originSlot, int destinationNode
 	bool wasConnected = oldOrigin.isConnected();
 	if (wasConnected)
 	{
-		m_nodes[oldOrigin.node].outputLinks[oldOrigin.slot].erase(destination);
+		NodeEntry & oldOriginEntry = m_nodes[oldOrigin.node];
+		oldOriginEntry.outputLinks[oldOrigin.slot].erase(destination);
 	}
 
 	// plug new link
 	originEntry.outputLinks[originSlot].insert(destination);
 	destinationEntry.inputLinks[destinationSlot] = origin;
 
-	// signal change
+	// signal change to views
 	const QModelIndex & oldSourceIndex = index(oldOrigin.node, 0);
 	if (wasConnected)
 	{
@@ -111,6 +115,71 @@ bool NodeGraphModel::addLink(int originNode, int originSlot, int destinationNode
 	emit dataChanged(newSourceIndex, newSourceIndex);
 	emit dataChanged(destinationIndex, destinationIndex);
 
+	// signal change to nodes
+	if (wasConnected)
+	{
+		NodeEntry & oldOriginEntry = m_nodes[oldOrigin.node];
+		if (oldOriginEntry.node)
+		{
+			oldOriginEntry.node->fireSlotDisconnectEvent(oldOrigin.slot, false /* isInput */);
+		}
+	}
+	if (originEntry.node)
+	{
+		originEntry.node->fireSlotConnectEvent(origin.slot, false /* isInput */);
+	}
+	if (destinationEntry.node)
+	{
+		destinationEntry.node->fireSlotConnectEvent(destination.slot, true /* isInput */);
+	}
+
+	return true;
+}
+
+bool NodeGraphModel::removeLink(int destinationNode, int destinationSlot)
+{
+	if (destinationNode < 0 || destinationNode >= m_nodes.size())
+	{
+		DEBUG_LOG << "invalid destination node";
+		return false;
+	}
+
+	NodeEntry & destinationEntry = m_nodes[destinationNode];
+	if (destinationSlot < 0 || destinationSlot >= destinationEntry.inputLinks.size())
+	{
+		DEBUG_LOG << "invalid destination slot: #" << destinationSlot << " (in node #" << destinationNode << ")";
+		return false;
+	}
+
+	SlotIndex & origin = destinationEntry.inputLinks[destinationSlot];
+	if (!origin.isConnected())
+	{
+		DEBUG_LOG << "slot had no connection";
+		return false;
+	}
+
+	// remove link
+	SlotIndex destination(destinationNode, destinationSlot);
+	NodeEntry & originEntry = m_nodes[origin.node];
+	originEntry.outputLinks[origin.slot].erase(destination);
+	origin.node = -1;
+
+	// signal views
+	const QModelIndex & originIndex = index(origin.node, 0);
+	const QModelIndex & destinationIndex = index(destinationNode, 0);
+	emit dataChanged(originIndex, originIndex);
+	emit dataChanged(destinationIndex, destinationIndex);
+
+	// signal node
+	if (originEntry.node)
+	{
+		originEntry.node->fireSlotDisconnectEvent(origin.slot, false /* isInput */);
+	}
+	if (destinationEntry.node)
+	{
+		destinationEntry.node->fireSlotDisconnectEvent(destination.slot, true /* isInput */);
+	}
+
 	return true;
 }
 
@@ -119,13 +188,13 @@ const SlotIndex & NodeGraphModel::sourceSlot(int destinationNode, int destinatio
 	if (destinationNode < 0 || destinationNode >= m_nodes.size())
 	{
 		WARN_LOG << "Invalid destination node: #" << destinationNode;
-		return SlotIndex();
+		return invalidSlot;
 	}
 	const NodeEntry & destinationEntry = m_nodes[destinationNode];
 	if (destinationSlot < 0 || destinationSlot >= destinationEntry.inputLinks.size())
 	{
 		WARN_LOG << "Invalid destination slot: #" << destinationSlot << " (in node #" << destinationNode << ")";
-		return SlotIndex();
+		return invalidSlot;
 	}
 	return destinationEntry.inputLinks[destinationSlot];
 }
@@ -135,13 +204,13 @@ const std::set<SlotIndex> & NodeGraphModel::destinationSlots(int sourceNode, int
 	if (sourceNode < 0 || sourceNode >= m_nodes.size())
 	{
 		WARN_LOG << "Invalid source node: #" << sourceNode;
-		return std::set<SlotIndex>();
+		return invalidSlotSet;
 	}
 	const NodeEntry & sourceEntry = m_nodes[sourceNode];
 	if (sourceSlot < 0 || sourceSlot >= sourceEntry.outputLinks.size())
 	{
 		WARN_LOG << "Invalid source slot: #" << sourceSlot << " (in node #" << sourceNode << ")";
-		return std::set<SlotIndex>();
+		return invalidSlotSet;
 	}
 	return sourceEntry.outputLinks[sourceSlot];
 }
