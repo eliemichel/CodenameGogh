@@ -41,6 +41,9 @@ public:
 	void setSelected(bool selected);
 	bool isSelected() const { return m_isSelected; }
 
+	void updateInputSlots();
+	void updateOutputSlots();
+
 	void updateInputLinks() const;
 	void updateOutputLinks() const;
 

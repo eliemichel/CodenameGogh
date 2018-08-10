@@ -40,8 +40,6 @@ NodeGraphicsItem::NodeGraphicsItem(NodeGraphScene *scene, NodeWidget *content)
 	: m_graphScene(scene)
 	, m_content(content)
 {
-	// TODO: add links
-
 	content->resize(content->sizeHint());
 
 	m_control = new NodeGraphicsItemControl();
@@ -66,18 +64,8 @@ NodeGraphicsItem::NodeGraphicsItem(NodeGraphScene *scene, NodeWidget *content)
 	m_proxy->setZValue(NodeGraphScene::NodeLayer);
 
 	// Wrap a SlotGraphiscItem around all the slots of the content node
+	updateInputSlots();
 	int offset = 30;
-	for (Slot *s : content->inputSlots())
-	{
-		SlotGraphicsItem *slotItem = new SlotGraphicsItem();
-		scene->addItem(slotItem);
-		slotItem->setSlot(s);
-		slotItem->setPos(-7, offset);
-		slotItem->setParentItem(m_control);
-		m_inputSlotItems.push_back(slotItem);
-		offset += 30;
-	}
-	offset = 30;
 	for (Slot *s : content->outputSlots())
 	{
 		SlotGraphicsItem *slotItem = new SlotGraphicsItem();
@@ -108,6 +96,29 @@ void NodeGraphicsItem::setSelected(bool selected)
 	m_isSelected = selected;
 	//m_control->setBrush(QBrush(m_isSelected ? QColor(64, 64, 64) : QColor(41, 41, 41)));
 	m_control->setPen(m_isSelected ? QPen(QColor(255, 128, 0)) : Qt::NoPen);
+}
+
+void NodeGraphicsItem::updateInputSlots()
+{
+	int i = -1;
+	for (Slot *s : m_content->inputSlots())
+	{
+		++i;
+		if (m_inputSlotItems.size() > i)
+		{
+			continue;
+		}
+		SlotGraphicsItem *slotItem = new SlotGraphicsItem();
+		m_graphScene->addItem(slotItem);
+		slotItem->setSlot(s);
+		slotItem->setPos(-7, 30 + i * 30);
+		slotItem->setParentItem(m_control);
+		m_inputSlotItems.push_back(slotItem);
+	}
+}
+
+void NodeGraphicsItem::updateOutputSlots()
+{
 }
 
 void NodeGraphicsItem::updateInputLinks() const
@@ -189,6 +200,10 @@ void NodeGraphicsItem::onDataChanged(const QModelIndex & topLeft, const QModelIn
 		name = model->data(model->index(modelIndex().row(), NodeGraphModel::NameColumn, modelIndex().parent())).toString();
 		setPos(QPointF(x, y));
 		m_control->setName(name);
+
+		updateInputSlots();
+		updateOutputSlots();
+
 		updateInputLinks();
 		updateOutputLinks();
 	}

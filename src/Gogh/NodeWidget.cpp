@@ -38,6 +38,12 @@ Slot* NodeWidget::newInputSlot()
 	s->setParentNode(this);
 	s->setIsInput(true);
 	m_inputSlots.push_back(s);
+
+	if (graphModel())
+	{
+		graphModel()->nodeGeometryChanged(modelIndex());
+	}
+
 	return s;
 }
 
@@ -49,6 +55,12 @@ Slot* NodeWidget::newOutputSlot()
 	s->setParentNode(this);
 	s->setIsInput(false);
 	m_outputSlots.push_back(s);
+
+	if (graphModel())
+	{
+		graphModel()->nodeGeometryChanged(modelIndex());
+	}
+
 	return s;
 }
 
@@ -65,11 +77,6 @@ int NodeWidget::inputSlotIndex(const Slot *slot) const
 	WARN_LOG << "Invalid slot pointer provided to NodeWidget::outputSlotIndex";
 	// TODO: assert(false)
 	return -1;
-}
-
-const NodeGraphModel * NodeWidget::graphModel() const
-{
-	return modelIndex().isValid() ? static_cast<const NodeGraphModel*>(modelIndex().model()) : nullptr;
 }
 
 int NodeWidget::outputSlotIndex(const Slot *slot) const
@@ -95,7 +102,7 @@ bool NodeWidget::buildRenderCommand(const Slot *slot, RenderCommand  & cmd) cons
 
 bool NodeWidget::parentBuildRenderCommand(int inputIndex, RenderCommand & cmd) const
 {
-	if (!graphModel())
+	if (!graphModel() || !modelIndex().isValid())
 	{
 		ERR_LOG << "node has no model";
 	}
@@ -107,7 +114,7 @@ bool NodeWidget::parentBuildRenderCommand(int inputIndex, RenderCommand & cmd) c
 	}
 
 	const SlotIndex & origin = graphModel()->sourceSlot(modelIndex().row(), inputIndex);
-	if (!origin.isConnected())
+	if (!origin.isValid())
 	{
 		ERR_LOG << "Input " << inputIndex << " is not connected, unable to render";
 		return false;

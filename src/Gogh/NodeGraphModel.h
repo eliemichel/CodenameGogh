@@ -13,7 +13,6 @@
 
 class EnvModel;
 class Link;
-typedef NodeWidget Node;
 
 struct SlotIndex
 {
@@ -23,7 +22,7 @@ struct SlotIndex
 	int node;
 	int slot;
 
-	bool isConnected() const { return node != -1; }
+	bool isValid() const { return node != -1; }
 
 	bool operator<(const SlotIndex &other) const { return node < other.node || slot < other.slot; }
 };
@@ -78,7 +77,7 @@ private:
 
 	struct NodeEntry
 	{
-		Node *node;
+		NodeWidget *node;
 		int type;
 		float x, y;
 		std::string name;
@@ -94,7 +93,7 @@ public:
 	// Factory function building a new node from a given type.
 	// This is the only place holding a mapping from type enum to type classes
 	// and must be updated any time a new node type is defined
-	static Node * buildNode(int type);
+	static NodeWidget * buildNode(int type);
 
 	/**
 	 * Convert node type to a string, for display purpose only
@@ -112,6 +111,7 @@ public:
 
 public:
 	NodeGraphModel();
+	~NodeGraphModel();
 
 	EnvModel *envModel() const { return m_envModel; }
 	void setEnvModel(EnvModel *envModel) { m_envModel = envModel; }
@@ -133,18 +133,21 @@ public:
 	bool LoadGraph(QString filename);
 	bool SaveGraph(QString filename);
 
-	void addNode(Node *node, int type, float x, float y, std::string name);
-	const std::vector<NodeEntry> & nodes() const { return m_nodes; }
-	Node * nodeData(int i) const { return m_nodes[i].node; }
+	void addNode(NodeWidget *node, int type, float x, float y, std::string name);
+	const std::vector<NodeEntry*> & nodes() const { return m_nodes; }
+	NodeWidget * nodeData(int i) const { return m_nodes[i]->node; }
 
-	bool canAddLink(int originNode, int originSlot, int destinationNode, int destinationSlot);
-	bool addLink(int originNode, int originSlot, int destinationNode, int destinationSlot);
-	bool removeLink(int destinationNode, int destinationSlot);
-	const SlotIndex & sourceSlot(int destinationNode, int destinationSlot) const;
-	const std::set<SlotIndex> & destinationSlots(int sourceNode, int sourceSlot) const;
+	bool canAddLink(int originNodeIndex, int originSlot, int destinationNodeIndex, int destinationSlot);
+	bool addLink(int originNodeIndex, int originSlot, int destinationNodeIndex, int destinationSlot);
+	bool removeLink(int destinationNodeIndex, int destinationSlot);
+	const SlotIndex & sourceSlot(int destinationNodeIndex, int destinationSlot) const;
+	const std::set<SlotIndex> & destinationSlots(int sourceNodeIndex, int sourceSlot) const;
+
+	/// Notify the model that a node geometry (slots) changed
+	void nodeGeometryChanged(const QModelIndex & nodeIndex);
 
 	// TODO: remove me
-	int nodeIndex(const Node *node) { return m_nodeLUT.at(node); }
+	int nodeIndex(const NodeWidget *node) { return m_nodeLUT.at(node); }
 
 private:
 	bool inParentBounds(const QModelIndex & index) const;
@@ -156,9 +159,9 @@ private:
 	 * node widget generator from node definition, and I want to keep it simple
 	 * to add new node type.
 	 */
-	mutable std::vector<NodeEntry> m_nodes;
+	mutable std::vector<NodeEntry*> m_nodes;
 	EnvModel *m_envModel;
-	std::unordered_map<const Node*, int> m_nodeLUT;
+	std::unordered_map<const NodeWidget*, int> m_nodeLUT;
 };
 
 #endif // H_NODEGRAPHMODEL

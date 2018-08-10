@@ -70,7 +70,9 @@ public:
 
 	const QModelIndex & modelIndex() const { return m_modelIndex; }
 	void setModelIndex(const QModelIndex & index) { m_modelIndex = index; }
-	const NodeGraphModel *graphModel() const;
+
+	NodeGraphModel *graphModel() const { return m_graphModel; }
+	void setGraphModel(NodeGraphModel *model) { m_graphModel = model; }
 
 	int outputSlotIndex(const Slot *slot) const;
 	int inputSlotIndex(const Slot *slot) const;
@@ -130,6 +132,7 @@ private:
 	std::vector<Slot*> m_inputSlots;
 	std::vector<Slot*> m_outputSlots;
 	EnvModel *m_envModel;
+	NodeGraphModel *m_graphModel;
 	QModelIndex m_modelIndex;
 };
 
