@@ -350,41 +350,34 @@ void NodeGraphView::dropEvent(QDropEvent *event)
 	{
 		QGraphicsItem *item = itemAt(event->pos());
 		QPointF p = mapToScene(event->pos());
+
 		if (SlotGraphicsItem *slotItem = nodeGraphScene()->toSlotItem(item))
 		{
 			// Create actual links in place of temporary pending links if possible
-			Slot *slot = slotItem->slot();
 			for (SlotGraphicsItem *otherSlotItem : m_pendingLinksSources)
 			{
-				Slot *otherSlot = otherSlotItem->slot();
-				if (slot && otherSlot && slot->isInput() != otherSlot->isInput())
+				if (slotItem->isInput() != otherSlotItem->isInput())
 				{
-					// TODO: cleanup
+					SlotGraphicsItem *destinationSlotItem = otherSlotItem->isInput() ? otherSlotItem : slotItem;
+					SlotGraphicsItem *sourceSlotItem = otherSlotItem->isInput() ? slotItem : otherSlotItem;
 
-					Slot *destinationSlot = otherSlot->isInput() ? otherSlot : slot;
-					Slot *sourceSlot = otherSlot->isInput() ? slot : otherSlot;
-					SlotGraphicsItem *destinationSlotItem = otherSlot->isInput() ? otherSlotItem : slotItem;
-					SlotGraphicsItem *sourceSlotItem = otherSlot->isInput() ? slotItem : otherSlotItem;
-
+					// TODO: move to slotgraphicsitem
 					LinkGraphicsItem *link = new LinkGraphicsItem();
 					link->setEndSlotItem(destinationSlotItem);
 					scene()->addItem(link);
 					destinationSlotItem->setInputLink(link);
 
 					// TODO: get rid of cast
-					int originSlotIndex = sourceSlot->parentNode()->outputSlotIndex(sourceSlot);
-					int originNodeIndex = static_cast<NodeGraphModel*>(model())->nodeIndex(sourceSlot->parentNode());
-					int destinationSlotIndex = destinationSlot->parentNode()->inputSlotIndex(destinationSlot);
-					int destinationNodeIndex = static_cast<NodeGraphModel*>(model())->nodeIndex(destinationSlot->parentNode());
-					static_cast<NodeGraphModel*>(model())->addLink(originNodeIndex, originSlotIndex, destinationNodeIndex, destinationSlotIndex);
-
-					destinationSlot->setSourceSlot(sourceSlot);
+					const SlotIndex & origin = sourceSlotItem->slotIndex();
+					const SlotIndex & destination = destinationSlotItem->slotIndex();
+					static_cast<NodeGraphModel*>(model())->addLink(origin, destination);
 				}
 			}
 
 			p = item->sceneBoundingRect().center();
 		}
 
+		// TODO: is this useful ?
 		for (LinkGraphicsItem *l : m_pendingLinks)
 		{
 			l->setEndPos(p);

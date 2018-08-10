@@ -110,8 +110,6 @@ public:
 	 * This should ultimately be modified so do not use this method anywhere else
 	 * Reserved to NodeGraphModel
 	 */
-	void fireSlotConnectEvent(Slot *slot, bool isInput);
-	void fireSlotDisconnectEvent(Slot *slot, bool isInput);
 	void fireSlotConnectEvent(int slotIndex, bool isInput);
 	void fireSlotDisconnectEvent(int slotIndex, bool isInput);
 

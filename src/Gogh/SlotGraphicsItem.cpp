@@ -19,15 +19,6 @@ SlotGraphicsItem::SlotGraphicsItem(QGraphicsItem *parent)
 	setZValue(NodeGraphScene::SlotLayer);
 }
 
-void SlotGraphicsItem::setSlot(Slot *slot)
-{
-	m_slot = slot;
-	if (m_slot)
-	{
-		m_slot->setGraphicItem(this);
-	}
-}
-
 void SlotGraphicsItem::setInputLink(LinkGraphicsItem *link)
 {
 	if (m_inputLink)

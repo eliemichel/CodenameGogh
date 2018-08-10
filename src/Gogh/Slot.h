@@ -15,16 +15,13 @@ class NodeWidget;
 class Slot
 {
 public:
-	Slot() : m_sourceSlot(nullptr), m_parentNode(nullptr), m_graphicItem(nullptr){}
+	Slot() : m_parentNode(nullptr), m_graphicItem(nullptr){}
 
 	int maxInputs() const { return m_maxInputs; }
 	void setMaxInputs(int maxInputs);
 
 	int maxOutputs() const { return m_maxOutputs; }
 	void setMaxOutputs(int maxOutputs) { m_maxOutputs = maxOutputs; }
-
-	const Slot * sourceSlot() const { WARN_LOG << "sourceSlot() is depreciated"; return m_sourceSlot; }
-	void setSourceSlot(Slot *sourceSlot) { m_sourceSlot = sourceSlot; }
 
 	NodeWidget * parentNode() const { return m_parentNode; }
 	void setParentNode(NodeWidget *parentNode) { m_parentNode = parentNode; }
@@ -38,7 +35,6 @@ public:
 private:
 	int m_maxInputs = 1;
 	int m_maxOutputs = -1;
-	Slot *m_sourceSlot;
 	NodeWidget *m_parentNode;
 	bool m_isInput;
 	SlotGraphicsItem *m_graphicItem;

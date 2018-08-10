@@ -2,6 +2,7 @@
 #define H_NODEGRAPHMODEL
 
 #include "NodeWidget.h"
+#include "SlotIndex.h"
 
 #include <QString> // should be replaced by a stream path class
 #include <QAbstractItemModel>
@@ -13,19 +14,6 @@
 
 class EnvModel;
 class Link;
-
-struct SlotIndex
-{
-	SlotIndex() : node(-1) {}
-	SlotIndex(int _node, int _slot) : node(_node), slot(_slot) {}
-
-	int node;
-	int slot;
-
-	bool isValid() const { return node != -1; }
-
-	bool operator<(const SlotIndex &other) const { return node < other.node || slot < other.slot; }
-};
 
 class NodeGraphModel : public QAbstractItemModel
 {
@@ -82,7 +70,7 @@ private:
 		float x, y;
 		std::string name;
 		std::vector<SlotIndex> inputLinks;
-		std::vector<std::set<SlotIndex>> outputLinks; // /!\ Problem: there can be several output links per output slot
+		std::vector<std::set<SlotIndex>> outputLinks;
 
 		IndexData nodeIndex;
 		IndexData blockIndex;
@@ -135,33 +123,29 @@ public:
 
 	void addNode(NodeWidget *node, int type, float x, float y, std::string name);
 	const std::vector<NodeEntry*> & nodes() const { return m_nodes; }
+
+	// TODO: remove me
 	NodeWidget * nodeData(int i) const { return m_nodes[i]->node; }
 
-	bool canAddLink(int originNodeIndex, int originSlot, int destinationNodeIndex, int destinationSlot);
-	bool addLink(int originNodeIndex, int originSlot, int destinationNodeIndex, int destinationSlot);
-	bool removeLink(int destinationNodeIndex, int destinationSlot);
-	const SlotIndex & sourceSlot(int destinationNodeIndex, int destinationSlot) const;
-	const std::set<SlotIndex> & destinationSlots(int sourceNodeIndex, int sourceSlot) const;
+	bool canAddLink(const SlotIndex & origin, const SlotIndex & destination);
+	bool addLink(const SlotIndex & origin, const SlotIndex & destination);
+	bool removeLink(const SlotIndex & destination);
+
+	const SlotIndex & originSlot(const SlotIndex & destination) const;
+	const std::set<SlotIndex> & destinationSlots(const SlotIndex & origin) const;
 
 	/// Notify the model that a node geometry (slots) changed
 	void nodeGeometryChanged(const QModelIndex & nodeIndex);
-
-	// TODO: remove me
-	int nodeIndex(const NodeWidget *node) { return m_nodeLUT.at(node); }
 
 private:
 	bool inParentBounds(const QModelIndex & index) const;
 	IndexData *indexData(const QModelIndex & index) const;
 
 private:
-	/**
-	 * This should be a list of non GUI objects, but for now we don't have a
-	 * node widget generator from node definition, and I want to keep it simple
-	 * to add new node type.
-	 */
-	mutable std::vector<NodeEntry*> m_nodes;
+	std::vector<NodeEntry*> m_nodes;
+
+	/// Env Model is forwarded to nodes
 	EnvModel *m_envModel;
-	std::unordered_map<const NodeWidget*, int> m_nodeLUT;
 };
 
 #endif // H_NODEGRAPHMODEL

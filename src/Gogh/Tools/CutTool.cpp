@@ -37,14 +37,9 @@ void CutTool::update(QPoint position)
 			if (SlotGraphicsItem *slotItem = linkItem->endSlotItem())
 			{
 				slotItem->setInputLink(nullptr);
-				if (Slot *slot = slotItem->slot())
-				{
-					NodeGraphModel *model = static_cast<NodeGraphModel*>(view()->model());
-					int destinationSlotIndex = slot->parentNode()->inputSlotIndex(slot);
-					int destinationNodeIndex = model->nodeIndex(slot->parentNode());
-					model->removeLink(destinationNodeIndex, destinationSlotIndex);
-				}
-				// TODO: use new model
+				// TODO: avoid cast
+				NodeGraphModel *model = static_cast<NodeGraphModel*>(view()->model());
+				model->removeLink(slotItem->slotIndex());
 			}
 			else
 			{

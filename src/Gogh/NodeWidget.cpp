@@ -113,7 +113,7 @@ bool NodeWidget::parentBuildRenderCommand(int inputIndex, RenderCommand & cmd) c
 		return false;
 	}
 
-	const SlotIndex & origin = graphModel()->sourceSlot(modelIndex().row(), inputIndex);
+	const SlotIndex & origin = graphModel()->originSlot(SlotIndex(modelIndex().row(), inputIndex));
 	if (!origin.isValid())
 	{
 		ERR_LOG << "Input " << inputIndex << " is not connected, unable to render";
@@ -152,36 +152,10 @@ void NodeWidget::write(QDataStream & stream) const
 	}
 }
 
-void NodeWidget::fireSlotConnectEvent(Slot *slot, bool isInput)
-{
-	int i = 0;
-	for (Slot * s : isInput ? inputSlots() : outputSlots())
-	{
-		if (s == slot)
-		{
-			fireSlotConnectEvent(i, isInput);
-		}
-		++i;
-	}
-}
-
 void NodeWidget::fireSlotConnectEvent(int slotIndex, bool isInput)
 {
 	SlotEvent event(slotIndex, isInput);
 	slotConnectEvent(&event);
-}
-
-void NodeWidget::fireSlotDisconnectEvent(Slot *slot, bool isInput)
-{
-	int i = 0;
-	for (Slot * s : isInput ? inputSlots() : outputSlots())
-	{
-		if (s == slot)
-		{
-			fireSlotDisconnectEvent(i, isInput);
-		}
-		++i;
-	}
 }
 
 void NodeWidget::fireSlotDisconnectEvent(int slotIndex, bool isInput)

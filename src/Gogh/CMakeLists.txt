@@ -40,6 +40,7 @@ add_executable(
 	NodeGraphicsItem.cpp
 	SlotGraphicsItem.h
 	SlotGraphicsItem.cpp
+	SlotIndex.h
 
 	Nodes/TestNode.h
 	Nodes/TestNode.ui

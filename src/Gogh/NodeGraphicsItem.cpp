@@ -63,19 +63,8 @@ NodeGraphicsItem::NodeGraphicsItem(NodeGraphScene *scene, NodeWidget *content)
 	m_proxy->setParentItem(m_control);
 	m_proxy->setZValue(NodeGraphScene::NodeLayer);
 
-	// Wrap a SlotGraphiscItem around all the slots of the content node
 	updateInputSlots();
-	int offset = 30;
-	for (Slot *s : content->outputSlots())
-	{
-		SlotGraphicsItem *slotItem = new SlotGraphicsItem();
-		scene->addItem(slotItem);
-		slotItem->setSlot(s);
-		slotItem->setPos(m_control->rect().width() - 8, offset);
-		slotItem->setParentItem(m_control);
-		m_outputSlotItems.push_back(slotItem);
-		offset += 30;
-	}
+	updateOutputSlots();
 }
 
 void NodeGraphicsItem::setModelIndex(const QModelIndex & modelIndex)
@@ -89,36 +78,61 @@ void NodeGraphicsItem::setModelIndex(const QModelIndex & modelIndex)
 	{
 		connect(m_modelIndex.model(), &QAbstractItemModel::dataChanged, this, &NodeGraphicsItem::onDataChanged);
 	}
+
+	updateInputSlots();
+	updateOutputSlots();
 }
 
 void NodeGraphicsItem::setSelected(bool selected)
 {
 	m_isSelected = selected;
-	//m_control->setBrush(QBrush(m_isSelected ? QColor(64, 64, 64) : QColor(41, 41, 41)));
 	m_control->setPen(m_isSelected ? QPen(QColor(255, 128, 0)) : Qt::NoPen);
 }
 
 void NodeGraphicsItem::updateInputSlots()
 {
-	int i = -1;
-	for (Slot *s : m_content->inputSlots())
+	for (int i = 0 ; i < m_content->inputSlots().size() ; ++i)
 	{
-		++i;
-		if (m_inputSlotItems.size() > i)
+		SlotGraphicsItem *slotItem;
+		if (i >= m_inputSlotItems.size())
 		{
-			continue;
+			slotItem = new SlotGraphicsItem();
+			m_graphScene->addItem(slotItem);
+			m_inputSlotItems.push_back(slotItem);
 		}
-		SlotGraphicsItem *slotItem = new SlotGraphicsItem();
-		m_graphScene->addItem(slotItem);
-		slotItem->setSlot(s);
+		else
+		{
+			slotItem = m_inputSlotItems[i];
+		}
+
+		slotItem->setSlotIndex(SlotIndex(modelIndex().row(), i));
+		slotItem->setIsInput(true);
 		slotItem->setPos(-7, 30 + i * 30);
 		slotItem->setParentItem(m_control);
-		m_inputSlotItems.push_back(slotItem);
 	}
 }
 
 void NodeGraphicsItem::updateOutputSlots()
 {
+	for (int i = 0; i < m_content->outputSlots().size(); ++i)
+	{
+		SlotGraphicsItem *slotItem;
+		if (i >= m_outputSlotItems.size())
+		{
+			slotItem = new SlotGraphicsItem();
+			m_graphScene->addItem(slotItem);
+			m_outputSlotItems.push_back(slotItem);
+		}
+		else
+		{
+			slotItem = m_outputSlotItems[i];
+		}
+
+		slotItem->setSlotIndex(SlotIndex(modelIndex().row(), i));
+		slotItem->setIsInput(false);
+		slotItem->setPos(m_control->rect().width() - 8, 30 + i * 30);
+		slotItem->setParentItem(m_control);
+	}
 }
 
 void NodeGraphicsItem::updateInputLinks() const
@@ -135,7 +149,7 @@ void NodeGraphicsItem::updateInputLinks() const
 
 		// TODO: make this easier and avoid cast
 		const NodeGraphModel *model = static_cast<const NodeGraphModel*>(modelIndex().model());
-		SlotIndex sourceSlot = model->sourceSlot(modelIndex().row(), slotId);
+		SlotIndex sourceSlot = model->originSlot(SlotIndex(modelIndex().row(), slotId));
 		const QModelIndex & sourceIndex = model->index(sourceSlot.node, 0);
 		NodeGraphicsItem *sourceNodeItem = m_graphScene->nodeItemAtIndex(sourceIndex);
 
@@ -161,7 +175,7 @@ void NodeGraphicsItem::updateOutputLinks() const
 
 		// TODO: make this easier and avoid cast
 		const NodeGraphModel *model = static_cast<const NodeGraphModel*>(modelIndex().model());
-		const std::set<SlotIndex> & destinationSlots = model->destinationSlots(modelIndex().row(), slotId);
+		const std::set<SlotIndex> & destinationSlots = model->destinationSlots(SlotIndex(modelIndex().row(), slotId));
 		for (const SlotIndex & destination : destinationSlots)
 		{
 			const QModelIndex & destinationIndex = model->index(destination.node, 0);
