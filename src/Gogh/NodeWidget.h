@@ -1,7 +1,6 @@
 #ifndef H_NODEWIDGET
 #define H_NODEWIDGET
 
-#include "Slot.h"
 #include "Logger.h"
 
 #include <QWidget>

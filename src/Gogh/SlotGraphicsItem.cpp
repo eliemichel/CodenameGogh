@@ -2,7 +2,6 @@
 #include "NodeGraphicsItem.h"
 #include "NodeGraphScene.h"
 #include "LinkGraphicsItem.h"
-#include "Slot.h"
 #include "Logger.h"
 
 #include <QGraphicsSceneMouseEvent>
