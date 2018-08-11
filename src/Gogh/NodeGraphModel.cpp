@@ -22,15 +22,16 @@ NodeGraphModel::NodeGraphModel()
 
 NodeGraphModel::~NodeGraphModel()
 {
-	while (!m_nodes.empty())
+	while (!m_nodeEntries.empty())
 	{
-		NodeEntry *node = m_nodes.back();
-		delete node;
-		m_nodes.pop_back();
+		NodeEntry *entry = m_nodeEntries.back();
+		delete entry->node;
+		delete entry;
+		m_nodeEntries.pop_back();
 	}
 }
 
-NodeWidget * NodeGraphModel::buildNode(int type)
+Node * NodeGraphModel::buildNode(int type)
 {
 	switch (type)
 	{
@@ -75,12 +76,12 @@ bool NodeGraphModel::isRoot(QModelIndex index)
 
 bool NodeGraphModel::canAddLink(const SlotIndex & origin, const SlotIndex & destination)
 {
-	if (origin.node < 0 || origin.node >= m_nodes.size() || destination.node < 0 || destination.node>= m_nodes.size())
+	if (origin.node < 0 || origin.node >= m_nodeEntries.size() || destination.node < 0 || destination.node>= m_nodeEntries.size())
 	{
 		return false;
 	}
-	const NodeEntry *originNode = m_nodes[origin.node];
-	const NodeEntry *destinationNode = m_nodes[destination.node];
+	const Node *originNode = m_nodeEntries[origin.node]->node;
+	const Node *destinationNode = m_nodeEntries[destination.node]->node;
 	if (origin.slot < 0 || origin.slot >= originNode->outputLinks.size() || destination.slot < 0 || destination.slot >= destinationNode->inputLinks.size())
 	{
 		return false;
@@ -95,15 +96,15 @@ bool NodeGraphModel::addLink(const SlotIndex & origin, const SlotIndex & destina
 	{
 		return false;
 	}
-	NodeEntry *originNode = m_nodes[origin.node];
-	NodeEntry *destinationNode = m_nodes[destination.node];
+	Node *originNode = node(origin.node);
+	Node *destinationNode = node(destination.node);
 
 	// unplug previous link
 	SlotIndex oldOrigin = destinationNode->inputLinks[destination.slot];
 	bool wasConnected = oldOrigin.isValid();
 	if (wasConnected)
 	{
-		NodeEntry *oldOriginEntry = m_nodes[oldOrigin.node];
+		Node *oldOriginEntry = node(oldOrigin.node);
 		oldOriginEntry->outputLinks[oldOrigin.slot].erase(destination);
 	}
 
@@ -125,33 +126,24 @@ bool NodeGraphModel::addLink(const SlotIndex & origin, const SlotIndex & destina
 	// signal change to nodes
 	if (wasConnected)
 	{
-		NodeEntry *oldOriginEntry = m_nodes[oldOrigin.node];
-		if (oldOriginEntry->node)
-		{
-			oldOriginEntry->node->fireSlotDisconnectEvent(oldOrigin.slot, false /* isInput */);
-		}
+		Node *oldOriginEntry = node(oldOrigin.node);
+		oldOriginEntry->fireSlotDisconnectEvent(oldOrigin.slot, false /* isInput */);
 	}
-	if (originNode->node)
-	{
-		originNode->node->fireSlotConnectEvent(origin.slot, false /* isInput */);
-	}
-	if (destinationNode->node)
-	{
-		destinationNode->node->fireSlotConnectEvent(destination.slot, true /* isInput */);
-	}
-
+	originNode->fireSlotConnectEvent(origin.slot, false /* isInput */);
+	destinationNode->fireSlotConnectEvent(destination.slot, true /* isInput */);
+	
 	return true;
 }
 
 bool NodeGraphModel::removeLink(const SlotIndex & destination)
 {
-	if (destination.node < 0 || destination.node >= m_nodes.size())
+	if (destination.node < 0 || destination.node >= m_nodeEntries.size())
 	{
 		DEBUG_LOG << "invalid destination node";
 		return false;
 	}
 
-	NodeEntry *destinationNode = m_nodes[destination.node];
+	Node *destinationNode = node(destination.node);
 	if (destination.slot < 0 || destination.slot >= destinationNode->inputLinks.size())
 	{
 		DEBUG_LOG << "invalid destination slot: #" << destination.slot << " (in node #" << destination.node << ")";
@@ -166,7 +158,7 @@ bool NodeGraphModel::removeLink(const SlotIndex & destination)
 	}
 
 	// remove link
-	NodeEntry *originNode = m_nodes[origin.node];
+	Node *originNode = node(origin.node);
 	originNode->outputLinks[origin.slot].erase(destination);
 	origin.node = -1;
 
@@ -177,26 +169,20 @@ bool NodeGraphModel::removeLink(const SlotIndex & destination)
 	emit dataChanged(destinationIndex, destinationIndex);
 
 	// signal node
-	if (originNode->node)
-	{
-		originNode->node->fireSlotDisconnectEvent(origin.slot, false /* isInput */);
-	}
-	if (destinationNode->node)
-	{
-		destinationNode->node->fireSlotDisconnectEvent(destination.slot, true /* isInput */);
-	}
+	originNode->fireSlotDisconnectEvent(origin.slot, false /* isInput */);
+	destinationNode->fireSlotDisconnectEvent(destination.slot, true /* isInput */);
 
 	return true;
 }
 
 const SlotIndex & NodeGraphModel::originSlot(const SlotIndex & destination) const
 {
-	if (destination.node < 0 || destination.node >= m_nodes.size())
+	if (destination.node < 0 || destination.node >= m_nodeEntries.size())
 	{
 		WARN_LOG << "Invalid destination node: #" << destination.node;
 		return invalidSlot;
 	}
-	const NodeEntry *destinationNode = m_nodes[destination.node];
+	const Node *destinationNode = node(destination.node);
 	if (destination.slot < 0 || destination.slot >= destinationNode->inputLinks.size())
 	{
 		WARN_LOG << "Invalid destination slot: #" << destination.slot << " (in node #" << destination.node << ")";
@@ -207,40 +193,18 @@ const SlotIndex & NodeGraphModel::originSlot(const SlotIndex & destination) cons
 
 const std::set<SlotIndex> & NodeGraphModel::destinationSlots(const SlotIndex & origin) const
 {
-	if (origin.node < 0 || origin.node >= m_nodes.size())
+	if (origin.node < 0 || origin.node >= m_nodeEntries.size())
 	{
 		WARN_LOG << "Invalid source node: #" << origin.node;
 		return invalidSlotSet;
 	}
-	const NodeEntry *originNode = m_nodes[origin.node];
+	const Node *originNode = node(origin.node);
 	if (origin.slot < 0 || origin.slot >= originNode->outputLinks.size())
 	{
 		WARN_LOG << "Invalid source slot: #" << origin.slot << " (in node #" << origin.node << ")";
 		return invalidSlotSet;
 	}
 	return originNode->outputLinks[origin.slot];
-}
-
-void NodeGraphModel::addInputSlot(const QModelIndex & nodeIndex)
-{
-	// TODO emit change on slot subindex
-	if (nodeIndex.isValid())
-	{
-		NodeEntry *entry = m_nodes[nodeIndex.row()];
-		entry->inputLinks.push_back(SlotIndex());
-		emit dataChanged(nodeIndex, nodeIndex);
-	}
-}
-
-void NodeGraphModel::addOutputSlot(const QModelIndex & nodeIndex)
-{
-	// TODO emit change on slot subindex
-	if (nodeIndex.isValid())
-	{
-		NodeEntry *entry = m_nodes[nodeIndex.row()];
-		entry->outputLinks.push_back(std::set<SlotIndex>());
-		emit dataChanged(nodeIndex, nodeIndex);
-	}
 }
 
 bool NodeGraphModel::inParentBounds(const QModelIndex & index) const
@@ -266,13 +230,13 @@ QModelIndex NodeGraphModel::index(int row, int column, const QModelIndex & paren
 	{
 
 	case RootLevel:
-		return createIndex(row, column, &m_nodes[row]->nodeIndex);
+		return createIndex(row, column, &m_nodeEntries[row]->nodeIndex);
 
 	case NodeLevel:
-		return createIndex(row, column, &m_nodes[parent.row()]->blockIndex);
+		return createIndex(row, column, &m_nodeEntries[parent.row()]->blockIndex);
 
 	case BlockLevel:
-		return createIndex(row, column, &m_nodes[data->parentNodeIndex]->elementIndex[parent.row()]);
+		return createIndex(row, column, &m_nodeEntries[data->parentNodeIndex]->elementIndex[parent.row()]);
 
 	default:
 		return QModelIndex();
@@ -289,7 +253,7 @@ QModelIndex NodeGraphModel::parent(const QModelIndex & index) const
 	else
 	{
 		IndexData *data = static_cast<IndexData*>(index.internalPointer());
-		NodeEntry *node = m_nodes[data->parentNodeIndex];
+		NodeEntry *node = m_nodeEntries[data->parentNodeIndex];
 		switch (data->level)
 		{
 		case NodeLevel:
@@ -308,12 +272,11 @@ int NodeGraphModel::rowCount(const QModelIndex & parent) const
 {
 	IndexData *data = indexData(parent);
 	IndexLevel level = data ? data->level : RootLevel;
-	NodeWidget *nodeWidget = data ? m_nodes[data->parentNodeIndex]->node : nullptr;
 	switch (level)
 	{
 
 	case RootLevel:
-		return static_cast<int>(m_nodes.size());
+		return static_cast<int>(m_nodeEntries.size());
 
 	case NodeLevel:
 		return _BlockCount;
@@ -322,11 +285,11 @@ int NodeGraphModel::rowCount(const QModelIndex & parent) const
 		switch (parent.row())
 		{
 		case ParamBlock:
-			return nodeWidget->parmCount();
+			return node(data->parentNodeIndex)->parmCount();
 		case InputSlotBlock:
-			return nodeWidget->inputSlotsCount();
+			return static_cast<int>(node(data->parentNodeIndex)->inputLinks.size());
 		case OutputSlotBlock:
-			return nodeWidget->outputSlotsCount();
+			return static_cast<int>(node(data->parentNodeIndex)->outputLinks.size());
 		}
 
 	default:
@@ -352,7 +315,7 @@ int NodeGraphModel::columnCount(const QModelIndex & parent) const
 		switch (parent.row())
 		{
 		case ParamBlock:
-			return 2; // parmName and parmEval
+			return 3; // parmName, parmType and parmEval
 		case InputSlotBlock:
 			return 2; // link origin node and slot
 		case OutputSlotBlock:
@@ -374,7 +337,6 @@ QVariant NodeGraphModel::data(const QModelIndex & index, int role) const
 
 	IndexData *data = indexData(index);
 	IndexLevel level = data ? data->level : RootLevel;
-	NodeWidget *nodeWidget = data ? m_nodes[data->parentNodeIndex]->node : nullptr;
 	switch (level)
 	{
 
@@ -383,7 +345,7 @@ QVariant NodeGraphModel::data(const QModelIndex & index, int role) const
 
 	case NodeLevel:
 	{
-		NodeEntry *node = m_nodes[index.row()];
+		Node *node = this->node(index.row());
 		switch (index.column())
 		{
 		case TypeColumn:
@@ -424,15 +386,17 @@ QVariant NodeGraphModel::data(const QModelIndex & index, int role) const
 			switch (index.column())
 			{
 			case 0: // name
-				return nodeWidget->parmName(index.row());
-			case 1: // value
-				return nodeWidget->parmEval(index.row());
+				return node(data->parentNodeIndex)->parmName(index.row());
+			case 1: // type
+				return node(data->parentNodeIndex)->parmType(index.row());
+			case 2: // value
+				return node(data->parentNodeIndex)->parmRawValue(index.row());
 			default:
 				return QVariant();
 			}
 		case InputSlotBlock:
 		{
-			SlotIndex sourceSlot = m_nodes[data->parentNodeIndex]->inputLinks[index.row()];
+			SlotIndex sourceSlot = node(data->parentNodeIndex)->inputLinks[index.row()];
 			
 			if (role == Qt::EditRole)
 			{
@@ -466,7 +430,7 @@ QVariant NodeGraphModel::data(const QModelIndex & index, int role) const
 		}
 		case OutputSlotBlock:
 			// TODO: expose all outputs to the model
-			const std::set<SlotIndex> & destinations = m_nodes[data->parentNodeIndex]->outputLinks[index.row()];
+			const std::set<SlotIndex> & destinations = node(data->parentNodeIndex)->outputLinks[index.row()];
 			const SlotIndex & destinationSlot = destinations.begin() == destinations.end() ? SlotIndex() : *destinations.begin();
 
 			if (role == Qt::EditRole)
@@ -546,7 +510,7 @@ bool NodeGraphModel::setData(const QModelIndex & index, const QVariant & value, 
 
 	case NodeLevel:
 	{
-		NodeEntry *node = m_nodes[index.row()];
+		Node *node = this->node(index.row());
 		switch (index.column())
 		{
 		case PosXColumn:
@@ -570,14 +534,13 @@ bool NodeGraphModel::setData(const QModelIndex & index, const QVariant & value, 
 
 	case ElementLevel:
 	{
-		NodeWidget * nodeWidget = data ? nodes()[data->parentNodeIndex]->node : nullptr;
 		switch (index.parent().row())
 		{
 		case ParamBlock:
 			switch (index.column())
 			{
-			case 1: // value
-				nodeWidget->setParm(index.row(), value);
+			case 2: // value
+				node(data->parentNodeIndex)->setParm(index.row(), value);
 				emit dataChanged(index, index);
 				return true;
 			default:
@@ -591,7 +554,7 @@ bool NodeGraphModel::setData(const QModelIndex & index, const QVariant & value, 
 			}
 			int id = value.toInt();
 
-			SlotIndex & sourceSlot = m_nodes[data->parentNodeIndex]->inputLinks[index.row()];
+			SlotIndex & sourceSlot = node(data->parentNodeIndex)->inputLinks[index.row()];
 
 			switch (index.column())
 			{
@@ -603,7 +566,7 @@ bool NodeGraphModel::setData(const QModelIndex & index, const QVariant & value, 
 				}
 
 				// clamp slot
-				int n = static_cast<int>(m_nodes[id]->outputLinks.size());
+				int n = static_cast<int>(node(id)->outputLinks.size());
 				if (n == 0)
 				{
 					return false;
@@ -621,7 +584,7 @@ bool NodeGraphModel::setData(const QModelIndex & index, const QVariant & value, 
 					return false;
 				}
 
-				int n = static_cast<int>(m_nodes[sourceSlot.node]->outputLinks.size());
+				int n = static_cast<int>(node(sourceSlot.node)->outputLinks.size());
 				if (id < 0 || id >= n)
 				{
 					return false;
@@ -678,7 +641,7 @@ Qt::ItemFlags NodeGraphModel::flags(const QModelIndex & index) const
 		case ParamBlock:
 			switch (index.column())
 			{
-			case 1: // value
+			case 2: // value
 				return f | Qt::ItemIsEditable;
 			default:
 				return f;
@@ -697,27 +660,42 @@ Qt::ItemFlags NodeGraphModel::flags(const QModelIndex & index) const
 
 void NodeGraphModel::LoadDefaultGraph()
 {
-	NodeWidget *node;
+	Node *node;
 
 	node = new InputNode();
-	node->setEnvModel(envModel());
-	addNode(node, NODE_INPUT, -300, -200, "Input");
+	node->type = NODE_INPUT;
+	node->x = -300;
+	node->y = -200;
+	node->name = "Input";
+	addNode(node);
 
 	node = new ScaleNode();
-	node->setEnvModel(envModel());
-	addNode(node, NODE_SCALE, 0, -250, "Scale");
+	node->type = NODE_SCALE;
+	node->x = 0;
+	node->y = -250;
+	node->name = "Scale";
+	addNode(node);
 
 	node = new CodecNode();
-	node->setEnvModel(envModel());
-	addNode(node, NODE_CODEC, 0, -100, "Codec");
+	node->type = NODE_CODEC;
+	node->x = 0;
+	node->y = -100;
+	node->name = "Codec";
+	addNode(node);
 
 	node = new MixNode();
-	node->setEnvModel(envModel());
-	addNode(node, NODE_MIX, -100, -100, "Mix");
-
+	node->type = NODE_MIX;
+	node->x = -100;
+	node->y = -100;
+	node->name = "Mix";
+	addNode(node);
+	
 	node = new OutputNode();
-	node->setEnvModel(envModel());
-	addNode(node, NODE_OUTPUT, 300, -200, "Output");
+	node->type = NODE_OUTPUT;
+	node->x = 300;
+	node->y = -200;
+	node->name = "Output";
+	addNode(node);
 
 	emit dataChanged(QModelIndex(), QModelIndex());
 }
@@ -733,7 +711,9 @@ bool NodeGraphModel::LoadGraph(QString filename)
 	LOG << "Loading graph from: " << filename.toStdString();
 
 	QDataStream in(&file);
-	int n = static_cast<int>(m_nodes.size());;
+
+	// Nodes
+	int n;
 	in >> n;
 	for (int i = 0; i < n; ++i)
 	{
@@ -742,17 +722,39 @@ bool NodeGraphModel::LoadGraph(QString filename)
 		QString name;
 		in >> type >> x >> y >> name;
 
-		NodeWidget *node = buildNode(type);
+		Node *node = buildNode(type);
 		if (!node)
 		{
 			ERR_LOG << "Invalid node type: " << type << " (in file " << filename.toStdString() << ")";
 			return false;
 		}
 
-		node->setEnvModel(envModel());
+		node->type = type;
+		node->x = x;
+		node->y = y;
+		node->name = name.toStdString();
 		node->read(in);
+		
+		addNode(node);
+	}
 
-		addNode(node, type, x, y, name.toStdString());
+	// Links
+	for (int i = 0; i < n; ++i)
+	{
+		int maxM = static_cast<int>(node(i)->inputSlotCount());
+		int m;
+		in >> m;
+		if (m > maxM)
+		{
+			ERR_LOG << "Invalid number of input links: " << m << " (" << maxM << " was expected, in node #" << i << ", in file " << filename.toStdString() << ")";
+		}
+		for (int j = 0; j < m; ++j)
+		{
+			SlotIndex destination(i, j);
+			SlotIndex origin;
+			in >> origin.node >> origin.slot;
+			addLink(origin, destination);
+		}
 	}
 
 	emit dataChanged(QModelIndex(), QModelIndex());
@@ -770,31 +772,38 @@ bool NodeGraphModel::SaveGraph(QString filename)
 	LOG << "Saving graph to: " << filename.toStdString();
 
 	QDataStream out(&file);
-	int n = static_cast<int>(m_nodes.size());
+
+	// Nodes
+	int n = static_cast<int>(m_nodeEntries.size());
 	out << n;
-	for (NodeEntry *node : m_nodes)
+	for (NodeEntry *entry : m_nodeEntries)
 	{
+		Node *node = entry->node;
 		out << node->type << node->x << node->y << QString::fromStdString(node->name);
-		node->node->write(out);
+		node->write(out);
 	}
+
+	// Links
+	for (NodeEntry *entry : m_nodeEntries)
+	{
+		Node *node = entry->node;
+		out << node->inputSlotCount();
+		for (const SlotIndex & origin : node->inputLinks)
+		{
+			out << origin.node << origin.slot;
+		}
+	}
+
 	return true;
 }
 
-void NodeGraphModel::addNode(NodeWidget *nodeWidget, int type, float x, float y, std::string name)
+void NodeGraphModel::addNode(Node *node)
 {
 	// /!\ not thread-safe
-	int nodeIndex = static_cast<int>(m_nodes.size());
+	int nodeIndex = static_cast<int>(m_nodeEntries.size());
 
 	NodeEntry *entry = new NodeEntry();
-	entry->node = nodeWidget;
-	entry->type = type;
-	entry->x = x;
-	entry->y = y;
-	entry->name = name;
-
-	// links
-	entry->inputLinks.resize(nodeWidget->inputSlotsCount());
-	entry->outputLinks.resize(nodeWidget->outputSlotsCount());
+	entry->node = node;
 
 	// blocks
 	entry->nodeIndex.level = NodeLevel;
@@ -810,9 +819,9 @@ void NodeGraphModel::addNode(NodeWidget *nodeWidget, int type, float x, float y,
 		entry->elementIndex[i].parentBlockIndex = i;
 	}
 
-	m_nodes.push_back(entry);
+	m_nodeEntries.push_back(entry);
 
-	nodeWidget->setGraphModel(this);
-	nodeWidget->setModelIndex(index(nodeIndex, 0));
-	// DANGER! adding nodes provokes memory reallocation! use qt addrow mechanism
+	node->setEnvModel(envModel());
+	node->setGraphModel(this);
+	node->setModelIndex(index(nodeIndex, 0));
 }

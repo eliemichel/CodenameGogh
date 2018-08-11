@@ -1,34 +1,19 @@
 #include "OutputNode.h"
-#include "ui_OutputNode.h"
 
-#include "RenderDialog.h"
+#include "OutputNodeEditor.h"
 #include "Logger.h"
 
-#include <QMessageBox>
-#include <QFont>
-
-OutputNode::OutputNode(QWidget *parent)
-: NodeWidget(parent)
-, ui(new Ui::OutputNode)
-, m_isFilenameUserDefined(false)
-, m_node_name("output")
+OutputNode::OutputNode()
+	: m_isFilenameUserDefined(false)
+	, m_node_name("output")
 {
-	ui->setupUi(this);
-
-	connect(ui->renderButton, &QPushButton::clicked, this, &OutputNode::render);
-	connect(ui->filenameInput, &QLineEdit::textEdited, this, &OutputNode::setUserDefined);
-
 	// Add slots
 	newInputSlot();
-
-	//Quick tests with video samples
-	//ui->filenameInput->setText("/Users/felixdavid/Documents/Logiciels/Tunnel/data/GoghTestSample_h264.mp4");
-	//DEBUG_LOG << ui->filenameInput->text().toStdString();
-	ui->filenameInput->setPlaceholderText("Path/to/output_file");
 }
 
-OutputNode::~OutputNode()
+QWidget * OutputNode::createEditor(QWidget * parent)
 {
+	return new OutputNodeEditor(this, parent);
 }
 
 bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
@@ -43,8 +28,7 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		return false;
 	}
 
-	cmd.cmd.push_back(parmFullEval(0).toStdString());
-
+	cmd.cmd.push_back(parmEvalAsString(0).toStdString());
 	return true;
 }
 
@@ -59,31 +43,45 @@ QString OutputNode::parmName(int parm) const
 {
 	switch (parm)
 	{
-		case 0:
+	case 0:
 		return "filename";
-		default:
+	default:
 		return QString();
 	}
 }
 
-QVariant OutputNode::parmEval(int parm) const
+ParmType OutputNode::parmType(int parm) const
 {
 	switch (parm)
 	{
-		case 0:
-		return ui->filenameInput->text();
-		default:
+	case 0:
+		return StringType;
+	default:
+		return NoneType;
+	}
+}
+
+QVariant OutputNode::parmRawValue(int parm) const
+{
+	switch (parm)
+	{
+	case 0:
+		return QString::fromStdString(m_filename);
+	default:
 		return QVariant();
 	}
 }
 
-void OutputNode::setParm(int parm, QVariant value)
+bool OutputNode::setParm(int parm, QVariant value)
 {
 	switch (parm)
 	{
-		case 0:
-		ui->filenameInput->setText(value.toString());
-		break;
+	case 0:
+		m_filename = value.toString().toStdString();
+		emit parmChanged(parm);
+		return true;
+	default:
+		return false;
 	}
 }
 
@@ -108,40 +106,13 @@ void OutputNode::slotConnectEvent(SlotEvent *event)
 			{
 				for (auto const& p : patternKeys)
 				{
-					replace(userPattern, "$" + p, cmd.keys[p]);
+					if (p != "")
+					{
+						replace(userPattern, "$" + p, cmd.keys[p]);
+					}
 				}
 			}
 			setParm(0, QString().fromStdString(userPattern));
 		}
 	}
-}
-
-void OutputNode::render()
-{
-	RenderCommand cmd;
-	if (buildRenderCommand(-1, cmd))
-	{
-		std::string cmdString;
-		for (auto const& s : cmd.cmd) { cmdString += s; }
-		RenderDialog renderDialog(cmd.cmd);
-		renderDialog.exec();
-	}
-	else
-	{
-		ERR_LOG << "Render failed";
-		QMessageBox errDialog;
-		errDialog.setText("Render failed");
-		errDialog.setInformativeText(QString::fromStdString(cmd.err));
-		errDialog.setIcon(QMessageBox::Critical);
-		errDialog.exec();
-	}
-}
-
-void OutputNode::setUserDefined()
-{
-	m_isFilenameUserDefined = !ui->filenameInput->text().isEmpty();
-
-	QFont font = ui->filenameInput->font();
-	font.setBold(!m_isFilenameUserDefined);
-	ui->filenameInput->setFont(font);
 }

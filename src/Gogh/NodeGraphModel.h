@@ -1,15 +1,14 @@
 #ifndef H_NODEGRAPHMODEL
 #define H_NODEGRAPHMODEL
 
-#include "NodeWidget.h"
 #include "SlotIndex.h"
+#include "Node.h"
 
 #include <QString> // should be replaced by a stream path class
 #include <QAbstractItemModel>
 
 #include <string>
 #include <vector>
-#include <unordered_map>
 #include <set>
 
 class EnvModel;
@@ -65,13 +64,7 @@ private:
 
 	struct NodeEntry
 	{
-		NodeWidget *node;
-		int type;
-		float x, y;
-		std::string name;
-		std::vector<SlotIndex> inputLinks;
-		std::vector<std::set<SlotIndex>> outputLinks;
-
+		Node *node;
 		IndexData nodeIndex;
 		IndexData blockIndex;
 		IndexData elementIndex[_BlockCount];
@@ -81,7 +74,7 @@ public:
 	// Factory function building a new node from a given type.
 	// This is the only place holding a mapping from type enum to type classes
 	// and must be updated any time a new node type is defined
-	static NodeWidget * buildNode(int type);
+	static Node * buildNode(int type);
 
 	/**
 	 * Convert node type to a string, for display purpose only
@@ -121,11 +114,11 @@ public:
 	bool LoadGraph(QString filename);
 	bool SaveGraph(QString filename);
 
-	void addNode(NodeWidget *node, int type, float x, float y, std::string name);
-	const std::vector<NodeEntry*> & nodes() const { return m_nodes; }
+	void addNode(Node *node);
+	// TODO: removeNode() (to be called in dtor)
+	const std::vector<NodeEntry*> & nodes() const { return m_nodeEntries; }
 
-	// TODO: remove me
-	NodeWidget * nodeData(int i) const { return m_nodes[i]->node; }
+	Node * node(int i) const { return m_nodeEntries[i]->node; }
 
 	bool canAddLink(const SlotIndex & origin, const SlotIndex & destination);
 	bool addLink(const SlotIndex & origin, const SlotIndex & destination);
@@ -134,17 +127,14 @@ public:
 	const SlotIndex & originSlot(const SlotIndex & destination) const;
 	const std::set<SlotIndex> & destinationSlots(const SlotIndex & origin) const;
 
-	void addInputSlot(const QModelIndex & nodeIndex);
-	void addOutputSlot(const QModelIndex & nodeIndex);
-	int inputSlotCount(const QModelIndex & nodeIndex) const { m_nodes[nodeIndex.row()]->inputLinks.size(); }
-	int outputSlotCount(const QModelIndex & nodeIndex) const { m_nodes[nodeIndex.row()]->outputLinks.size(); }
+	void broadcastNodeChange(const QModelIndex & nodeIndex) { emit dataChanged(nodeIndex, nodeIndex); }
 
 private:
 	bool inParentBounds(const QModelIndex & index) const;
 	IndexData *indexData(const QModelIndex & index) const;
 
 private:
-	std::vector<NodeEntry*> m_nodes;
+	std::vector<NodeEntry*> m_nodeEntries;
 
 	/// Env Model is forwarded to nodes
 	EnvModel *m_envModel;

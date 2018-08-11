@@ -15,6 +15,9 @@ class SlotGraphicsItem : public QGraphicsEllipseItem
 public:
 	SlotGraphicsItem(QGraphicsItem *parent = nullptr);
 
+	/// Point to which attaching links
+	QPointF slotCenter() const { return sceneBoundingRect().center(); };
+
 	const SlotIndex & slotIndex() const { return m_slotIndex; }
 	void setSlotIndex(const SlotIndex & slotIndex) { m_slotIndex = slotIndex; }
 
@@ -22,7 +25,8 @@ public:
 	void setIsInput(bool isInput) { m_isInput = isInput; }
 
 	LinkGraphicsItem * inputLink() const { return m_inputLink; }
-	void setInputLink(LinkGraphicsItem *link);
+	void removeInputLink();
+	void ensureInputLink();
 
 private:
 	SlotIndex m_slotIndex;

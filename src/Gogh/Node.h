@@ -1,19 +1,29 @@
-#ifndef H_NODEWIDGET
-#define H_NODEWIDGET
+#ifndef H_NODE
+#define H_NODE
 
-#include "Logger.h"
+#include "SlotIndex.h"
 
-#include <QWidget>
+#include <QObject>
+#include <QString>
 #include <QVariant>
 #include <QModelIndex>
 
+#include <set>
 #include <vector>
 #include <string>
 #include<utils/stringlist.h>
 
-class LinkGraphicsItem;
 class EnvModel;
 class NodeGraphModel;
+class QWidget;
+
+enum ParmType
+{
+	NoneType,
+	StringType,
+	IntType,
+	EnumType,
+};
 
 /**
  * This structure is transmitted among the graph nodes while building the
@@ -29,14 +39,13 @@ struct RenderCommand {
 	std::string err;
 };
 
-class NodeWidget : public QWidget
+class Node : public QObject
 {
-	Q_OBJECT;
-
+	Q_OBJECT
 public:
 	class SlotEvent
 	{
-		friend class NodeWidget;
+		friend class Node;
 
 	public:
 		/// index in inputSlots() or outputSlots() of the slot that has been connected
@@ -55,22 +64,62 @@ public:
 	};
 
 public:
-	explicit NodeWidget(QWidget *parent = 0);
+	// TODO: make these private and add accessors
+	int type;
+	float x, y;
+	std::string name;
+	std::vector<SlotIndex> inputLinks;
+	std::vector<std::set<SlotIndex>> outputLinks;
 
-	int inputSlotsCount() const { return m_inputSlotsCount;	}
-	void newInputSlot();
+public:
+	explicit Node(QObject *parent = nullptr);
 
-	int outputSlotsCount() const { return m_outputSlotsCount; }
-	void newOutputSlot();
+	/**
+	 * Create an editor widget to operate on this node's parms.
+	 * This is the only method that handle graphical objects.
+	 */
+	virtual QWidget *createEditor(QWidget *parent = nullptr);
 
-	EnvModel *envModel() const { return m_envModel; }
 	void setEnvModel(EnvModel *envModel) { m_envModel = envModel; }
+	void setGraphModel(NodeGraphModel *model) { m_graphModel = model; }
 
 	const QModelIndex & modelIndex() const { return m_modelIndex; }
 	void setModelIndex(const QModelIndex & index) { m_modelIndex = index; }
 
+public:
+	// parm model
+	virtual int parmCount() const { return 0; }
+	virtual QString parmName(int parm) const { return QString(); }
+	virtual ParmType parmType(int parm) const { return NoneType; }
+	virtual QVariant parmRawValue(int parm) const { return QVariant(); }
+
+	// menu items are used for parm of type EnumType
+	virtual int parmMenuCount(int parm) const { return 0; }
+	virtual QString parmMenuLabel(int parm, int menu) const { return QString(); }
+	virtual QVariant parmMenuValue(int parm, int menu) const { return menu; }
+
+	/// When overriding, think about firing parmChanged(int parm) events when parameter change is accepted
+	virtual bool setParm(int parm, QVariant value) { return false; }
+
+	QString parmEvalAsString(int parm) const;
+	int parmEvalAsInt(int parm) const;
+
+	// slot structure read
+	int inputSlotCount() const { return static_cast<int>(inputLinks.size()); }
+	int outputSlotCount() const { return static_cast<int>(outputLinks.size()); }
+
+signals:
+	void parmChanged(int parm);
+
+protected:
+	// slot structure write
+	void newInputSlot();
+	void newOutputSlot();
+
+	EnvModel * envModel() const { return m_envModel; }
 	NodeGraphModel *graphModel() const { return m_graphModel; }
-	void setGraphModel(NodeGraphModel *model) { m_graphModel = model; }
+
+public:
 
 	/**
 	 * Function that contains the logic of the node. This must be reimplemented
@@ -84,12 +133,6 @@ public:
 	 */
 	bool parentBuildRenderCommand(int inputIndex, RenderCommand & cmd) const;
 
-	/**
-	 * I/O function, used to save and load scenes.
-	 * The default implementation relies on parmCount, parmEval and setParm.
-	 * Reimplement this in subclasses to symmetrically write and read back raw
-	 * node data in a custom way.
-	 */
 	virtual void read(QDataStream & stream);
 	virtual void write(QDataStream & stream) const;
 
@@ -101,15 +144,6 @@ public:
 	void fireSlotConnectEvent(int slotIndex, bool isInput);
 	void fireSlotDisconnectEvent(int slotIndex, bool isInput);
 
-public: // data model
-	virtual int parmCount() const { return 0; }
-	virtual QString parmName(int parm) const { return QString(); }
-	virtual QVariant parmEval(int parm) const { return QVariant(); }
-	virtual void setParm(int parm, QVariant value) {}
-
-	/// This should be called parmEval and the current parmEval should be parmRawValue but I don't want to break the API yet
-	QString parmFullEval(int parm) const;
-
 protected:
 	virtual void slotConnectEvent(SlotEvent *event) {}
 	virtual void slotDisconnectEvent(SlotEvent *event) {}
@@ -118,11 +152,9 @@ protected:
 	std::string m_node_name;
 
 private:
-	int m_inputSlotsCount;
-	int m_outputSlotsCount;
 	EnvModel *m_envModel;
 	NodeGraphModel *m_graphModel;
 	QModelIndex m_modelIndex;
 };
 
-#endif // H_NODEWIDGET
+#endif // H_NODE

@@ -1,27 +1,33 @@
 #ifndef H_CODECNODE
 #define H_CODECNODE
 
-#include "NodeWidget.h"
+#include "Node.h"
 
-namespace Ui {
-	class CodecNode;
-}
-
-class CodecNode : public NodeWidget
+class CodecNode : public Node
 {
 	Q_OBJECT
 
 public:
-	explicit CodecNode(QWidget *parent = 0);
-	~CodecNode();
+	CodecNode();
 
 	bool buildRenderCommand(int outputIndex, RenderCommand & cmd) const override;
+
+	int parmCount() const override;
+	QString parmName(int parm) const override;
+	ParmType parmType(int parm) const override;
+	QVariant parmRawValue(int parm) const override;
+
+	int parmMenuCount(int parm) const override;
+	QString parmMenuLabel(int parm, int menu) const override;
+	QVariant parmMenuValue(int parm, int menu) const override;
+
+	bool setParm(int parm, QVariant value) override;
 
 protected:
 	std::string m_node_name;
 
 private:
-	Ui::CodecNode *ui;
+	int m_codec;
 };
 
 #endif // H_CODECNODE

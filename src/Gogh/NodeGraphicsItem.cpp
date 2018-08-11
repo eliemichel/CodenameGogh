@@ -1,11 +1,11 @@
 #include "NodeGraphicsItem.h"
 #include "LinkGraphicsItem.h"
-#include "NodeWidget.h"
 #include "Logger.h"
 #include "NodeGraphView.h"
 #include "SlotGraphicsItem.h"
 #include "NodeGraphModel.h"
 #include "NodeGraphScene.h"
+#include "Node.h"
 
 #include <QWidget>
 #include <QGraphicsRectItem>
@@ -36,15 +36,17 @@ void NodeGraphicsItemControl::paint(QPainter *painter, const QStyleOptionGraphic
 	painter->drawText(r.x() + 5, r.y() + 2, r.width() - 10, r.height() - 4, Qt::AlignLeft || Qt::AlignVCenter, name());
 }
 
-NodeGraphicsItem::NodeGraphicsItem(NodeGraphScene *scene, NodeWidget *content)
+NodeGraphicsItem::NodeGraphicsItem(NodeGraphScene *scene, Node *node)
 	: m_graphScene(scene)
-	, m_content(content)
+	, m_modelIndex(node->modelIndex())
+	, m_control(nullptr)
 {
-	content->resize(content->sizeHint());
+	m_content = node->createEditor();
+	m_content->resize(m_content->sizeHint());
 
 	m_control = new NodeGraphicsItemControl();
 	scene->addItem(m_control);
-	m_control->setRect(0, 0, content->width(), 20);
+	m_control->setRect(0, 0, m_content->width(), 20);
 	m_control->setPen(Qt::NoPen);
 	m_control->setBrush(QBrush(QColor(41, 41, 41)));
 	m_control->setFlag(QGraphicsItem::ItemIsSelectable, true);
@@ -57,30 +59,17 @@ NodeGraphicsItem::NodeGraphicsItem(NodeGraphScene *scene, NodeWidget *content)
 	m_control->setData(NodeGraphScene::NodePointerData, v);
 	m_control->setZValue(NodeGraphScene::NodeLayer);
 
-	m_proxy = scene->addWidget(content);
+	m_proxy = scene->addWidget(m_content);
 	m_proxy->setData(NodeGraphScene::RoleData, NodeGraphScene::NodeContentRole);
 	m_proxy->setPos(0, m_control->rect().height());
 	m_proxy->setParentItem(m_control);
 	m_proxy->setZValue(NodeGraphScene::NodeLayer);
 
-	updateInputSlots();
-	updateOutputSlots();
-}
-
-void NodeGraphicsItem::setModelIndex(const QModelIndex & modelIndex)
-{
-	if (m_modelIndex.model())
-	{
-		disconnect(m_modelIndex.model(), 0, this, 0);
-	}
-	m_modelIndex = modelIndex;
 	if (m_modelIndex.model())
 	{
 		connect(m_modelIndex.model(), &QAbstractItemModel::dataChanged, this, &NodeGraphicsItem::onDataChanged);
 	}
-
-	updateInputSlots();
-	updateOutputSlots();
+	onDataChanged(modelIndex(), modelIndex());
 }
 
 void NodeGraphicsItem::setSelected(bool selected)
@@ -91,7 +80,7 @@ void NodeGraphicsItem::setSelected(bool selected)
 
 void NodeGraphicsItem::updateInputSlots()
 {
-	for (int i = 0 ; i < m_content->inputSlotsCount() ; ++i)
+	for (int i = 0 ; i < graphModel()->node(modelIndex().row())->inputSlotCount() ; ++i)
 	{
 		SlotGraphicsItem *slotItem;
 		if (i >= m_inputSlotItems.size())
@@ -114,7 +103,7 @@ void NodeGraphicsItem::updateInputSlots()
 
 void NodeGraphicsItem::updateOutputSlots()
 {
-	for (int i = 0; i < m_content->outputSlotsCount(); ++i)
+	for (int i = 0 ; i < graphModel()->node(modelIndex().row())->outputSlotCount(); ++i)
 	{
 		SlotGraphicsItem *slotItem;
 		if (i >= m_outputSlotItems.size())
@@ -142,21 +131,29 @@ void NodeGraphicsItem::updateInputLinks() const
 	{
 		++slotId;
 
-		if (!modelIndex().isValid() || !item->inputLink())
+		if (!modelIndex().isValid())
 		{
+			item->removeInputLink();
 			continue;
 		}
 
 		// TODO: make this easier and avoid cast
 		const NodeGraphModel *model = static_cast<const NodeGraphModel*>(modelIndex().model());
 		SlotIndex sourceSlot = model->originSlot(SlotIndex(modelIndex().row(), slotId));
+
+		if (!sourceSlot.isValid())
+		{
+			item->removeInputLink();
+			continue;
+		}
+
 		const QModelIndex & sourceIndex = model->index(sourceSlot.node, 0);
 		NodeGraphicsItem *sourceNodeItem = m_graphScene->nodeItemAtIndex(sourceIndex);
-
 		QPointF startPos = sourceNodeItem->outputSlotPosition(sourceSlot.slot);
 
+		item->ensureInputLink();
 		item->inputLink()->setStartPos(startPos);
-		item->inputLink()->setEndPos(item->sceneBoundingRect().center());
+		item->inputLink()->setEndPos(item->slotCenter());
 		item->inputLink()->update();
 	}
 }
@@ -179,8 +176,10 @@ void NodeGraphicsItem::updateOutputLinks() const
 		for (const SlotIndex & destination : destinationSlots)
 		{
 			const QModelIndex & destinationIndex = model->index(destination.node, 0);
-			NodeGraphicsItem *destinationNodeItem = m_graphScene->nodeItemAtIndex(destinationIndex);
-			destinationNodeItem->updateInputLinks();
+			if (NodeGraphicsItem *destinationNodeItem = m_graphScene->nodeItemAtIndex(destinationIndex))
+			{
+				destinationNodeItem->updateInputLinks();
+			}
 		}
 	}
 }
