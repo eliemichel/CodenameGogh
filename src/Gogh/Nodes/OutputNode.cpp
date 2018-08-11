@@ -13,6 +13,7 @@ OutputNode::OutputNode(QWidget *parent)
 , m_isFilenameUserDefined(false)
 {
 	ui->setupUi(this);
+	m_node_name = "Output";
 
 	connect(ui->renderButton, &QPushButton::clicked, this, &OutputNode::render);
 	connect(ui->filenameInput, &QLineEdit::textEdited, this, &OutputNode::setUserDefined);
@@ -32,12 +33,17 @@ OutputNode::~OutputNode()
 
 bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 {
+	stringlist pattern;
+	return buildRenderCommand(outputIndex, cmd, pattern);
+}
+bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd, stringlist & pattern) const
+{
 	// special output index for render function
 	if (outputIndex != -1) {
 		return false;
 	}
 
-	if (!parentBuildRenderCommand(0, cmd))
+	if (!parentBuildRenderCommand(0, cmd, pattern))
 	{
 		return false;
 	}
@@ -93,19 +99,17 @@ void OutputNode::slotConnectEvent(SlotEvent *event)
 		{
 			// TODO: auto name output
 			RenderCommand cmd;
+			std::string userPattern = "$filename_$Codec_$Scale.$Ext";
+			//Find how to split userPattern in stringlist pattern
+			stringlist pattern {"Input", "Codec", "Scale"};
 			std::string cmdString;
-			if (buildRenderCommand(-1, cmd))
+			if (buildRenderCommand(-1, cmd, pattern))
 			{
 				int i = 0;
 				for (auto const& s : cmd.cmd)
 				{
-					cmdString = "/Users/felixdavid/Documents/Logiciels/Tunnel/data/GoghTestSample.mov";
-					if (i == 3)
-					{
-						cmdString = "/Users/felixdavid/Documents/Logiciels/Tunnel/data/GoghTestSample_" + s + ".mov";
-						break;
-					}
-					i++;
+					//cmdString = "/Users/felixdavid/Documents/Logiciels/Tunnel/data/GoghTestSample.mov";
+					cmdString += s;
 				}
 			}
 			setParm(0, QString().fromStdString(cmdString));

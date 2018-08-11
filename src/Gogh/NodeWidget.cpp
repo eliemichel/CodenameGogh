@@ -13,6 +13,7 @@ NodeWidget::NodeWidget(QWidget *parent)
 	: QWidget(parent)
 	, m_envModel(nullptr)
 {
+	m_node_name = "Default";
 }
 
 NodeWidget::~NodeWidget()
@@ -83,11 +84,21 @@ int NodeWidget::outputSlotIndex(const Slot *slot) const
 
 bool NodeWidget::buildRenderCommand(const Slot *slot, RenderCommand  & cmd) const
 {
+	stringlist pattern;
+ 	buildRenderCommand(slot, cmd, pattern);
+}
+bool NodeWidget::buildRenderCommand(const Slot *slot, RenderCommand  & cmd, stringlist & pattern) const
+{
 	int i = outputSlotIndex(slot);
-	return i < 0 ? false : buildRenderCommand(i, cmd);
+	return i < 0 ? false : buildRenderCommand(i, cmd, pattern);
 }
 
 bool NodeWidget::parentBuildRenderCommand(int inputIndex, RenderCommand & cmd) const
+{
+	stringlist pattern;
+	parentBuildRenderCommand(inputIndex, cmd, pattern);
+}
+bool NodeWidget::parentBuildRenderCommand(int inputIndex, RenderCommand & cmd, stringlist & pattern) const
 {
 	if (inputIndex >= inputSlots().size())
 	{
@@ -108,7 +119,7 @@ bool NodeWidget::parentBuildRenderCommand(int inputIndex, RenderCommand & cmd) c
 		return false;
 	}
 
-	return parentNode->buildRenderCommand(sourceSlot, cmd);
+	return parentNode->buildRenderCommand(sourceSlot, cmd, pattern);
 }
 
 void NodeWidget::read(QDataStream & stream)
@@ -157,4 +168,16 @@ QString NodeWidget::parmFullEval(int parm) const
 		}
 	}
 	return value;
+}
+
+bool NodeWidget::isPatterned(stringlist &pattern) const
+{
+	for (auto const& p : pattern)
+	{
+		if(p == m_node_name)
+		{
+			return true;
+		}
+	}
+	return false;
 }

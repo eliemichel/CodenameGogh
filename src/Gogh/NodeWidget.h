@@ -8,6 +8,7 @@
 
 #include <vector>
 #include <string>
+#include<utils/stringlist.h>
 
 class LinkGraphicsItem;
 class EnvModel;
@@ -73,6 +74,7 @@ public:
 	 * in each node and is called when building the render command.
 	 */
 	virtual bool buildRenderCommand(int outputIndex, RenderCommand & cmd) const { return true; }
+	virtual bool buildRenderCommand(int outputIndex, RenderCommand & cmd, stringlist &pattern) const { return true; }
 
 	/**
 	 * Try to call buildRenderCommand by providing a pointer to a slot instead
@@ -80,12 +82,14 @@ public:
 	 * that equals.
 	 */
 	bool buildRenderCommand(const Slot *slot, RenderCommand  & cmd) const;
+	bool buildRenderCommand(const Slot *slot, RenderCommand  & cmd, stringlist &pattern) const;
 
 	/**
 	 * Convenience function calling buildRenderCommand() on the source output slot
 	 * connected to the input at index inputIndex.
 	 */
 	bool parentBuildRenderCommand(int inputIndex, RenderCommand & cmd) const;
+	bool parentBuildRenderCommand(int inputIndex, RenderCommand & cmd, stringlist &pattern) const;
 
 	/**
 	 * I/O function, used to save and load scenes.
@@ -113,6 +117,10 @@ public: // data model
 
 protected:
 	virtual void slotConnectEvent(SlotEvent *event) {}
+
+protected:
+	std::string m_node_name;
+	bool isPatterned(stringlist &pattern) const;
 
 private:
 	std::vector<Slot*> m_inputSlots;

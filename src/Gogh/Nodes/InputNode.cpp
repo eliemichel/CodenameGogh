@@ -12,6 +12,7 @@ InputNode::InputNode(QWidget *parent)
 	, ui(new Ui::InputNode)
 {
 	ui->setupUi(this);
+	m_node_name = "Input";
 
 	// Add slots
 	newOutputSlot();
@@ -28,6 +29,11 @@ InputNode::~InputNode()
 
 bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 {
+	stringlist pattern;
+	return buildRenderCommand(outputIndex, cmd, pattern);
+}
+bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd, stringlist & pattern) const
+{
 	if (outputIndex != 0) {
 		return false;
 	}
@@ -42,8 +48,16 @@ bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		return false;
 	}
 
-	cmd.cmd.push_back("-i");
-	cmd.cmd.push_back(filename.toStdString());
+	if(isPatterned(pattern)){
+		cmd.cmd.push_back(fileinfo.absolutePath().toStdString());
+		cmd.cmd.push_back(fileinfo.baseName().toStdString());
+		cmd.cmd.push_back("." + fileinfo.suffix().toStdString());
+	}
+	else
+	{
+		cmd.cmd.push_back("-i");
+		cmd.cmd.push_back(filename.toStdString());
+	}
 	return true;
 }
 
