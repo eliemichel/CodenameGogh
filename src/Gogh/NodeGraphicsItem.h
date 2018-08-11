@@ -1,6 +1,8 @@
 #ifndef H_NODEGRAPHICSITEM
 #define H_NODEGRAPHICSITEM
 
+#include "NodeGraphModel.h"
+
 #include <QPointF>
 #include <QGraphicsRectItem>
 #include <QModelIndex>
@@ -8,7 +10,7 @@
 
 #include <vector>
 
-class NodeWidget;
+class Node;
 class QGraphicsRectItem;
 class QGraphicsProxyWidget;
 class SlotGraphicsItem;
@@ -31,10 +33,11 @@ class NodeGraphicsItem : public QObject
 {
 	Q_OBJECT
 public:
-	NodeGraphicsItem(NodeGraphScene *scene, NodeWidget *content);
+	NodeGraphicsItem(NodeGraphScene *scene, Node *node);
 
 	const QModelIndex & modelIndex() const { return m_modelIndex; }
-	void setModelIndex(const QModelIndex & modelIndex);
+
+	const NodeGraphModel *graphModel() const { return static_cast<const NodeGraphModel*>(modelIndex().model()); }
 
 	void setPos(QPointF pos) { if (m_control) m_control->setPos(pos); }
 
@@ -49,16 +52,14 @@ public:
 
 	QPointF outputSlotPosition(int i) const;
 
-protected:
-	//QVariant itemChange(GraphicsItemChange change, const QVariant &value) override;
-
 private slots:
 	void onDataChanged(const QModelIndex & topLeft, const QModelIndex & bottomRight);
 
 private:
+
 	NodeGraphScene *m_graphScene;
 	NodeGraphicsItemControl *m_control;
-	NodeWidget * m_content;
+	QWidget * m_content;
 	QGraphicsProxyWidget *m_proxy;
 	std::vector<SlotGraphicsItem*> m_outputSlotItems;
 	std::vector<SlotGraphicsItem*> m_inputSlotItems;

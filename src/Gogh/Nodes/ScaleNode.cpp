@@ -1,23 +1,15 @@
 #include "ScaleNode.h"
-#include "ui_ScaleNode.h"
 
 #include "Logger.h"
 
 #include <sstream>
 
-ScaleNode::ScaleNode(QWidget *parent)
-	: NodeWidget(parent)
-	, ui(new Ui::ScaleNode)
+ScaleNode::ScaleNode()
+	: m_width(1920)
+	, m_height(1080)
 {
-	ui->setupUi(this);
-
-	// Add slots
 	newInputSlot();
 	newOutputSlot();
-}
-
-ScaleNode::~ScaleNode()
-{
 }
 
 bool ScaleNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
@@ -33,7 +25,7 @@ bool ScaleNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 
 	cmd.cmd.push_back("-vf");
 	std::ostringstream ss;
-	ss << "scale=" << ui->widthInput->value() << ":" << ui->heightInput->value();
+	ss << "scale=" << parmEvalAsInt(0) << ":" << parmEvalAsInt(1);
 	cmd.cmd.push_back(ss.str());
 	return true;
 }
@@ -58,28 +50,45 @@ QString ScaleNode::parmName(int parm) const
 	}
 }
 
-QVariant ScaleNode::parmEval(int parm) const
+ParmType ScaleNode::parmType(int parm) const
 {
 	switch (parm)
 	{
 	case 0:
-		return ui->widthInput->value();
+		return IntType;
 	case 1:
-		return ui->heightInput->value();
+		return IntType;
+	default:
+		return NoneType;
+	}
+}
+
+QVariant ScaleNode::parmRawValue(int parm) const
+{
+	switch (parm)
+	{
+	case 0:
+		return m_width;
+	case 1:
+		return m_height;
 	default:
 		return QVariant();
 	}
 }
 
-void ScaleNode::setParm(int parm, QVariant value)
+bool ScaleNode::setParm(int parm, QVariant value)
 {
 	switch (parm)
 	{
 	case 0:
-		ui->widthInput->setValue(value.toInt());
-		break;
+		m_width = value.toInt();
+		emit parmChanged(parm);
+		return true;
 	case 1:
-		ui->heightInput->setValue(value.toInt());
-		break;
+		m_height = value.toInt();
+		emit parmChanged(parm);
+		return true;
+	default:
+		return false;
 	}
 }

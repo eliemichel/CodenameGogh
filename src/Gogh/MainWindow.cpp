@@ -4,7 +4,6 @@
 #include "Logger.h"
 #include "NodeGraphModel.h"
 #include "NodeGraphScene.h"
-#include "NodeWidget.h"
 #include "LinkGraphicsItem.h"
 #include "NodeGraphicsItem.h"
 #include "SlotGraphicsItem.h"
@@ -68,8 +67,7 @@ MainWindow::MainWindow(QString graphFilename, QWidget *parent)
 	{
 		float x = m_model->data(m_model->index(i, NodeGraphModel::PosXColumn)).toFloat();
 		float y = m_model->data(m_model->index(i, NodeGraphModel::PosYColumn)).toFloat();
-		nodeItem = new NodeGraphicsItem(m_scene, m_model->nodeData(i));
-		nodeItem->setModelIndex(m_model->index(i, 0));
+		nodeItem = new NodeGraphicsItem(m_scene, m_model->node(i));
 		nodeItem->setPos(QPointF(x, y));
 	}
 

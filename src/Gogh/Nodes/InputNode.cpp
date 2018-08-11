@@ -1,5 +1,4 @@
 #include "InputNode.h"
-#include "ui_InputNode.h"
 
 #include "Logger.h"
 
@@ -7,23 +6,13 @@
 
 #include <sstream>
 
-InputNode::InputNode(QWidget *parent)
-	: NodeWidget(parent)
-	, ui(new Ui::InputNode)
+InputNode::InputNode()
 {
-	ui->setupUi(this);
-
 	// Add slots
 	newOutputSlot();
 
-	//Quick tests with video samples
-	ui->filenameInput->setText("/Users/felixdavid/Documents/Logiciels/Tunnel/data/GoghTestSample.mp4");
-	//DEBUG_LOG << ui->filenameInput->text().toStdString();
-	ui->filenameInput->setPlaceholderText("Path/to/input_file");
-}
-
-InputNode::~InputNode()
-{
+	// Quick tests with video samples
+	m_filename = "/Users/felixdavid/Documents/Logiciels/Tunnel/data/GoghTestSample.mp4";
 }
 
 bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
@@ -32,7 +21,7 @@ bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		return false;
 	}
 
-	QString filename = parmFullEval(0);
+	QString filename = parmEvalAsString(0);
 	QFileInfo fileinfo(filename);
 	if (!fileinfo.isFile())
 	{
@@ -65,23 +54,37 @@ QString InputNode::parmName(int parm) const
 	}
 }
 
-QVariant InputNode::parmEval(int parm) const
+ParmType InputNode::parmType(int parm) const
 {
 	switch (parm)
 	{
 	case 0:
-		return ui->filenameInput->text();
+		return StringType;
+	default:
+		return NoneType;
+	}
+}
+
+QVariant InputNode::parmRawValue(int parm) const
+{
+	switch (parm)
+	{
+	case 0:
+		return QString::fromStdString(m_filename);
 	default:
 		return QVariant();
 	}
 }
 
-void InputNode::setParm(int parm, QVariant value)
+bool InputNode::setParm(int parm, QVariant value)
 {
 	switch (parm)
 	{
 	case 0:
-		ui->filenameInput->setText(value.toString());
-		break;
+		m_filename = value.toString().toStdString();
+		emit parmChanged(parm);
+		return true;
+	default:
+		return false;
 	}
 }

@@ -1,25 +1,18 @@
 #include "MixNode.h"
-#include "ui_MixNode.h"
 
 #include "Logger.h"
 
 #include <sstream>
 #include <string>
+#include <QDataStream>
 
-MixNode::MixNode(QWidget *parent)
-	: NodeWidget(parent)
-	, ui(new Ui::MixNode)
+MixNode::MixNode()
 {
-	ui->setupUi(this);
-
-	// Add slots
 	newInputSlot();
 	newInputSlot();
 	newOutputSlot();
-}
 
-MixNode::~MixNode()
-{
+	m_streams.push_back("");
 }
 
 bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
@@ -34,7 +27,7 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	}
 
 	//cmd.cmd.push_back("-c:v");
-	//cmd.cmd.push_back(ui->codecBox->currentText().toStdString());
+	//cmd.cmd.push_back(parmEvalAsString(0).toStdString());
 	return true;
 }
 
@@ -42,7 +35,7 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 
 int MixNode::parmCount() const
 {
-	return 1;
+	return static_cast<int>(m_streams.size());
 }
 
 QString MixNode::parmName(int parm) const
@@ -57,11 +50,23 @@ QString MixNode::parmName(int parm) const
 	}
 }
 
-QVariant MixNode::parmEval(int parm) const
+ParmType MixNode::parmType(int parm) const
 {
 	if (parm >= 0 && parm < parmCount())
 	{
-		return ui->streamLineEdit1->text();
+		return StringType;
+	}
+	else
+	{
+		return NoneType;
+	}
+}
+
+QVariant MixNode::parmRawValue(int parm) const
+{
+	if (parm >= 0 && parm < parmCount())
+	{
+		return QString::fromStdString(m_streams[parm]);
 	}
 	else
 	{
@@ -69,12 +74,37 @@ QVariant MixNode::parmEval(int parm) const
 	}
 }
 
-void MixNode::setParm(int parm, QVariant value)
+bool MixNode::setParm(int parm, QVariant value)
 {
 	if (parm >= 0 && parm < parmCount())
 	{
-		ui->streamLineEdit1->setText(value.toString());
+		m_streams[parm] = value.toString().toStdString();
+		emit parmChanged(parm);
+		return true;
 	}
+	else
+	{
+		return false;
+	}
+}
+
+void MixNode::read(QDataStream & stream)
+{
+	int n;
+	stream >> n;
+	for (int i = parmCount(); i < n; ++i)
+	{
+		newInputSlot();
+	}
+	m_streams.resize(n);
+	Node::read(stream);
+}
+
+void MixNode::write(QDataStream & stream) const
+{
+	int n = parmCount();
+	stream << n;
+	Node::write(stream);
 }
 
 void MixNode::slotConnectEvent(SlotEvent *event)
@@ -82,5 +112,7 @@ void MixNode::slotConnectEvent(SlotEvent *event)
 	if (event->isInputSlot() && event->slotIndex() == 0)
 	{
 		newInputSlot();
+		m_streams.push_back("");
+		emit parmChanged(parmCount() - 1);
 	}
 }

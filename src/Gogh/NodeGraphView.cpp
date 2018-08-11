@@ -1,7 +1,6 @@
 #include "NodeGraphView.h"
 
 #include "Logger.h"
-#include "NodeWidget.h"
 #include "LinkGraphicsItem.h"
 #include "SlotGraphicsItem.h"
 #include "NodeGraphicsItem.h"

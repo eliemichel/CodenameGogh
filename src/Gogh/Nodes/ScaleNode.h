@@ -1,30 +1,27 @@
 #ifndef H_SCALENODE
 #define H_SCALENODE
 
-#include "NodeWidget.h"
+#include "Node.h"
 
-namespace Ui {
-	class ScaleNode;
-}
-
-class ScaleNode : public NodeWidget
+class ScaleNode : public Node
 {
 	Q_OBJECT
 
 public:
-	explicit ScaleNode(QWidget *parent = 0);
-	~ScaleNode();
+	ScaleNode();
 
 	bool buildRenderCommand(int outputIndex, RenderCommand & cmd) const override;
 
 public: // data model
 	int parmCount() const override;
 	QString parmName(int parm) const override;
-	QVariant parmEval(int parm) const override;
-	void setParm(int parm, QVariant value) override;
+	ParmType parmType(int parm) const override;
+	QVariant parmRawValue(int parm) const override;
+	bool setParm(int parm, QVariant value) override;
 
 private:
-	Ui::ScaleNode *ui;
+	int m_width;
+	int m_height;
 };
 
 #endif // H_SCALENODE

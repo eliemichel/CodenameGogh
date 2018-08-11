@@ -16,13 +16,15 @@ add_executable(
 	utils/strutils.cpp
 	utils/fileutils.h
 	utils/fileutils.cpp
+	Node.h
+	Node.cpp
+	DefaultNodeEditor.h
+	DefaultNodeEditor.cpp
 	MainWindow.h
 	MainWindow.ui
 	MainWindow.cpp
 	NodeGraphView.h
 	NodeGraphView.cpp
-	NodeWidget.h
-	NodeWidget.cpp
 	NodeGraphModel.h
 	NodeGraphModel.cpp
 	NodeGraphScene.h
@@ -40,23 +42,17 @@ add_executable(
 	SlotGraphicsItem.cpp
 	SlotIndex.h
 
-	Nodes/TestNode.h
-	Nodes/TestNode.ui
-	Nodes/TestNode.cpp
 	Nodes/OutputNode.h
-	Nodes/OutputNode.ui
 	Nodes/OutputNode.cpp
+	Nodes/OutputNodeEditor.h
+	Nodes/OutputNodeEditor.cpp
 	Nodes/InputNode.h
-	Nodes/InputNode.ui
 	Nodes/InputNode.cpp
 	Nodes/ScaleNode.h
-	Nodes/ScaleNode.ui
 	Nodes/ScaleNode.cpp
 	Nodes/CodecNode.h
-	Nodes/CodecNode.ui
 	Nodes/CodecNode.cpp
 	Nodes/MixNode.h
-	Nodes/MixNode.ui
 	Nodes/MixNode.cpp
 
 	Tools/AbstractGraphTool.h

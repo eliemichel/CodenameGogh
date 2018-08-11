@@ -1,37 +1,33 @@
 #ifndef H_OUTPUTNODE
 #define H_OUTPUTNODE
 
-#include "NodeWidget.h"
+#include "Node.h"
 
-namespace Ui {
-	class OutputNode;
-}
-
-class OutputNode : public NodeWidget
+class OutputNode : public Node
 {
 	Q_OBJECT
 
 public:
-	explicit OutputNode(QWidget *parent = 0);
-	~OutputNode();
+	OutputNode();
+
+	QWidget *createEditor(QWidget *parent = nullptr) override;
 
 	bool buildRenderCommand(int outputIndex, RenderCommand & cmd) const override;
+
+	void setFilenameUserDefined(bool userDefined) { m_isFilenameUserDefined = userDefined; }
 
 public: // data model
 	int parmCount() const override;
 	QString parmName(int parm) const override;
-	QVariant parmEval(int parm) const override;
-	void setParm(int parm, QVariant value) override;
+	ParmType parmType(int parm) const override;
+	QVariant parmRawValue(int parm) const override;
+	bool setParm(int parm, QVariant value) override;
 
 protected:
 	void slotConnectEvent(SlotEvent *event) override;
 
-private slots:
-	void render();
-	void setUserDefined();
-
 private:
-	Ui::OutputNode *ui;
+	std::string m_filename;
 
 	/// Used to keep track of whether the user set the filename or whether it has been auto generated and must hence be updated
 	/// if filename is user-defined, it is displayed in bold
