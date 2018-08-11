@@ -16,6 +16,8 @@ add_executable(
 	utils/strutils.cpp
 	utils/fileutils.h
 	utils/fileutils.cpp
+	utils/stringlist.h
+	utils/stringlist.cpp
 	MainWindow.h
 	MainWindow.ui
 	MainWindow.cpp

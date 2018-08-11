@@ -16,13 +16,15 @@ public:
 	~InputNode();
 
 	bool buildRenderCommand(int outputIndex, RenderCommand & cmd) const override;
-	bool buildRenderCommand(int outputIndex, RenderCommand & cmd, stringlist & pattern) const override;
 
 public: // data model
 	int parmCount() const override;
 	QString parmName(int parm) const override;
 	QVariant parmEval(int parm) const override;
 	void setParm(int parm, QVariant value) override;
+
+protected:
+	std::string m_node_name;
 
 private:
 	Ui::InputNode *ui;

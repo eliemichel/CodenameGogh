@@ -8,9 +8,9 @@
 CodecNode::CodecNode(QWidget *parent)
 	: NodeWidget(parent)
 	, ui(new Ui::CodecNode)
+	, m_node_name("codec")
 {
 	ui->setupUi(this);
-	m_node_name = "Codec";
 
 	// Add slots
 	newInputSlot();
@@ -27,30 +27,22 @@ CodecNode::~CodecNode()
 
 bool CodecNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 {
-	stringlist pattern;
-	return buildRenderCommand(outputIndex, cmd, pattern);
-}
-bool CodecNode::buildRenderCommand(int outputIndex, RenderCommand & cmd, stringlist & pattern) const
-{
 	if (outputIndex != 0) {
 		return false;
 	}
 
-	if (!parentBuildRenderCommand(0, cmd, pattern))
+	if (!parentBuildRenderCommand(0, cmd))
 	{
 		return false;
 	}
-	if(isPatterned(pattern))
-	{
-		int cmdLen = cmd.cmd.size();
-		//cmd.cmd.at(cmdLen - 1) = ui->codecBox->currentText().toStdString();
-		cmd.cmd.resize(cmdLen + 1, cmd.cmd[cmdLen - 1]);
-		cmd.cmd.at(cmdLen - 1) = ui->codecBox->currentText().toStdString();
-	}
-	else
-	{
-		cmd.cmd.push_back("-c:v");
-		cmd.cmd.push_back(ui->codecBox->currentText().toStdString());
-	}
+	/*int cmdLen = cmd.cmd.size();
+	//cmd.cmd.at(cmdLen - 1) = ui->codecBox->currentText().toStdString();
+	cmd.cmd.resize(cmdLen + 1, cmd.cmd[cmdLen - 1]);
+	cmd.cmd.at(cmdLen - 1) = ui->codecBox->currentText().toStdString();*/
+	cmd.keys[m_node_name] = ui->codecBox->currentText().toStdString();
+
+	cmd.cmd.push_back("-c:v");
+	cmd.cmd.push_back(ui->codecBox->currentText().toStdString());
+
 	return true;
 }

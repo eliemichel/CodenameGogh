@@ -16,7 +16,6 @@ public:
 	~ScaleNode();
 
 	bool buildRenderCommand(int outputIndex, RenderCommand & cmd) const override;
-	bool buildRenderCommand(int outputIndex, RenderCommand & cmd, stringlist & pattern) const override;
 
 public: // data model
 	int parmCount() const override;
@@ -27,6 +26,9 @@ public: // data model
 protected:
 	// DEBUG!
 	void slotConnectEvent(SlotEvent *event) override;
+
+protected:
+	std::string m_node_name;
 
 private:
 	Ui::ScaleNode *ui;

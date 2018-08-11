@@ -10,9 +10,9 @@
 InputNode::InputNode(QWidget *parent)
 	: NodeWidget(parent)
 	, ui(new Ui::InputNode)
+	, m_node_name("input")
 {
 	ui->setupUi(this);
-	m_node_name = "Input";
 
 	// Add slots
 	newOutputSlot();
@@ -29,11 +29,6 @@ InputNode::~InputNode()
 
 bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 {
-	stringlist pattern;
-	return buildRenderCommand(outputIndex, cmd, pattern);
-}
-bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd, stringlist & pattern) const
-{
 	if (outputIndex != 0) {
 		return false;
 	}
@@ -48,16 +43,15 @@ bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd, stringl
 		return false;
 	}
 
-	if(isPatterned(pattern)){
-		cmd.cmd.push_back(fileinfo.absolutePath().toStdString());
-		cmd.cmd.push_back(fileinfo.baseName().toStdString());
-		cmd.cmd.push_back("." + fileinfo.suffix().toStdString());
-	}
-	else
-	{
-		cmd.cmd.push_back("-i");
-		cmd.cmd.push_back(filename.toStdString());
-	}
+	cmd.keys["path"] = fileinfo.absolutePath().toStdString();
+	cmd.keys["filename"] = fileinfo.baseName().toStdString();
+	cmd.keys["ext"] = fileinfo.suffix().toStdString();
+	cmd.keys[m_node_name] = filename.toStdString();
+	//TODO: Set default keys from ffprobe file properties, like "codec" or "scale"
+
+	cmd.cmd.push_back("-i");
+	cmd.cmd.push_back(filename.toStdString());
+
 	return true;
 }
 

@@ -11,9 +11,9 @@ OutputNode::OutputNode(QWidget *parent)
 : NodeWidget(parent)
 , ui(new Ui::OutputNode)
 , m_isFilenameUserDefined(false)
+, m_node_name("output")
 {
 	ui->setupUi(this);
-	m_node_name = "Output";
 
 	connect(ui->renderButton, &QPushButton::clicked, this, &OutputNode::render);
 	connect(ui->filenameInput, &QLineEdit::textEdited, this, &OutputNode::setUserDefined);
@@ -33,22 +33,18 @@ OutputNode::~OutputNode()
 
 bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 {
-	stringlist pattern;
-	return buildRenderCommand(outputIndex, cmd, pattern);
-}
-bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd, stringlist & pattern) const
-{
 	// special output index for render function
 	if (outputIndex != -1) {
 		return false;
 	}
 
-	if (!parentBuildRenderCommand(0, cmd, pattern))
+	if (!parentBuildRenderCommand(0, cmd))
 	{
 		return false;
 	}
 
 	cmd.cmd.push_back(parmFullEval(0).toStdString());
+
 	return true;
 }
 
@@ -97,22 +93,25 @@ void OutputNode::slotConnectEvent(SlotEvent *event)
 	{
 		if (!m_isFilenameUserDefined)
 		{
-			// TODO: auto name output
+			// Smart ouput renaming
 			RenderCommand cmd;
-			std::string userPattern = "$filename_$Codec_$Scale.$Ext";
-			//Find how to split userPattern in stringlist pattern
-			stringlist pattern {"Input", "Codec", "Scale"};
-			std::string cmdString;
-			if (buildRenderCommand(-1, cmd, pattern))
+
+			//TODO: userPattern from user_preferences menu
+			std::string userPattern = "$path$filename_$codec_$scale.$ext";
+
+			std::string s = userPattern;
+			s.erase(remove_if(s.begin(), s.end(), [](char c) { return !isalpha(c) && c != '$'; } ), s.end());
+
+			stringlist patternKeys = split(s, '$');
+
+			if (buildRenderCommand(-1, cmd))
 			{
-				int i = 0;
-				for (auto const& s : cmd.cmd)
+				for (auto const& p : patternKeys)
 				{
-					//cmdString = "/Users/felixdavid/Documents/Logiciels/Tunnel/data/GoghTestSample.mov";
-					cmdString += s;
+					replace(userPattern, "$" + p, cmd.keys[p]);
 				}
 			}
-			setParm(0, QString().fromStdString(cmdString));
+			setParm(0, QString().fromStdString(userPattern));
 		}
 	}
 }

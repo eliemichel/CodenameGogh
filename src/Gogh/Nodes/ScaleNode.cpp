@@ -8,9 +8,9 @@
 ScaleNode::ScaleNode(QWidget *parent)
 	: NodeWidget(parent)
 	, ui(new Ui::ScaleNode)
+	, m_node_name("scale")
 {
 	ui->setupUi(this);
-	m_node_name = "Scale";
 
 	// Add slots
 	newInputSlot();
@@ -23,33 +23,22 @@ ScaleNode::~ScaleNode()
 
 bool ScaleNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 {
-	stringlist pattern;
-	return buildRenderCommand(outputIndex, cmd, pattern);
-}
-bool ScaleNode::buildRenderCommand(int outputIndex, RenderCommand & cmd, stringlist & pattern) const
-{
 	if (outputIndex != 0) {
 		return false;
 	}
 
-	if (!parentBuildRenderCommand(0, cmd, pattern))
+	if (!parentBuildRenderCommand(0, cmd))
 	{
 		return false;
 	}
 
-	if(isPatterned(pattern))
-	{
-		std::ostringstream ss;
-		ss << ui->widthInput->value() << "x" << ui->heightInput->value();
-		cmd.cmd.push_back(ss.str());
-	}
-	else
-	{
-		cmd.cmd.push_back("-vf");
-		std::ostringstream ss;
-		ss << "scale=" << ui->widthInput->value() << ":" << ui->heightInput->value();
-		cmd.cmd.push_back(ss.str());	
-	}
+	cmd.keys[m_node_name] = std::to_string(ui->widthInput->value()) + "x" + std::to_string(ui->heightInput->value());
+
+	cmd.cmd.push_back("-vf");
+	std::ostringstream ss;
+	ss << "scale=" << ui->widthInput->value() << ":" << ui->heightInput->value();
+	cmd.cmd.push_back(ss.str());
+
 	return true;
 }
 

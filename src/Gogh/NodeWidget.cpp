@@ -15,8 +15,9 @@ NodeWidget::NodeWidget(QWidget *parent)
 	, m_inputSlotsCount(0)
 	, m_outputSlotsCount(0)
 	, m_envModel(nullptr)
+	, m_node_name("Default")
 {
-	m_node_name = "Default";
+
 }
 
 void NodeWidget::newInputSlot()
@@ -40,11 +41,6 @@ void NodeWidget::newOutputSlot()
 }
 
 bool NodeWidget::parentBuildRenderCommand(int inputIndex, RenderCommand & cmd) const
-{
-	stringlist pattern;
-	return parentBuildRenderCommand(inputIndex, cmd, pattern);
-}
-bool NodeWidget::parentBuildRenderCommand(int inputIndex, RenderCommand & cmd, stringlist & pattern) const
 {
 	if (!graphModel() || !modelIndex().isValid())
 	{
@@ -71,7 +67,7 @@ bool NodeWidget::parentBuildRenderCommand(int inputIndex, RenderCommand & cmd, s
 		return false;
 	}
 
-	return parentNode->buildRenderCommand(origin.slot, cmd, pattern);
+	return parentNode->buildRenderCommand(origin.slot, cmd);
 }
 
 void NodeWidget::read(QDataStream & stream)
@@ -118,16 +114,4 @@ QString NodeWidget::parmFullEval(int parm) const
 		}
 	}
 	return value;
-}
-
-bool NodeWidget::isPatterned(stringlist &pattern) const
-{
-	for (auto const& p : pattern)
-	{
-		if(p == m_node_name)
-		{
-			return true;
-		}
-	}
-	return false;
 }

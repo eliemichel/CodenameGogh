@@ -22,10 +22,12 @@ public: // data model
 	void setParm(int parm, QVariant value) override;
 
 	bool buildRenderCommand(int outputIndex, RenderCommand & cmd) const override;
-	bool buildRenderCommand(int outputIndex, RenderCommand & cmd, stringlist & pattern) const override;
 
 protected:
 	void slotConnectEvent(SlotEvent *event) override;
+
+protected:
+	std::string m_node_name;
 
 private:
 	Ui::MixNode *ui;

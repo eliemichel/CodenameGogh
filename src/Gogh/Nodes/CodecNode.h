@@ -16,7 +16,9 @@ public:
 	~CodecNode();
 
 	bool buildRenderCommand(int outputIndex, RenderCommand & cmd) const override;
-	bool buildRenderCommand(int outputIndex, RenderCommand & cmd, stringlist & pattern) const override;
+
+protected:
+	std::string m_node_name;
 
 private:
 	Ui::CodecNode *ui;

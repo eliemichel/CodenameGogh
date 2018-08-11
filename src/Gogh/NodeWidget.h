@@ -23,6 +23,7 @@ class NodeGraphModel;
 struct RenderCommand {
 	// raw command being built
 	std::vector<std::string> cmd;
+	std::map<std::string, std::string> keys;
 
 	// error message that may be filled when returning false in buildRenderCommand
 	std::string err;
@@ -76,14 +77,12 @@ public:
 	 * in each node and is called when building the render command.
 	 */
 	virtual bool buildRenderCommand(int outputIndex, RenderCommand & cmd) const { return true; }
-	virtual bool buildRenderCommand(int outputIndex, RenderCommand & cmd, stringlist & pattern) const { return true; }
 
 	/**
 	 * Convenience function calling buildRenderCommand() on the source output slot
 	 * connected to the input at index inputIndex.
 	 */
 	bool parentBuildRenderCommand(int inputIndex, RenderCommand & cmd) const;
-	bool parentBuildRenderCommand(int inputIndex, RenderCommand & cmd, stringlist & pattern) const;
 
 	/**
 	 * I/O function, used to save and load scenes.
@@ -117,7 +116,6 @@ protected:
 
 protected:
 	std::string m_node_name;
-	bool isPatterned(stringlist &pattern) const;
 
 private:
 	int m_inputSlotsCount;

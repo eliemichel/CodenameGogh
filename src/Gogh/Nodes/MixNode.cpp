@@ -9,6 +9,7 @@
 MixNode::MixNode(QWidget *parent)
 	: NodeWidget(parent)
 	, ui(new Ui::MixNode)
+	, m_node_name("mix")
 {
 	ui->setupUi(this);
 
@@ -23,11 +24,6 @@ MixNode::~MixNode()
 }
 
 bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
-{
-	stringlist pattern;
-	return buildRenderCommand(outputIndex, cmd, pattern);
-}
-bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd, stringlist & pattern) const
 {
 	if (outputIndex != 0) {
 		return false;

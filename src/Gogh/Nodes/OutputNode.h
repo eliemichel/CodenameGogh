@@ -14,9 +14,8 @@ class OutputNode : public NodeWidget
 public:
 	explicit OutputNode(QWidget *parent = 0);
 	~OutputNode();
-	
+
 	bool buildRenderCommand(int outputIndex, RenderCommand & cmd) const override;
-	bool buildRenderCommand(int outputIndex, RenderCommand & cmd, stringlist & pattern) const override;
 
 public: // data model
 	int parmCount() const override;
@@ -26,6 +25,9 @@ public: // data model
 
 protected:
 	void slotConnectEvent(SlotEvent *event) override;
+
+protected:
+	std::string m_node_name;	
 
 private slots:
 	void render();
