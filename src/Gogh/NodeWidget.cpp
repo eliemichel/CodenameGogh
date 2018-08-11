@@ -12,92 +12,30 @@
 
 NodeWidget::NodeWidget(QWidget *parent)
 	: QWidget(parent)
+	, m_inputSlotsCount(0)
+	, m_outputSlotsCount(0)
 	, m_envModel(nullptr)
 {
 }
 
-NodeWidget::~NodeWidget()
+void NodeWidget::newInputSlot()
 {
-	for (Slot *s : m_inputSlots)
-	{
-		delete s;
-	}
-	m_inputSlots.clear();
-	for (Slot *s : m_outputSlots)
-	{
-		delete s;
-	}
-	m_outputSlots.clear();
-}
-
-Slot* NodeWidget::newInputSlot()
-{
-	Slot *s = new Slot();
-	s->setMaxInputs(1);
-	s->setMaxOutputs(0);
-	s->setParentNode(this);
-	s->setIsInput(true);
-	m_inputSlots.push_back(s);
+	m_inputSlotsCount++;
 
 	if (graphModel())
 	{
-		graphModel()->nodeGeometryChanged(modelIndex());
+		graphModel()->addInputSlot(modelIndex());
 	}
-
-	return s;
 }
 
-Slot* NodeWidget::newOutputSlot()
+void NodeWidget::newOutputSlot()
 {
-	Slot *s = new Slot();
-	s->setMaxInputs(1);
-	s->setMaxOutputs(-1);
-	s->setParentNode(this);
-	s->setIsInput(false);
-	m_outputSlots.push_back(s);
+	m_outputSlotsCount++;
 
 	if (graphModel())
 	{
-		graphModel()->nodeGeometryChanged(modelIndex());
+		graphModel()->addOutputSlot(modelIndex());
 	}
-
-	return s;
-}
-
-int NodeWidget::inputSlotIndex(const Slot *slot) const
-{
-	const std::vector<Slot*> & inputs = inputSlots();
-	for (int i = 0; i < inputs.size(); ++i)
-	{
-		if (inputs[i] == slot)
-		{
-			return i;
-		}
-	}
-	WARN_LOG << "Invalid slot pointer provided to NodeWidget::outputSlotIndex";
-	// TODO: assert(false)
-	return -1;
-}
-
-int NodeWidget::outputSlotIndex(const Slot *slot) const
-{
-	const std::vector<Slot*> & outputs = outputSlots();
-	for (int i = 0; i < outputs.size(); ++i)
-	{
-		if (outputs[i] == slot)
-		{
-			return i;
-		}
-	}
-	WARN_LOG << "Invalid slot pointer provided to NodeWidget::outputSlotIndex";
-	// TODO: assert(false)
-	return -1;
-}
-
-bool NodeWidget::buildRenderCommand(const Slot *slot, RenderCommand  & cmd) const
-{
-	int i = outputSlotIndex(slot);
-	return i < 0 ? false : buildRenderCommand(i, cmd);
 }
 
 bool NodeWidget::parentBuildRenderCommand(int inputIndex, RenderCommand & cmd) const
@@ -107,7 +45,7 @@ bool NodeWidget::parentBuildRenderCommand(int inputIndex, RenderCommand & cmd) c
 		ERR_LOG << "node has no model";
 	}
 
-	if (inputIndex >= inputSlots().size())
+	if (inputIndex >= inputSlotsCount())
 	{
 		ERR_LOG << "Input " << inputIndex << " does not exist";
 		return false;

@@ -134,8 +134,10 @@ public:
 	const SlotIndex & originSlot(const SlotIndex & destination) const;
 	const std::set<SlotIndex> & destinationSlots(const SlotIndex & origin) const;
 
-	/// Notify the model that a node geometry (slots) changed
-	void nodeGeometryChanged(const QModelIndex & nodeIndex);
+	void addInputSlot(const QModelIndex & nodeIndex);
+	void addOutputSlot(const QModelIndex & nodeIndex);
+	int inputSlotCount(const QModelIndex & nodeIndex) const { m_nodes[nodeIndex.row()]->inputLinks.size(); }
+	int outputSlotCount(const QModelIndex & nodeIndex) const { m_nodes[nodeIndex.row()]->outputLinks.size(); }
 
 private:
 	bool inParentBounds(const QModelIndex & index) const;

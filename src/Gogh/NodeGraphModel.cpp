@@ -221,14 +221,24 @@ const std::set<SlotIndex> & NodeGraphModel::destinationSlots(const SlotIndex & o
 	return originNode->outputLinks[origin.slot];
 }
 
-void NodeGraphModel::nodeGeometryChanged(const QModelIndex & nodeIndex)
+void NodeGraphModel::addInputSlot(const QModelIndex & nodeIndex)
 {
 	// TODO emit change on slot subindex
 	if (nodeIndex.isValid())
 	{
 		NodeEntry *entry = m_nodes[nodeIndex.row()];
-		entry->inputLinks.resize(entry->node->inputSlotsCount());
-		entry->outputLinks.resize(entry->node->outputSlotsCount());
+		entry->inputLinks.push_back(SlotIndex());
+		emit dataChanged(nodeIndex, nodeIndex);
+	}
+}
+
+void NodeGraphModel::addOutputSlot(const QModelIndex & nodeIndex)
+{
+	// TODO emit change on slot subindex
+	if (nodeIndex.isValid())
+	{
+		NodeEntry *entry = m_nodes[nodeIndex.row()];
+		entry->outputLinks.push_back(std::set<SlotIndex>());
 		emit dataChanged(nodeIndex, nodeIndex);
 	}
 }

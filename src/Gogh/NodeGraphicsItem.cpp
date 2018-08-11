@@ -91,7 +91,7 @@ void NodeGraphicsItem::setSelected(bool selected)
 
 void NodeGraphicsItem::updateInputSlots()
 {
-	for (int i = 0 ; i < m_content->inputSlots().size() ; ++i)
+	for (int i = 0 ; i < m_content->inputSlotsCount() ; ++i)
 	{
 		SlotGraphicsItem *slotItem;
 		if (i >= m_inputSlotItems.size())
@@ -114,7 +114,7 @@ void NodeGraphicsItem::updateInputSlots()
 
 void NodeGraphicsItem::updateOutputSlots()
 {
-	for (int i = 0; i < m_content->outputSlots().size(); ++i)
+	for (int i = 0; i < m_content->outputSlotsCount(); ++i)
 	{
 		SlotGraphicsItem *slotItem;
 		if (i >= m_outputSlotItems.size())

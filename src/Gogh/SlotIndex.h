@@ -11,7 +11,7 @@ struct SlotIndex
 
 	bool isValid() const { return node != -1; }
 
-	bool operator<(const SlotIndex &other) const { return node < other.node || slot < other.slot; }
+	bool operator<(const SlotIndex &other) const { return node < other.node || (node == other.node && slot < other.slot); }
 };
 
 

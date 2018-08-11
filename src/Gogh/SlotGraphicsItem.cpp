@@ -9,7 +9,6 @@
 
 SlotGraphicsItem::SlotGraphicsItem(QGraphicsItem *parent)
 	: QGraphicsEllipseItem(0, 0, 15, 15, parent)
-	, m_slot(nullptr)
 	, m_inputLink(nullptr)
 {
 	setPen(QPen(Qt::black));

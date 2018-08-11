@@ -158,7 +158,6 @@ void NodeGraphView::mousePressEvent(QMouseEvent *event)
 
 	if (event->button() == Qt::MiddleButton)
 	{
-		//startPan(event->pos());
 		m_panTool.start(event->pos());
 	}
 	else if (event->button() == Qt::LeftButton)

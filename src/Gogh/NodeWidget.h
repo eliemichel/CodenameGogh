@@ -55,15 +55,12 @@ public:
 
 public:
 	explicit NodeWidget(QWidget *parent = 0);
-	~NodeWidget();
 
-	int inputSlotsCount() const { return static_cast<int>(m_inputSlots.size()); }
-	const std::vector<Slot*> inputSlots() const { return m_inputSlots; }
-	Slot* newInputSlot();
+	int inputSlotsCount() const { return m_inputSlotsCount;	}
+	void newInputSlot();
 
-	int outputSlotsCount() const { return static_cast<int>(m_outputSlots.size()); }
-	const std::vector<Slot*> outputSlots() const { return m_outputSlots; }
-	Slot* newOutputSlot();
+	int outputSlotsCount() const { return m_outputSlotsCount; }
+	void newOutputSlot();
 
 	EnvModel *envModel() const { return m_envModel; }
 	void setEnvModel(EnvModel *envModel) { m_envModel = envModel; }
@@ -74,21 +71,11 @@ public:
 	NodeGraphModel *graphModel() const { return m_graphModel; }
 	void setGraphModel(NodeGraphModel *model) { m_graphModel = model; }
 
-	int outputSlotIndex(const Slot *slot) const;
-	int inputSlotIndex(const Slot *slot) const;
-
 	/**
 	 * Function that contains the logic of the node. This must be reimplemented
 	 * in each node and is called when building the render command.
 	 */
 	virtual bool buildRenderCommand(int outputIndex, RenderCommand & cmd) const { return true; }
-
-	/**
-	 * Try to call buildRenderCommand by providing a pointer to a slot instead
-	 * of the slot index. This iterates through the inputs until finding one
-	 * that equals.
-	 */
-	bool buildRenderCommand(const Slot *slot, RenderCommand  & cmd) const;
 
 	/**
 	 * Convenience function calling buildRenderCommand() on the source output slot
@@ -127,8 +114,8 @@ protected:
 	virtual void slotDisconnectEvent(SlotEvent *event) {}
 
 private:
-	std::vector<Slot*> m_inputSlots;
-	std::vector<Slot*> m_outputSlots;
+	int m_inputSlotsCount;
+	int m_outputSlotsCount;
 	EnvModel *m_envModel;
 	NodeGraphModel *m_graphModel;
 	QModelIndex m_modelIndex;

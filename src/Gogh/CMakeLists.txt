@@ -16,8 +16,6 @@ add_executable(
 	utils/strutils.cpp
 	utils/fileutils.h
 	utils/fileutils.cpp
-	Slot.h
-	Slot.cpp
 	MainWindow.h
 	MainWindow.ui
 	MainWindow.cpp
