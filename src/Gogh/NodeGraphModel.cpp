@@ -207,6 +207,19 @@ const std::set<SlotIndex> & NodeGraphModel::destinationSlots(const SlotIndex & o
 	return originNode->outputLinks[origin.slot];
 }
 
+QModelIndex NodeGraphModel::findByName(const std::string & name)
+{
+	int n = rowCount();
+	for (int i = 0 ; i < n ; ++i)
+	{
+		if (node(i)->name == name)
+		{
+			return index(i, 0);
+		}
+	}
+	return QModelIndex();
+}
+
 bool NodeGraphModel::inParentBounds(const QModelIndex & index) const
 {
 	return index.row() >= 0 && index.row() < rowCount(index.parent()) && index.column() >= 0 && index.column() < columnCount(index.parent());

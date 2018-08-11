@@ -18,6 +18,8 @@ public:
 public:
 	EnvModel();
 
+	std::string & at(const std::string & key) { return m_env.at(key); }
+	const std::string & at(const std::string & key) const { return m_env.at(key); }
 	std::map<std::string, std::string> & env() { return m_env; }
 	const std::map<std::string, std::string> & env() const { return m_env; }
 

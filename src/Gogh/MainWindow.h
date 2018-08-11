@@ -17,7 +17,7 @@ class MainWindow :
 	Q_OBJECT
 
 public:
-	explicit MainWindow(QString graphFilename = QString(), QWidget *parent = 0);
+	explicit MainWindow(EnvModel *envModel, QString graphFilename = QString(), QWidget *parent = 0);
 	~MainWindow();
 
 	EnvModel *envModel() const { return m_envModel; }

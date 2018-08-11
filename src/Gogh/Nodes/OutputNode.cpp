@@ -19,6 +19,7 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 {
 	// special output index for render function
 	if (outputIndex != -1) {
+		ERR_LOG << "Invalid output index: #" << outputIndex;
 		return false;
 	}
 

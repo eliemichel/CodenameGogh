@@ -33,6 +33,8 @@ add_executable(
 	NodeParmListView.cpp
 	RenderDialog.h
 	RenderDialog.cpp
+	RenderProcess.h
+	RenderProcess.cpp
 
 	LinkGraphicsItem.h
 	LinkGraphicsItem.cpp

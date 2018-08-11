@@ -11,8 +11,6 @@ class QProcess;
 class RenderDialog : public QDialog
 {
 	Q_OBJECT
-public:
-	static std::string locateFfmpeg();
 
 public:
 	RenderDialog(std::vector<std::string> cmd, QWidget *parent = nullptr);

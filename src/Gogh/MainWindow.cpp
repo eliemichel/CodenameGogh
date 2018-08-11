@@ -21,10 +21,11 @@
 #include <QDir>
 #include <QModelIndex>
 
-MainWindow::MainWindow(QString graphFilename, QWidget *parent)
+MainWindow::MainWindow(EnvModel *envModel, QString graphFilename, QWidget *parent)
 	: QMainWindow(parent)
 	, ui(new Ui::MainWindow)
 	, m_currentFilename(graphFilename)
+	, m_envModel(envModel)
 {
 	//TODO: Temporary fixes the MenuBar issue by setting it in the Mainwindow, try to set back native menubar
 	QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
@@ -37,11 +38,10 @@ MainWindow::MainWindow(QString graphFilename, QWidget *parent)
 	connect(ui->saveAsAction, &QAction::triggered, this, &MainWindow::showSaveAsFileDialog);
 	connect(ui->envAction, &QAction::triggered, this, &MainWindow::showEnvDialog);
 
-	m_scene = new NodeGraphScene();
 	m_model = new NodeGraphModel();
-	m_envModel = new EnvModel();
-
 	m_model->setEnvModel(m_envModel);
+
+	m_scene = new NodeGraphScene();
 
 	if (m_currentFilename.isNull())
 	{
@@ -88,7 +88,6 @@ MainWindow::MainWindow(QString graphFilename, QWidget *parent)
 MainWindow::~MainWindow()
 {
 	delete m_model;
-	delete m_envModel;
 	delete m_scene;
 }
 

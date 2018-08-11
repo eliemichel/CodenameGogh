@@ -129,6 +129,9 @@ public:
 
 	void broadcastNodeChange(const QModelIndex & nodeIndex) { emit dataChanged(nodeIndex, nodeIndex); }
 
+	/// Complexity: O(n)
+	QModelIndex findByName(const std::string & name);
+
 private:
 	bool inParentBounds(const QModelIndex & index) const;
 	IndexData *indexData(const QModelIndex & index) const;
