@@ -733,6 +733,8 @@ bool NodeGraphModel::LoadGraph(QString filename)
 	LOG << "Loading graph from: " << filename.toStdString();
 
 	QDataStream in(&file);
+
+	// Nodes
 	int n = static_cast<int>(m_nodes.size());;
 	in >> n;
 	for (int i = 0; i < n; ++i)
@@ -755,6 +757,25 @@ bool NodeGraphModel::LoadGraph(QString filename)
 		addNode(node, type, x, y, name.toStdString());
 	}
 
+	// Links
+	for (int i = 0; i < n; ++i)
+	{
+		int maxM = static_cast<int>(m_nodes[i]->inputLinks.size());
+		int m;
+		in >> m;
+		if (m > maxM)
+		{
+			ERR_LOG << "Invalid number of input links: " << m << " (" << maxM << " was expected, in node #" << i << ", in file " << filename.toStdString() << ")";
+		}
+		for (int j = 0; j < m; ++j)
+		{
+			SlotIndex destination(i, j);
+			SlotIndex origin;
+			in >> origin.node >> origin.slot;
+			addLink(origin, destination);
+		}
+	}
+
 	emit dataChanged(QModelIndex(), QModelIndex());
 	return true;
 }
@@ -770,6 +791,8 @@ bool NodeGraphModel::SaveGraph(QString filename)
 	LOG << "Saving graph to: " << filename.toStdString();
 
 	QDataStream out(&file);
+
+	// Nodes
 	int n = static_cast<int>(m_nodes.size());
 	out << n;
 	for (NodeEntry *node : m_nodes)
@@ -777,6 +800,17 @@ bool NodeGraphModel::SaveGraph(QString filename)
 		out << node->type << node->x << node->y << QString::fromStdString(node->name);
 		node->node->write(out);
 	}
+
+	// Links
+	for (NodeEntry *node : m_nodes)
+	{
+		out << node->inputLinks.size();
+		for (const SlotIndex & origin : node->inputLinks)
+		{
+			out << origin.node << origin.slot;
+		}
+	}
+
 	return true;
 }
 

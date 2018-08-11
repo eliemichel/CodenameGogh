@@ -83,12 +83,3 @@ void ScaleNode::setParm(int parm, QVariant value)
 		break;
 	}
 }
-
-void ScaleNode::slotConnectEvent(SlotEvent * event)
-{
-	// DEBUG!
-	if (event->isInputSlot())
-	{
-		newInputSlot();
-	}
-}

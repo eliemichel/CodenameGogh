@@ -73,14 +73,14 @@ void NodeGraphicsItem::setModelIndex(const QModelIndex & modelIndex)
 	{
 		disconnect(m_modelIndex.model(), 0, this, 0);
 	}
+
 	m_modelIndex = modelIndex;
+
 	if (m_modelIndex.model())
 	{
 		connect(m_modelIndex.model(), &QAbstractItemModel::dataChanged, this, &NodeGraphicsItem::onDataChanged);
+		onDataChanged(modelIndex, modelIndex);
 	}
-
-	updateInputSlots();
-	updateOutputSlots();
 }
 
 void NodeGraphicsItem::setSelected(bool selected)
@@ -142,21 +142,29 @@ void NodeGraphicsItem::updateInputLinks() const
 	{
 		++slotId;
 
-		if (!modelIndex().isValid() || !item->inputLink())
+		if (!modelIndex().isValid())
 		{
+			item->removeInputLink();
 			continue;
 		}
 
 		// TODO: make this easier and avoid cast
 		const NodeGraphModel *model = static_cast<const NodeGraphModel*>(modelIndex().model());
 		SlotIndex sourceSlot = model->originSlot(SlotIndex(modelIndex().row(), slotId));
+
+		if (!sourceSlot.isValid())
+		{
+			item->removeInputLink();
+			continue;
+		}
+
 		const QModelIndex & sourceIndex = model->index(sourceSlot.node, 0);
 		NodeGraphicsItem *sourceNodeItem = m_graphScene->nodeItemAtIndex(sourceIndex);
-
 		QPointF startPos = sourceNodeItem->outputSlotPosition(sourceSlot.slot);
 
+		item->ensureInputLink();
 		item->inputLink()->setStartPos(startPos);
-		item->inputLink()->setEndPos(item->sceneBoundingRect().center());
+		item->inputLink()->setEndPos(item->slotCenter());
 		item->inputLink()->update();
 	}
 }
@@ -179,8 +187,10 @@ void NodeGraphicsItem::updateOutputLinks() const
 		for (const SlotIndex & destination : destinationSlots)
 		{
 			const QModelIndex & destinationIndex = model->index(destination.node, 0);
-			NodeGraphicsItem *destinationNodeItem = m_graphScene->nodeItemAtIndex(destinationIndex);
-			destinationNodeItem->updateInputLinks();
+			if (NodeGraphicsItem *destinationNodeItem = m_graphScene->nodeItemAtIndex(destinationIndex))
+			{
+				destinationNodeItem->updateInputLinks();
+			}
 		}
 	}
 }

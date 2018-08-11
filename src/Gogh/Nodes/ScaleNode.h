@@ -23,10 +23,6 @@ public: // data model
 	QVariant parmEval(int parm) const override;
 	void setParm(int parm, QVariant value) override;
 
-protected:
-	// DEBUG!
-	void slotConnectEvent(SlotEvent *event) override;
-
 private:
 	Ui::ScaleNode *ui;
 };

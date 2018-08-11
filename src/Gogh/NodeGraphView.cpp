@@ -360,12 +360,6 @@ void NodeGraphView::dropEvent(QDropEvent *event)
 					SlotGraphicsItem *destinationSlotItem = otherSlotItem->isInput() ? otherSlotItem : slotItem;
 					SlotGraphicsItem *sourceSlotItem = otherSlotItem->isInput() ? slotItem : otherSlotItem;
 
-					// TODO: move to slotgraphicsitem
-					LinkGraphicsItem *link = new LinkGraphicsItem();
-					link->setEndSlotItem(destinationSlotItem);
-					scene()->addItem(link);
-					destinationSlotItem->setInputLink(link);
-
 					// TODO: get rid of cast
 					const SlotIndex & origin = sourceSlotItem->slotIndex();
 					const SlotIndex & destination = destinationSlotItem->slotIndex();

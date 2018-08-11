@@ -17,12 +17,23 @@ SlotGraphicsItem::SlotGraphicsItem(QGraphicsItem *parent)
 	setZValue(NodeGraphScene::SlotLayer);
 }
 
-void SlotGraphicsItem::setInputLink(LinkGraphicsItem *link)
+void SlotGraphicsItem::removeInputLink()
 {
 	if (m_inputLink)
 	{
 		scene()->removeItem(m_inputLink);
 		delete m_inputLink;
 	}
-	m_inputLink = link;
+	m_inputLink = nullptr;
+}
+
+void SlotGraphicsItem::ensureInputLink()
+{
+	if (!m_inputLink)
+	{
+		m_inputLink = new LinkGraphicsItem();
+		m_inputLink->setEndSlotItem(this);
+		m_inputLink->setEndPos(slotCenter());
+		scene()->addItem(m_inputLink);
+	}
 }
