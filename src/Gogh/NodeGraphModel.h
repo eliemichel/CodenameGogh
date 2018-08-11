@@ -2,17 +2,18 @@
 #define H_NODEGRAPHMODEL
 
 #include "NodeWidget.h"
+#include "SlotIndex.h"
 
 #include <QString> // should be replaced by a stream path class
 #include <QAbstractItemModel>
 
 #include <string>
 #include <vector>
-#include <map>
+#include <unordered_map>
+#include <set>
 
 class EnvModel;
 class Link;
-typedef NodeWidget Node;
 
 class NodeGraphModel : public QAbstractItemModel
 {
@@ -62,22 +63,14 @@ private:
 		int parentBlockIndex;
 	};
 
-	struct SlotIndex
-	{
-		int node = -1;
-		int slot;
-
-		bool isConnected() const { return node != -1; }
-	};
-
 	struct NodeEntry
 	{
-		Node *node;
+		NodeWidget *node;
 		int type;
 		float x, y;
 		std::string name;
 		std::vector<SlotIndex> inputLinks;
-		std::vector<SlotIndex> outputLinks;
+		std::vector<std::set<SlotIndex>> outputLinks;
 
 		IndexData nodeIndex;
 		IndexData blockIndex;
@@ -88,7 +81,7 @@ public:
 	// Factory function building a new node from a given type.
 	// This is the only place holding a mapping from type enum to type classes
 	// and must be updated any time a new node type is defined
-	static Node * buildNode(int type);
+	static NodeWidget * buildNode(int type);
 
 	/**
 	 * Convert node type to a string, for display purpose only
@@ -101,7 +94,12 @@ public:
 	static bool isRoot(QModelIndex index);
 
 public:
+	static SlotIndex invalidSlot;
+	static std::set<SlotIndex> invalidSlotSet;
+
+public:
 	NodeGraphModel();
+	~NodeGraphModel();
 
 	EnvModel *envModel() const { return m_envModel; }
 	void setEnvModel(EnvModel *envModel) { m_envModel = envModel; }
@@ -123,24 +121,33 @@ public:
 	bool LoadGraph(QString filename);
 	bool SaveGraph(QString filename);
 
-	void addNode(Node *node, int type, float x, float y, std::string name);
-	const std::vector<NodeEntry> & nodes() const { return m_nodes; }
-	Node * nodeData(int i) { return m_nodes[i].node; }
+	void addNode(NodeWidget *node, int type, float x, float y, std::string name);
+	const std::vector<NodeEntry*> & nodes() const { return m_nodes; }
+
+	// TODO: remove me
+	NodeWidget * nodeData(int i) const { return m_nodes[i]->node; }
+
+	bool canAddLink(const SlotIndex & origin, const SlotIndex & destination);
+	bool addLink(const SlotIndex & origin, const SlotIndex & destination);
+	bool removeLink(const SlotIndex & destination);
+
+	const SlotIndex & originSlot(const SlotIndex & destination) const;
+	const std::set<SlotIndex> & destinationSlots(const SlotIndex & origin) const;
+
+	void addInputSlot(const QModelIndex & nodeIndex);
+	void addOutputSlot(const QModelIndex & nodeIndex);
+	int inputSlotCount(const QModelIndex & nodeIndex) const { m_nodes[nodeIndex.row()]->inputLinks.size(); }
+	int outputSlotCount(const QModelIndex & nodeIndex) const { m_nodes[nodeIndex.row()]->outputLinks.size(); }
 
 private:
 	bool inParentBounds(const QModelIndex & index) const;
 	IndexData *indexData(const QModelIndex & index) const;
 
 private:
-	/**
-	 * This should be a list of non GUI objects, but for now we don't have a
-	 * node widget generator from node definition, and I want to keep it simple
-	 * to add new node type.
-	 */
-	mutable std::vector<NodeEntry> m_nodes;
+	std::vector<NodeEntry*> m_nodes;
+
+	/// Env Model is forwarded to nodes
 	EnvModel *m_envModel;
-	std::map<const Node*, int> m_nodeLUT;
-	std::map<int, std::map<int, std::pair<int, int>>> m_links;
 };
 
 #endif // H_NODEGRAPHMODEL

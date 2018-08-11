@@ -9,7 +9,6 @@
 #include <QItemSelection>
 #include <vector>
 
-class Slot;
 class LinkGraphicsItem;
 class SlotGraphicsItem;
 class NodeGraphicsItem;

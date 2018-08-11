@@ -1,10 +1,11 @@
 #ifndef H_NODEWIDGET
 #define H_NODEWIDGET
 
-#include "Slot.h"
+#include "Logger.h"
 
 #include <QWidget>
 #include <QVariant>
+#include <QModelIndex>
 
 #include <vector>
 #include <string>
@@ -12,6 +13,7 @@
 
 class LinkGraphicsItem;
 class EnvModel;
+class NodeGraphModel;
 
 /**
  * This structure is transmitted among the graph nodes while building the
@@ -53,43 +55,35 @@ public:
 
 public:
 	explicit NodeWidget(QWidget *parent = 0);
-	~NodeWidget();
 
-	int inputSlotsCount() const { return static_cast<int>(m_inputSlots.size()); }
-	const std::vector<Slot*> inputSlots() const { return m_inputSlots; }
-	Slot* newInputSlot();
+	int inputSlotsCount() const { return m_inputSlotsCount;	}
+	void newInputSlot();
 
-	int outputSlotsCount() const { return static_cast<int>(m_outputSlots.size()); }
-	const std::vector<Slot*> outputSlots() const { return m_outputSlots; }
-	Slot* newOutputSlot();
+	int outputSlotsCount() const { return m_outputSlotsCount; }
+	void newOutputSlot();
 
 	EnvModel *envModel() const { return m_envModel; }
 	void setEnvModel(EnvModel *envModel) { m_envModel = envModel; }
 
-	int outputSlotIndex(const Slot *slot) const;
-	int inputSlotIndex(const Slot *slot) const;
+	const QModelIndex & modelIndex() const { return m_modelIndex; }
+	void setModelIndex(const QModelIndex & index) { m_modelIndex = index; }
+
+	NodeGraphModel *graphModel() const { return m_graphModel; }
+	void setGraphModel(NodeGraphModel *model) { m_graphModel = model; }
 
 	/**
 	 * Function that contains the logic of the node. This must be reimplemented
 	 * in each node and is called when building the render command.
 	 */
 	virtual bool buildRenderCommand(int outputIndex, RenderCommand & cmd) const { return true; }
-	virtual bool buildRenderCommand(int outputIndex, RenderCommand & cmd, stringlist &pattern) const { return true; }
-
-	/**
-	 * Try to call buildRenderCommand by providing a pointer to a slot instead
-	 * of the slot index. This iterates through the inputs until finding one
-	 * that equals.
-	 */
-	bool buildRenderCommand(const Slot *slot, RenderCommand  & cmd) const;
-	bool buildRenderCommand(const Slot *slot, RenderCommand  & cmd, stringlist &pattern) const;
+	virtual bool buildRenderCommand(int outputIndex, RenderCommand & cmd, stringlist & pattern) const { return true; }
 
 	/**
 	 * Convenience function calling buildRenderCommand() on the source output slot
 	 * connected to the input at index inputIndex.
 	 */
 	bool parentBuildRenderCommand(int inputIndex, RenderCommand & cmd) const;
-	bool parentBuildRenderCommand(int inputIndex, RenderCommand & cmd, stringlist &pattern) const;
+	bool parentBuildRenderCommand(int inputIndex, RenderCommand & cmd, stringlist & pattern) const;
 
 	/**
 	 * I/O function, used to save and load scenes.
@@ -103,8 +97,10 @@ public:
 	/**
 	 * This is used in graphics view to initiate slotConnectEvent() propagation.
 	 * This should ultimately be modified so do not use this method anywhere else
+	 * Reserved to NodeGraphModel
 	 */
-	void fireSlotConnectEvent(Slot *slot, bool isInput);
+	void fireSlotConnectEvent(int slotIndex, bool isInput);
+	void fireSlotDisconnectEvent(int slotIndex, bool isInput);
 
 public: // data model
 	virtual int parmCount() const { return 0; }
@@ -117,15 +113,18 @@ public: // data model
 
 protected:
 	virtual void slotConnectEvent(SlotEvent *event) {}
+	virtual void slotDisconnectEvent(SlotEvent *event) {}
 
 protected:
 	std::string m_node_name;
 	bool isPatterned(stringlist &pattern) const;
 
 private:
-	std::vector<Slot*> m_inputSlots;
-	std::vector<Slot*> m_outputSlots;
+	int m_inputSlotsCount;
+	int m_outputSlotsCount;
 	EnvModel *m_envModel;
+	NodeGraphModel *m_graphModel;
+	QModelIndex m_modelIndex;
 };
 
 #endif // H_NODEWIDGET

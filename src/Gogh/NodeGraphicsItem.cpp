@@ -36,8 +36,9 @@ void NodeGraphicsItemControl::paint(QPainter *painter, const QStyleOptionGraphic
 	painter->drawText(r.x() + 5, r.y() + 2, r.width() - 10, r.height() - 4, Qt::AlignLeft || Qt::AlignVCenter, name());
 }
 
-NodeGraphicsItem::NodeGraphicsItem(QGraphicsScene *scene, NodeWidget *content)
-	: m_content(content)
+NodeGraphicsItem::NodeGraphicsItem(NodeGraphScene *scene, NodeWidget *content)
+	: m_graphScene(scene)
+	, m_content(content)
 {
 	content->resize(content->sizeHint());
 
@@ -62,29 +63,8 @@ NodeGraphicsItem::NodeGraphicsItem(QGraphicsScene *scene, NodeWidget *content)
 	m_proxy->setParentItem(m_control);
 	m_proxy->setZValue(NodeGraphScene::NodeLayer);
 
-	// Wrap a SlotGraphiscItem around all the slots of the content node
-	int offset = 30;
-	for (Slot *s : content->inputSlots())
-	{
-		SlotGraphicsItem *slotItem = new SlotGraphicsItem();
-		scene->addItem(slotItem);
-		slotItem->setSlot(s);
-		slotItem->setPos(-7, offset);
-		slotItem->setParentItem(m_control);
-		m_slotItems.push_back(slotItem);
-		offset += 30;
-	}
-	offset = 30;
-	for (Slot *s : content->outputSlots())
-	{
-		SlotGraphicsItem *slotItem = new SlotGraphicsItem();
-		scene->addItem(slotItem);
-		slotItem->setSlot(s);
-		slotItem->setPos(m_control->rect().width() - 8, offset);
-		slotItem->setParentItem(m_control);
-		m_slotItems.push_back(slotItem);
-		offset += 30;
-	}
+	updateInputSlots();
+	updateOutputSlots();
 }
 
 void NodeGraphicsItem::setModelIndex(const QModelIndex & modelIndex)
@@ -98,20 +78,122 @@ void NodeGraphicsItem::setModelIndex(const QModelIndex & modelIndex)
 	{
 		connect(m_modelIndex.model(), &QAbstractItemModel::dataChanged, this, &NodeGraphicsItem::onDataChanged);
 	}
+
+	updateInputSlots();
+	updateOutputSlots();
 }
 
 void NodeGraphicsItem::setSelected(bool selected)
 {
 	m_isSelected = selected;
-	//m_control->setBrush(QBrush(m_isSelected ? QColor(64, 64, 64) : QColor(41, 41, 41)));
 	m_control->setPen(m_isSelected ? QPen(QColor(255, 128, 0)) : Qt::NoPen);
 }
 
-void NodeGraphicsItem::updateLinks() const
+void NodeGraphicsItem::updateInputSlots()
 {
-	for (SlotGraphicsItem *item : m_slotItems)
+	for (int i = 0 ; i < m_content->inputSlotsCount() ; ++i)
 	{
-		item->updateLinks();
+		SlotGraphicsItem *slotItem;
+		if (i >= m_inputSlotItems.size())
+		{
+			slotItem = new SlotGraphicsItem();
+			m_graphScene->addItem(slotItem);
+			m_inputSlotItems.push_back(slotItem);
+		}
+		else
+		{
+			slotItem = m_inputSlotItems[i];
+		}
+
+		slotItem->setSlotIndex(SlotIndex(modelIndex().row(), i));
+		slotItem->setIsInput(true);
+		slotItem->setPos(-7, 30 + i * 30);
+		slotItem->setParentItem(m_control);
+	}
+}
+
+void NodeGraphicsItem::updateOutputSlots()
+{
+	for (int i = 0; i < m_content->outputSlotsCount(); ++i)
+	{
+		SlotGraphicsItem *slotItem;
+		if (i >= m_outputSlotItems.size())
+		{
+			slotItem = new SlotGraphicsItem();
+			m_graphScene->addItem(slotItem);
+			m_outputSlotItems.push_back(slotItem);
+		}
+		else
+		{
+			slotItem = m_outputSlotItems[i];
+		}
+
+		slotItem->setSlotIndex(SlotIndex(modelIndex().row(), i));
+		slotItem->setIsInput(false);
+		slotItem->setPos(m_control->rect().width() - 8, 30 + i * 30);
+		slotItem->setParentItem(m_control);
+	}
+}
+
+void NodeGraphicsItem::updateInputLinks() const
+{
+	int slotId = -1;
+	for (SlotGraphicsItem *item : m_inputSlotItems)
+	{
+		++slotId;
+
+		if (!modelIndex().isValid() || !item->inputLink())
+		{
+			continue;
+		}
+
+		// TODO: make this easier and avoid cast
+		const NodeGraphModel *model = static_cast<const NodeGraphModel*>(modelIndex().model());
+		SlotIndex sourceSlot = model->originSlot(SlotIndex(modelIndex().row(), slotId));
+		const QModelIndex & sourceIndex = model->index(sourceSlot.node, 0);
+		NodeGraphicsItem *sourceNodeItem = m_graphScene->nodeItemAtIndex(sourceIndex);
+
+		QPointF startPos = sourceNodeItem->outputSlotPosition(sourceSlot.slot);
+
+		item->inputLink()->setStartPos(startPos);
+		item->inputLink()->setEndPos(item->sceneBoundingRect().center());
+		item->inputLink()->update();
+	}
+}
+
+void NodeGraphicsItem::updateOutputLinks() const
+{
+	int slotId = -1;
+	for (SlotGraphicsItem *item : m_outputSlotItems)
+	{
+		++slotId;
+
+		if (!modelIndex().isValid())
+		{
+			continue;
+		}
+
+		// TODO: make this easier and avoid cast
+		const NodeGraphModel *model = static_cast<const NodeGraphModel*>(modelIndex().model());
+		const std::set<SlotIndex> & destinationSlots = model->destinationSlots(SlotIndex(modelIndex().row(), slotId));
+		for (const SlotIndex & destination : destinationSlots)
+		{
+			const QModelIndex & destinationIndex = model->index(destination.node, 0);
+			NodeGraphicsItem *destinationNodeItem = m_graphScene->nodeItemAtIndex(destinationIndex);
+			destinationNodeItem->updateInputLinks();
+		}
+	}
+}
+
+QPointF NodeGraphicsItem::outputSlotPosition(int i) const
+{
+	if (i < 0 || i >= m_outputSlotItems.size())
+	{
+		return QPointF();
+	}
+	else
+	{
+		return m_outputSlotItems[i]->sceneBoundingRect().center();
 	}
 }
 
@@ -132,6 +214,11 @@ void NodeGraphicsItem::onDataChanged(const QModelIndex & topLeft, const QModelIn
 		name = model->data(model->index(modelIndex().row(), NodeGraphModel::NameColumn, modelIndex().parent())).toString();
 		setPos(QPointF(x, y));
 		m_control->setName(name);
-		updateLinks();
+
+		updateInputSlots();
+		updateOutputSlots();
+
+		updateInputLinks();
+		updateOutputLinks();
 	}
 }

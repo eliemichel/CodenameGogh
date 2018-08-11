@@ -1,6 +1,7 @@
 #include "NodeWidget.h"
 #include "EnvModel.h"
 #include "Logger.h"
+#include "NodeGraphModel.h"
 
 #include <QHBoxLayout>
 #include <QVBoxLayout>
@@ -11,115 +12,66 @@
 
 NodeWidget::NodeWidget(QWidget *parent)
 	: QWidget(parent)
+	, m_inputSlotsCount(0)
+	, m_outputSlotsCount(0)
 	, m_envModel(nullptr)
 {
 	m_node_name = "Default";
 }
 
-NodeWidget::~NodeWidget()
+void NodeWidget::newInputSlot()
 {
-	for (Slot *s : m_inputSlots)
+	m_inputSlotsCount++;
+
+	if (graphModel())
 	{
-		delete s;
+		graphModel()->addInputSlot(modelIndex());
 	}
-	m_inputSlots.clear();
-	for (Slot *s : m_outputSlots)
+}
+
+void NodeWidget::newOutputSlot()
+{
+	m_outputSlotsCount++;
+
+	if (graphModel())
 	{
-		delete s;
+		graphModel()->addOutputSlot(modelIndex());
 	}
-	m_outputSlots.clear();
-}
-
-Slot* NodeWidget::newInputSlot()
-{
-	Slot *s = new Slot();
-	s->setMaxInputs(1);
-	s->setMaxOutputs(0);
-	s->setParentNode(this);
-	s->setIsInput(true);
-	m_inputSlots.push_back(s);
-	return s;
-}
-
-Slot* NodeWidget::newOutputSlot()
-{
-	Slot *s = new Slot();
-	s->setMaxInputs(1);
-	s->setMaxOutputs(-1);
-	s->setParentNode(this);
-	s->setIsInput(false);
-	m_outputSlots.push_back(s);
-	return s;
-}
-
-int NodeWidget::inputSlotIndex(const Slot *slot) const
-{
-	const std::vector<Slot*> & inputs = inputSlots();
-	for (int i = 0; i < inputs.size(); ++i)
-	{
-		if (inputs[i] == slot)
-		{
-			return i;
-		}
-	}
-	WARN_LOG << "Invalid slot pointer provided to NodeWidget::outputSlotIndex";
-	// TODO: assert(false)
-	return -1;
-}
-
-int NodeWidget::outputSlotIndex(const Slot *slot) const
-{
-	const std::vector<Slot*> & outputs = outputSlots();
-	for (int i = 0; i < outputs.size(); ++i)
-	{
-		if (outputs[i] == slot)
-		{
-			return i;
-		}
-	}
-	WARN_LOG << "Invalid slot pointer provided to NodeWidget::outputSlotIndex";
-	// TODO: assert(false)
-	return -1;
-}
-
-bool NodeWidget::buildRenderCommand(const Slot *slot, RenderCommand  & cmd) const
-{
-	stringlist pattern;
- 	buildRenderCommand(slot, cmd, pattern);
-}
-bool NodeWidget::buildRenderCommand(const Slot *slot, RenderCommand  & cmd, stringlist & pattern) const
-{
-	int i = outputSlotIndex(slot);
-	return i < 0 ? false : buildRenderCommand(i, cmd, pattern);
 }
 
 bool NodeWidget::parentBuildRenderCommand(int inputIndex, RenderCommand & cmd) const
 {
 	stringlist pattern;
-	parentBuildRenderCommand(inputIndex, cmd, pattern);
+	return parentBuildRenderCommand(inputIndex, cmd, pattern);
 }
 bool NodeWidget::parentBuildRenderCommand(int inputIndex, RenderCommand & cmd, stringlist & pattern) const
 {
-	if (inputIndex >= inputSlots().size())
+	if (!graphModel() || !modelIndex().isValid())
+	{
+		ERR_LOG << "node has no model";
+	}
+
+	if (inputIndex >= inputSlotsCount())
 	{
 		ERR_LOG << "Input " << inputIndex << " does not exist";
 		return false;
 	}
 
-	const Slot *sourceSlot = inputSlots()[inputIndex]->sourceSlot();
-	if (!sourceSlot)
+	const SlotIndex & origin = graphModel()->originSlot(SlotIndex(modelIndex().row(), inputIndex));
+	if (!origin.isValid())
 	{
 		ERR_LOG << "Input " << inputIndex << " is not connected, unable to render";
 		return false;
 	}
-	const NodeWidget *parentNode = sourceSlot->parentNode();
+
+	const NodeWidget *parentNode = graphModel()->nodeData(origin.node);
 	if (!parentNode)
 	{
-		ERR_LOG << "Input " << inputIndex << " is not connected to an orphan slot";
+		ERR_LOG << "Input " << inputIndex << " is connected to an orphan slot";
 		return false;
 	}
 
-	return parentNode->buildRenderCommand(sourceSlot, cmd, pattern);
+	return parentNode->buildRenderCommand(origin.slot, cmd, pattern);
 }
 
 void NodeWidget::read(QDataStream & stream)
@@ -144,18 +96,16 @@ void NodeWidget::write(QDataStream & stream) const
 	}
 }
 
-void NodeWidget::fireSlotConnectEvent(Slot *slot, bool isInput)
+void NodeWidget::fireSlotConnectEvent(int slotIndex, bool isInput)
 {
-	int i = 0;
-	for (Slot * s : isInput ? inputSlots() : outputSlots())
-	{
-		if (s == slot)
-		{
-			SlotEvent event(i, isInput);
-			slotConnectEvent(&event);
-		}
-		++i;
-	}
+	SlotEvent event(slotIndex, isInput);
+	slotConnectEvent(&event);
+}
+
+void NodeWidget::fireSlotDisconnectEvent(int slotIndex, bool isInput)
+{
+	SlotEvent event(slotIndex, isInput);
+	slotDisconnectEvent(&event);
 }
 
 QString NodeWidget::parmFullEval(int parm) const

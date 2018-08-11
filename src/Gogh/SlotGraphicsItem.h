@@ -4,32 +4,30 @@
 #include <QGraphicsEllipseItem>
 
 #include "Logger.h"
+#include "SlotIndex.h"
 
-class Slot;
 class QGraphicsSceneMouseEvent;
 class LinkGraphicsItem;
+class NodeGraphicsItem;
 
 class SlotGraphicsItem : public QGraphicsEllipseItem
 {
 public:
 	SlotGraphicsItem(QGraphicsItem *parent = nullptr);
 
-	Slot *slot() const { return m_slot; }
-	void setSlot(Slot *slot);
+	const SlotIndex & slotIndex() const { return m_slotIndex; }
+	void setSlotIndex(const SlotIndex & slotIndex) { m_slotIndex = slotIndex; }
+
+	bool isInput() const { return m_isInput; }
+	void setIsInput(bool isInput) { m_isInput = isInput; }
 
 	LinkGraphicsItem * inputLink() const { return m_inputLink; }
 	void setInputLink(LinkGraphicsItem *link);
 
-	const std::vector<LinkGraphicsItem*> outputLinks() const { return m_outputLinks; }
-	void addOutputLink(LinkGraphicsItem *link) { m_outputLinks.push_back(link); }
-	void removeOutputLink(LinkGraphicsItem *link);
-
-	void updateLinks() const;
-
 private:
-	Slot *m_slot;
+	SlotIndex m_slotIndex;
+	bool m_isInput;
 	LinkGraphicsItem *m_inputLink;
-	std::vector<LinkGraphicsItem*> m_outputLinks;
 };
 
 #endif // H_SLOTGRAPHICSITEM

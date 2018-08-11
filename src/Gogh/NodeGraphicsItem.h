@@ -9,10 +9,10 @@
 #include <vector>
 
 class NodeWidget;
-class QGraphicsScene;
 class QGraphicsRectItem;
 class QGraphicsProxyWidget;
 class SlotGraphicsItem;
+class NodeGraphScene;
 
 // TODO: move this in its own file
 class NodeGraphicsItemControl : public QGraphicsRectItem
@@ -31,9 +31,7 @@ class NodeGraphicsItem : public QObject
 {
 	Q_OBJECT
 public:
-	NodeGraphicsItem(QGraphicsScene *scene, NodeWidget *content);
-
-	const std::vector<SlotGraphicsItem*> & slotItems() const { return m_slotItems; }
+	NodeGraphicsItem(NodeGraphScene *scene, NodeWidget *content);
 
 	const QModelIndex & modelIndex() const { return m_modelIndex; }
 	void setModelIndex(const QModelIndex & modelIndex);
@@ -43,7 +41,13 @@ public:
 	void setSelected(bool selected);
 	bool isSelected() const { return m_isSelected; }
 
-	void updateLinks() const;
+	void updateInputSlots();
+	void updateOutputSlots();
+
+	void updateInputLinks() const;
+	void updateOutputLinks() const;
+
+	QPointF outputSlotPosition(int i) const;
 
 protected:
 	//QVariant itemChange(GraphicsItemChange change, const QVariant &value) override;
@@ -52,10 +56,12 @@ private slots:
 	void onDataChanged(const QModelIndex & topLeft, const QModelIndex & bottomRight);
 
 private:
+	NodeGraphScene *m_graphScene;
 	NodeGraphicsItemControl *m_control;
 	NodeWidget * m_content;
 	QGraphicsProxyWidget *m_proxy;
-	std::vector<SlotGraphicsItem*> m_slotItems;
+	std::vector<SlotGraphicsItem*> m_outputSlotItems;
+	std::vector<SlotGraphicsItem*> m_inputSlotItems;
 	QModelIndex m_modelIndex;
 	bool m_isSelected;
 };

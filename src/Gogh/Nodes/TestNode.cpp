@@ -23,5 +23,4 @@ TestNode::~TestNode()
 void TestNode::render()
 {
 	DEBUG_LOG << "render";
-	inputSlots();
 }

@@ -158,7 +158,6 @@ void NodeGraphView::mousePressEvent(QMouseEvent *event)
 
 	if (event->button() == Qt::MiddleButton)
 	{
-		//startPan(event->pos());
 		m_panTool.start(event->pos());
 	}
 	else if (event->button() == Qt::LeftButton)
@@ -350,47 +349,34 @@ void NodeGraphView::dropEvent(QDropEvent *event)
 	{
 		QGraphicsItem *item = itemAt(event->pos());
 		QPointF p = mapToScene(event->pos());
+
 		if (SlotGraphicsItem *slotItem = nodeGraphScene()->toSlotItem(item))
 		{
 			// Create actual links in place of temporary pending links if possible
-			Slot *slot = slotItem->slot();
 			for (SlotGraphicsItem *otherSlotItem : m_pendingLinksSources)
 			{
-				Slot *otherSlot = otherSlotItem->slot();
-				if (slot && otherSlot && slot->isInput() != otherSlot->isInput())
+				if (slotItem->isInput() != otherSlotItem->isInput())
 				{
-					Slot *destinationSlot = otherSlot->isInput() ? otherSlot : slot;
-					Slot *sourceSlot = otherSlot->isInput() ? slot : otherSlot;
-					SlotGraphicsItem *destinationSlotItem = otherSlot->isInput() ? otherSlotItem : slotItem;
-					SlotGraphicsItem *sourceSlotItem = otherSlot->isInput() ? slotItem : otherSlotItem;
+					SlotGraphicsItem *destinationSlotItem = otherSlotItem->isInput() ? otherSlotItem : slotItem;
+					SlotGraphicsItem *sourceSlotItem = otherSlotItem->isInput() ? slotItem : otherSlotItem;
 
+					// TODO: move to slotgraphicsitem
 					LinkGraphicsItem *link = new LinkGraphicsItem();
 					link->setEndSlotItem(destinationSlotItem);
 					scene()->addItem(link);
 					destinationSlotItem->setInputLink(link);
-					sourceSlotItem->addOutputLink(link);
 
-					destinationSlotItem->updateLinks();
-					sourceSlotItem->updateLinks();
-
-					// TODO: add link in model
-					//model()->setData(model()->index(id, 0))
-
-					destinationSlot->setSourceSlot(sourceSlot);
-					if (NodeWidget *node = sourceSlot->parentNode())
-					{
-						node->fireSlotConnectEvent(sourceSlot, false /* isInput */);
-					}
-					if (NodeWidget *node = destinationSlot->parentNode())
-					{
-						node->fireSlotConnectEvent(destinationSlot, true /* isInput */);
-					}
+					// TODO: get rid of cast
+					const SlotIndex & origin = sourceSlotItem->slotIndex();
+					const SlotIndex & destination = destinationSlotItem->slotIndex();
+					static_cast<NodeGraphModel*>(model())->addLink(origin, destination);
 				}
 			}
 
 			p = item->sceneBoundingRect().center();
 		}
 
+		// TODO: is this useful ?
 		for (LinkGraphicsItem *l : m_pendingLinks)
 		{
 			l->setEndPos(p);
