@@ -5,7 +5,8 @@ mkdir build-mingw
 cd build-mingw
 
 :: Call cmake to generate the MinGW solution, check the path to your Qt
-cmake .. -G "MinGW Makefiles" -DQt5_DIR=E:/Qt/5.9.2/mingw53_32/lib/cmake/Qt5
+:: If Qt is not found, you can specify its location using e.g. -DQt5_DIR=E:/Qt/5.9.2/mingw53_32/lib/cmake/Qt5
+cmake .. -G "MinGW Makefiles"
 
 @echo off
 :: Check that it run all right

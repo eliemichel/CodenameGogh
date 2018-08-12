@@ -5,6 +5,7 @@ set(CMAKE_CXX_STANDARD 11)
 
 include(cmake/utils.cmake)
 
+guess_qt5_dir()
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 add_subdirectory(src)
