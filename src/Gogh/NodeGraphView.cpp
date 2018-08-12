@@ -282,9 +282,10 @@ void NodeGraphView::keyPressEvent(QKeyEvent *event)
 	{
 		if (selectionModel())
 		{
-			for (const QModelIndex & index : selectionModel()->selectedIndexes())
+			while (!selectionModel()->selectedIndexes().empty())
 			{
-				model()->removeRow(index.row());
+				int nodeIndex = selectionModel()->selectedIndexes().back().row();
+				model()->removeRow(nodeIndex);
 			}
 		}
 	}
