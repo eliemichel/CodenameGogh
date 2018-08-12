@@ -33,7 +33,7 @@ enum ParmType
 struct RenderCommand {
 	// raw command being built
 	std::vector<std::string> cmd;
-	std::map<std::string, std::string> keys;
+	std::map<std::string, std::string> env;
 
 	// error message that may be filled when returning false in buildRenderCommand
 	std::string err;
@@ -147,9 +147,6 @@ public:
 protected:
 	virtual void slotConnectEvent(SlotEvent *event) {}
 	virtual void slotDisconnectEvent(SlotEvent *event) {}
-
-protected:
-	std::string m_node_name;
 
 private:
 	EnvModel *m_envModel;

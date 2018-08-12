@@ -19,9 +19,6 @@ public: // data model
 	QVariant parmRawValue(int parm) const override;
 	bool setParm(int parm, QVariant value) override;
 
-protected:
-	std::string m_node_name;
-
 private:
 	int m_width;
 	int m_height;

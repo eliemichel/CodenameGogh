@@ -7,7 +7,6 @@
 #include <sstream>
 
 InputNode::InputNode()
-	: m_node_name("input")
 {
 	// Add slots
 	newOutputSlot();
@@ -32,10 +31,10 @@ bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		return false;
 	}
 
-	cmd.keys["path"] = fileinfo.absolutePath().toStdString() + "/";
-	cmd.keys["filename"] = fileinfo.baseName().toStdString();
-	cmd.keys["ext"] = fileinfo.suffix().toStdString();
-	cmd.keys[m_node_name] = filename.toStdString();
+	cmd.env["path"] = fileinfo.absolutePath().toStdString() + "/";
+	cmd.env["filename"] = fileinfo.baseName().toStdString();
+	cmd.env["ext"] = fileinfo.suffix().toStdString();
+	cmd.env["input"] = filename.toStdString();
 	//TODO: Set default keys from ffprobe file properties, like "codec" or "scale"
 
 	cmd.cmd.push_back("-i");

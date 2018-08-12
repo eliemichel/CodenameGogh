@@ -28,9 +28,6 @@ public:
 protected:
 	void slotConnectEvent(SlotEvent *event) override;
 
-protected:
-	std::string m_node_name;
-
 private:
 	std::vector<std::string> m_streams;
 };

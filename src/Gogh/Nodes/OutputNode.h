@@ -26,9 +26,6 @@ public: // data model
 protected:
 	void slotConnectEvent(SlotEvent *event) override;
 
-protected:
-	std::string m_node_name;
-
 private:
 	std::string m_filename;
 

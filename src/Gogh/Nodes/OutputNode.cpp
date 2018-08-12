@@ -5,7 +5,6 @@
 
 OutputNode::OutputNode()
 	: m_isFilenameUserDefined(false)
-	, m_node_name("output")
 {
 	// Add slots
 	newInputSlot();
@@ -18,6 +17,14 @@ QWidget * OutputNode::createEditor(QWidget * parent)
 
 bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 {
+	// Clean cmd.env :
+	cmd.env["path"];
+	cmd.env["filename"];
+	cmd.env["ext"];
+	cmd.env["input"];
+	cmd.env["scale"];
+	cmd.env["codec"];
+
 	// special output index for render function
 	if (outputIndex != -1) {
 		return false;
@@ -93,23 +100,14 @@ void OutputNode::slotConnectEvent(SlotEvent *event)
 		{
 			// Smart ouput renaming
 			RenderCommand cmd;
-
 			//TODO: userPattern from user_preferences menu
 			std::string userPattern = "$path$filename_$codec_$scale.$ext";
 
-			std::string s = userPattern;
-			s.erase(remove_if(s.begin(), s.end(), [](char c) { return !isalpha(c) && c != '$'; } ), s.end());
-
-			stringlist patternKeys = split(s, '$');
-
 			if (buildRenderCommand(-1, cmd))
 			{
-				for (auto const& p : patternKeys)
+				for (auto const& k : cmd.env)
 				{
-					if (p != "")
-					{
-						replace(userPattern, "$" + p, cmd.keys[p]);
-					}
+					replace(userPattern, "$" + k.first, cmd.env[k.first]);
 				}
 			}
 			setParm(0, QString().fromStdString(userPattern));

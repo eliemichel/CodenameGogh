@@ -7,7 +7,6 @@
 #include <QDataStream>
 
 MixNode::MixNode()
-	: m_node_name("mix")
 {
 	newInputSlot();
 	newInputSlot();

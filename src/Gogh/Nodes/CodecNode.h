@@ -23,9 +23,6 @@ public:
 
 	bool setParm(int parm, QVariant value) override;
 
-protected:
-	std::string m_node_name;
-
 private:
 	int m_codec;
 };

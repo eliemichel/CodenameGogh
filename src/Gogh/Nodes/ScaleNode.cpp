@@ -7,7 +7,6 @@
 ScaleNode::ScaleNode()
 	: m_width(1920)
 	, m_height(1080)
-	, m_node_name("scale")
 {
 	newInputSlot();
 	newOutputSlot();
@@ -26,7 +25,7 @@ bool ScaleNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 
 	std::ostringstream ss;
 	ss << parmEvalAsInt(0) << "x" << parmEvalAsInt(1);
-	cmd.keys[m_node_name] = ss.str();
+	cmd.env["scale"] = ss.str();
 
 	cmd.cmd.push_back("-vf");
 	std::ostringstream().swap(ss);

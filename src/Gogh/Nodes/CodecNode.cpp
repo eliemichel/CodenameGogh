@@ -6,7 +6,6 @@
 
 CodecNode::CodecNode()
 	: m_codec(0)
-	, m_node_name("codec")
 {
 	newInputSlot();
 	newOutputSlot();
@@ -22,8 +21,8 @@ bool CodecNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	{
 		return false;
 	}
-	
-	cmd.keys[m_node_name] = parmEvalAsString(0).toStdString();
+
+	cmd.env["codec"] = parmEvalAsString(0).toStdString();
 
 	cmd.cmd.push_back("-c:v");
 	cmd.cmd.push_back(parmEvalAsString(0).toStdString());
