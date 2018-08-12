@@ -18,6 +18,9 @@ public:
 protected:
 	Node * node() const { return m_node; }
 
+signals:
+	void buttonClicked(int parm);
+
 private slots:
 	void updateParm(int parm);
 

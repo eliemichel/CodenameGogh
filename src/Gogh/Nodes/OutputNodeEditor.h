@@ -1,13 +1,13 @@
 #ifndef H_OUTPUTNODEEDITOR
 #define H_OUTPUTNODEEDITOR
 
-#include <QWidget>
+#include "DefaultNodeEditor.h"
 #include <vector>
 
 class OutputNode;
 class QLineEdit;
 
-class OutputNodeEditor : public QWidget
+class OutputNodeEditor : public DefaultNodeEditor
 {
 	Q_OBJECT
 public:
@@ -15,9 +15,10 @@ public:
 
 private:
 	OutputNode * node() const { return m_node; }
+	void render();
 
 private slots:
-	void render();
+	void onButtonClicked(int parm);
 	void setUserDefined();
 
 private:

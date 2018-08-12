@@ -22,6 +22,7 @@ enum ParmType
 	StringType,
 	IntType,
 	EnumType,
+	ButtonType,
 };
 
 /**

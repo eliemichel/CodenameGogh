@@ -8,6 +8,7 @@
 #include <QLineEdit>
 #include <QSpinBox>
 #include <QComboBox>
+#include <QPushButton>
 
 DefaultNodeEditor::DefaultNodeEditor(Node *_node, QWidget *parent)
 	: QWidget(parent)
@@ -70,10 +71,15 @@ void DefaultNodeEditor::updateParm(int parm)
 		w->setCurrentIndex(node()->parmRawValue(parm).toInt());
 		break;
 	}
+	case ButtonType:
+	{
+		QComboBox *w = static_cast<QComboBox*>(input);
+		w->setCurrentIndex(node()->parmRawValue(parm).toInt());
+		break;
+	}
 	default:
 	{
-		QLineEdit *w = static_cast<QLineEdit*>(input);
-		w->setText(node()->parmRawValue(parm).toString());
+		ERR_LOG << "Not implemented: Node Type" << node()->parmType(parm);
 		break;
 	}
 	}
@@ -81,50 +87,60 @@ void DefaultNodeEditor::updateParm(int parm)
 
 void DefaultNodeEditor::addParmInput(int parm)
 {
-	QLabel *label = new QLabel(node()->parmName(parm));
-	m_layout->addWidget(label, parm, 0);
+	ParmType type = node()->parmType(parm);
+	// Special case for button
+	if (type == ButtonType)
+	{
+		QPushButton *button = new QPushButton();
+		button->setText(node()->parmName(parm));
+		connect(button, &QPushButton::clicked, [=]() { emit buttonClicked(parm); });
+		m_layout->addWidget(button, parm, 0, 1, 2);
+		m_inputs.push_back(button);
+	}
+	else
+	{
+		QLabel *label = new QLabel(node()->parmName(parm));
+		m_layout->addWidget(label, parm, 0);
 
-	QWidget *input;
-	switch (node()->parmType(parm))
-	{
-	case StringType:
-	{
-		QLineEdit *w = new QLineEdit();
-		w->setText(node()->parmRawValue(parm).toString());
-		connect(w, &QLineEdit::textEdited, [=](const QString &text) { node()->setParm(parm, text); });
-		input = w;
-		break;
-	}
-	case IntType:
-	{
-		QSpinBox *w = new QSpinBox();
-		w->setMaximum(99999999);
-		w->setValue(node()->parmRawValue(parm).toInt());
-		connect(w, QOverload<int>::of(&QSpinBox::valueChanged), [=](int value) { node()->setParm(parm, value); });
-		input = w;
-		break;
-	}
-	case EnumType:
-	{
-		QComboBox *w = new QComboBox();
-		for (int j = 0; j < node()->parmMenuCount(parm); ++j)
+		QWidget *input;
+		switch (node()->parmType(parm))
 		{
-			w->addItem(node()->parmMenuLabel(parm, j));
+		case StringType:
+		{
+			QLineEdit *w = new QLineEdit();
+			w->setText(node()->parmRawValue(parm).toString());
+			connect(w, &QLineEdit::textEdited, [=](const QString &text) { node()->setParm(parm, text); });
+			input = w;
+			break;
 		}
-		w->setCurrentIndex(node()->parmRawValue(parm).toInt());
-		connect(w, QOverload<int>::of(&QComboBox::currentIndexChanged), [=](int index) { node()->setParm(parm, index); });
-		input = w;
-		break;
+		case IntType:
+		{
+			QSpinBox *w = new QSpinBox();
+			w->setMaximum(99999999);
+			w->setValue(node()->parmRawValue(parm).toInt());
+			connect(w, QOverload<int>::of(&QSpinBox::valueChanged), [=](int value) { node()->setParm(parm, value); });
+			input = w;
+			break;
+		}
+		case EnumType:
+		{
+			QComboBox *w = new QComboBox();
+			for (int j = 0; j < node()->parmMenuCount(parm); ++j)
+			{
+				w->addItem(node()->parmMenuLabel(parm, j));
+			}
+			w->setCurrentIndex(node()->parmRawValue(parm).toInt());
+			connect(w, QOverload<int>::of(&QComboBox::currentIndexChanged), [=](int index) { node()->setParm(parm, index); });
+			input = w;
+			break;
+		}
+		default:
+		{
+			ERR_LOG << "Not implemented: Node Type" << node()->parmType(parm);
+			break;
+		}
+		}
+		m_layout->addWidget(input, parm, 1);
+		m_inputs.push_back(input);
 	}
-	default:
-	{
-		QLineEdit *w = new QLineEdit();
-		w->setText(node()->parmRawValue(parm).toString());
-		connect(w, &QLineEdit::textEdited, [=](const QString &text) { node()->setParm(parm, text); });
-		input = w;
-		break;
-	}
-	}
-	m_layout->addWidget(input, parm, 1);
-	m_inputs.push_back(input);
 }

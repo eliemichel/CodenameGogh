@@ -11,22 +11,15 @@
 #include <QLineEdit>
 
 OutputNodeEditor::OutputNodeEditor(OutputNode *_node, QWidget *parent)
-	: QWidget(parent)
+	: DefaultNodeEditor(_node, parent)
 	, m_node(_node)
 {
-	QVBoxLayout *layout = new QVBoxLayout();
-	DefaultNodeEditor *ed = new DefaultNodeEditor(node(), parent);
-	layout->addWidget(ed);
-
 	// TODO: clean up, avoid this cast
-	m_filenameInput = static_cast<QLineEdit*>(ed->inputWidget(0));
+	m_filenameInput = static_cast<QLineEdit*>(inputWidget(0));
 	connect(m_filenameInput, &QLineEdit::textEdited, this, &OutputNodeEditor::setUserDefined);
 
 	QPushButton *renderButton = new QPushButton("Render");
-	connect(renderButton, &QPushButton::clicked, this, &OutputNodeEditor::render);
-	layout->addWidget(renderButton);
-
-	setLayout(layout);
+	connect(this, &DefaultNodeEditor::buttonClicked, this, &OutputNodeEditor::onButtonClicked);
 }
 
 void OutputNodeEditor::render()
@@ -45,6 +38,16 @@ void OutputNodeEditor::render()
 		errDialog.setInformativeText(QString::fromStdString(cmd.err));
 		errDialog.setIcon(QMessageBox::Critical);
 		errDialog.exec();
+	}
+}
+
+void OutputNodeEditor::onButtonClicked(int parm)
+{
+	switch (parm)
+	{
+	case 1:
+		render();
+		break;
 	}
 }
 
