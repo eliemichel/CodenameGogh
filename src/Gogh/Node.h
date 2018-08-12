@@ -11,7 +11,9 @@
 #include <set>
 #include <vector>
 #include <string>
-#include<utils/stringlist.h>
+#include <utils/stringlist.h>
+#include <utils/strutils.h>
+
 
 class EnvModel;
 class NodeGraphModel;
@@ -33,6 +35,8 @@ enum ParmType
 struct RenderCommand {
 	// raw command being built
 	std::vector<std::string> cmd;
+
+	// OutputNode's smart renaming : keys (like : "codec", "scale") associated to current nodes values (like : "h264", "1920x1080")
 	std::map<std::string, std::string> env;
 
 	// error message that may be filled when returning false in buildRenderCommand
