@@ -87,15 +87,44 @@ public:
 	static bool isRoot(QModelIndex index);
 
 public:
-	static SlotIndex invalidSlot;
-	static std::set<SlotIndex> invalidSlotSet;
+	static const SlotIndex invalidSlot;
+	static const std::set<SlotIndex> invalidSlotSet;
 
 public:
 	NodeGraphModel();
 	~NodeGraphModel();
 
+	// Accessors
 	EnvModel *envModel() const { return m_envModel; }
 	void setEnvModel(EnvModel *envModel) { m_envModel = envModel; }
+
+	// I/O
+	void LoadDefaultGraph();
+	bool LoadGraph(QString filename);
+	bool SaveGraph(QString filename);
+
+	// Read node info
+	int nodeCount() const { return static_cast<int>(m_nodeEntries.size()); }
+	Node * node(int i) const { return m_nodeEntries[i]->node; }
+
+	// Read link info
+	bool canAddLink(const SlotIndex & origin, const SlotIndex & destination);
+	const SlotIndex & originSlot(const SlotIndex & destination) const;
+	const std::set<SlotIndex> & destinationSlots(const SlotIndex & origin) const;
+
+	// Edit node info
+	void addNode(Node *node);
+	bool removeNode(Node *node);
+
+	// Edit link info
+	bool addLink(const SlotIndex & origin, const SlotIndex & destination);
+	bool removeLink(const SlotIndex & destination);
+
+	// Utility
+	void broadcastNodeChange(int nodeIndex) { const QModelIndex & i = index(nodeIndex, 0); emit dataChanged(i, i); }
+
+	/// Complexity: O(n)
+	QModelIndex findByName(const std::string & name);
 
 public: // overrides from QAbstractItemModel
 	QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
@@ -109,28 +138,7 @@ public: // overrides from QAbstractItemModel
 	bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
 	Qt::ItemFlags flags(const QModelIndex &index) const override;
 
-public:
-	void LoadDefaultGraph();
-	bool LoadGraph(QString filename);
-	bool SaveGraph(QString filename);
-
-	void addNode(Node *node);
-	// TODO: removeNode() (to be called in dtor)
-	const std::vector<NodeEntry*> & nodes() const { return m_nodeEntries; }
-
-	Node * node(int i) const { return m_nodeEntries[i]->node; }
-
-	bool canAddLink(const SlotIndex & origin, const SlotIndex & destination);
-	bool addLink(const SlotIndex & origin, const SlotIndex & destination);
-	bool removeLink(const SlotIndex & destination);
-
-	const SlotIndex & originSlot(const SlotIndex & destination) const;
-	const std::set<SlotIndex> & destinationSlots(const SlotIndex & origin) const;
-
-	void broadcastNodeChange(const QModelIndex & nodeIndex) { emit dataChanged(nodeIndex, nodeIndex); }
-
-	/// Complexity: O(n)
-	QModelIndex findByName(const std::string & name);
+	bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
 
 private:
 	bool inParentBounds(const QModelIndex & index) const;

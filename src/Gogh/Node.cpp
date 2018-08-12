@@ -89,6 +89,7 @@ QString Node::parmEvalAsString(int parm) const
 	{
 		int menu = parmRawValue(parm).toInt();
 		value = parmMenuValue(parm, menu).toString();
+		break;
 	}
 	default:
 		value = parmRawValue(parm).toString();
@@ -112,6 +113,7 @@ int Node::parmEvalAsInt(int parm) const
 	{
 		int menu = parmRawValue(parm).toInt();
 		return parmMenuValue(parm, menu).toInt();
+		break;
 	}
 	default:
 		return parmRawValue(parm).toInt();
@@ -123,7 +125,7 @@ void Node::newInputSlot()
 	inputLinks.resize(inputLinks.size() + 1);
 	if (graphModel())
 	{
-		graphModel()->broadcastNodeChange(modelIndex());
+		graphModel()->broadcastNodeChange(nodeIndex());
 	}
 }
 
@@ -132,6 +134,6 @@ void Node::newOutputSlot()
 	outputLinks.resize(outputLinks.size() + 1);
 	if (graphModel())
 	{
-		graphModel()->broadcastNodeChange(modelIndex());
+		graphModel()->broadcastNodeChange(nodeIndex());
 	}
 }

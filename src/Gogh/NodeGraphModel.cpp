@@ -12,8 +12,8 @@
 #include <QDataStream>
 #include <QModelIndex>
 
-SlotIndex NodeGraphModel::invalidSlot = SlotIndex();
-std::set<SlotIndex> NodeGraphModel::invalidSlotSet = std::set<SlotIndex>();
+const SlotIndex NodeGraphModel::invalidSlot = SlotIndex();
+const std::set<SlotIndex> NodeGraphModel::invalidSlotSet = std::set<SlotIndex>();
 
 NodeGraphModel::NodeGraphModel()
 	: QAbstractItemModel()
@@ -160,10 +160,11 @@ bool NodeGraphModel::removeLink(const SlotIndex & destination)
 	// remove link
 	Node *originNode = node(origin.node);
 	originNode->outputLinks[origin.slot].erase(destination);
+	int oldOriginNode = origin.node;
 	origin.node = -1;
 
 	// signal views
-	const QModelIndex & originIndex = index(origin.node, 0);
+	const QModelIndex & originIndex = index(oldOriginNode, 0);
 	const QModelIndex & destinationIndex = index(destination.node, 0);
 	emit dataChanged(originIndex, originIndex);
 	emit dataChanged(destinationIndex, destinationIndex);
@@ -175,6 +176,7 @@ bool NodeGraphModel::removeLink(const SlotIndex & destination)
 	return true;
 }
 
+// TODO: move this to Node
 const SlotIndex & NodeGraphModel::originSlot(const SlotIndex & destination) const
 {
 	if (destination.node < 0 || destination.node >= m_nodeEntries.size())
@@ -289,7 +291,7 @@ int NodeGraphModel::rowCount(const QModelIndex & parent) const
 	{
 
 	case RootLevel:
-		return static_cast<int>(m_nodeEntries.size());
+		return nodeCount();
 
 	case NodeLevel:
 		return _BlockCount;
@@ -573,7 +575,7 @@ bool NodeGraphModel::setData(const QModelIndex & index, const QVariant & value, 
 			{
 			case 0: // node
 			{
-				if (id < 0 || id >= nodes().size() || id == sourceSlot.node)
+				if (id < 0 || id >= nodeCount() || id == sourceSlot.node)
 				{
 					return false;
 				}
@@ -669,6 +671,21 @@ Qt::ItemFlags NodeGraphModel::flags(const QModelIndex & index) const
 	default:
 		return f;
 	}
+}
+
+bool NodeGraphModel::removeRows(int row, int count, const QModelIndex &parent)
+{
+	if (!isRoot(parent))
+	{
+		return false;
+	}
+
+	for (int i = 0 ; i < count ; ++i)
+	{
+		removeNode(node(row));
+	}
+
+	return true;
 }
 
 void NodeGraphModel::LoadDefaultGraph()
@@ -812,8 +829,9 @@ bool NodeGraphModel::SaveGraph(QString filename)
 
 void NodeGraphModel::addNode(Node *node)
 {
-	// /!\ not thread-safe
 	int nodeIndex = static_cast<int>(m_nodeEntries.size());
+
+	beginInsertRows(QModelIndex(), nodeIndex, nodeIndex);
 
 	NodeEntry *entry = new NodeEntry();
 	entry->node = node;
@@ -836,5 +854,98 @@ void NodeGraphModel::addNode(Node *node)
 
 	node->setEnvModel(envModel());
 	node->setGraphModel(this);
-	node->setModelIndex(index(nodeIndex, 0));
+	node->setNodeIndex(nodeIndex);
+
+	endInsertRows();
+}
+
+bool NodeGraphModel::removeNode(Node *node)
+{
+	if (!node)
+	{
+		return false;
+	}
+
+	int nodeIndex = node->nodeIndex();
+
+	beginRemoveRows(QModelIndex(), nodeIndex, nodeIndex);
+
+	std::set<int> affectedIndexes;
+
+	// Ok, this is not good, I have to make a full list of all the references to node by index to update them
+	// 1. in node's nodeIndex and inputLinks/outputLinks
+	for (int i = 0 ; i < nodeCount() ; ++i)
+	{
+		if (this->node(i)->nodeIndex() > nodeIndex)
+		{
+			this->node(i)->setNodeIndex(this->node(i)->nodeIndex() - 1);
+		}
+
+		for (SlotIndex & origin : this->node(i)->inputLinks)
+		{
+			if (origin.node == nodeIndex)
+			{
+				origin.node = -1;
+				affectedIndexes.insert(i);
+			}
+			else if (origin.node > nodeIndex)
+			{
+				origin.node -= 1;
+			}
+		}
+		for (std::set<SlotIndex> & destinationSet : this->node(i)->outputLinks)
+		{
+			std::set<SlotIndex> oldDestinationSet = destinationSet;
+			destinationSet.clear();
+			for (const SlotIndex & destination : oldDestinationSet)
+			{
+				if (destination.node == nodeIndex)
+				{
+					continue;
+				}
+				else if (destination.node > nodeIndex)
+				{
+					destinationSet.insert(SlotIndex(destination.node - 1, destination.slot));
+				}
+				else
+				{
+					destinationSet.insert(destination);
+				}
+			}
+		}
+	}
+	// 2. Node entry IndexData
+	for (NodeEntry *entry : m_nodeEntries)
+	{
+		if (entry->nodeIndex.parentNodeIndex > nodeIndex)
+		{
+			entry->nodeIndex.parentNodeIndex -= 1;
+		}
+		if (entry->blockIndex.parentNodeIndex > nodeIndex)
+		{
+			entry->blockIndex.parentNodeIndex -= 1;
+		}
+		for (int i = 0 ; i < _BlockCount ; ++i)
+		{
+			if (entry->elementIndex[i].parentNodeIndex > nodeIndex)
+			{
+				entry->elementIndex[i].parentNodeIndex -= 1;
+			}
+		}
+	}
+
+	NodeEntry *entry = m_nodeEntries[nodeIndex];
+	delete entry->node;
+	delete entry;
+	m_nodeEntries.erase(m_nodeEntries.begin() + nodeIndex);
+
+	endRemoveRows();
+
+	for (int i : affectedIndexes)
+	{
+		const QModelIndex & idx = index(i, 0);
+		emit dataChanged(idx, idx);
+	}
+
+	return true;
 }

@@ -37,8 +37,8 @@ void NodeGraphicsItemControl::paint(QPainter *painter, const QStyleOptionGraphic
 }
 
 NodeGraphicsItem::NodeGraphicsItem(NodeGraphScene *scene, Node *node)
-	: m_graphScene(scene)
-	, m_modelIndex(node->modelIndex())
+	: m_node(node)
+	, m_graphScene(scene)
 	, m_control(nullptr)
 {
 	m_content = node->createEditor();
@@ -65,11 +65,17 @@ NodeGraphicsItem::NodeGraphicsItem(NodeGraphScene *scene, Node *node)
 	m_proxy->setParentItem(m_control);
 	m_proxy->setZValue(NodeGraphScene::NodeLayer);
 
-	if (m_modelIndex.model())
+	update();
+}
+
+NodeGraphicsItem::~NodeGraphicsItem()
+{
+	for (SlotGraphicsItem *inputItem : m_inputSlotItems)
 	{
-		connect(m_modelIndex.model(), &QAbstractItemModel::dataChanged, this, &NodeGraphicsItem::onDataChanged);
+		inputItem->removeInputLink();
 	}
-	onDataChanged(modelIndex(), modelIndex());
+	m_graphScene->removeItem(m_control);
+	delete m_control;
 }
 
 void NodeGraphicsItem::setSelected(bool selected)
@@ -80,7 +86,7 @@ void NodeGraphicsItem::setSelected(bool selected)
 
 void NodeGraphicsItem::updateInputSlots()
 {
-	for (int i = 0 ; i < graphModel()->node(modelIndex().row())->inputSlotCount() ; ++i)
+	for (int i = 0 ; i < node()->inputSlotCount() ; ++i)
 	{
 		SlotGraphicsItem *slotItem;
 		if (i >= m_inputSlotItems.size())
@@ -94,7 +100,7 @@ void NodeGraphicsItem::updateInputSlots()
 			slotItem = m_inputSlotItems[i];
 		}
 
-		slotItem->setSlotIndex(SlotIndex(modelIndex().row(), i));
+		slotItem->setSlotIndex(SlotIndex(node()->nodeIndex(), i));
 		slotItem->setIsInput(true);
 		slotItem->setPos(-7, 30 + i * 30);
 		slotItem->setParentItem(m_control);
@@ -103,7 +109,7 @@ void NodeGraphicsItem::updateInputSlots()
 
 void NodeGraphicsItem::updateOutputSlots()
 {
-	for (int i = 0 ; i < graphModel()->node(modelIndex().row())->outputSlotCount(); ++i)
+	for (int i = 0 ; i < node()->outputSlotCount(); ++i)
 	{
 		SlotGraphicsItem *slotItem;
 		if (i >= m_outputSlotItems.size())
@@ -117,7 +123,7 @@ void NodeGraphicsItem::updateOutputSlots()
 			slotItem = m_outputSlotItems[i];
 		}
 
-		slotItem->setSlotIndex(SlotIndex(modelIndex().row(), i));
+		slotItem->setSlotIndex(SlotIndex(node()->nodeIndex(), i));
 		slotItem->setIsInput(false);
 		slotItem->setPos(m_control->rect().width() - 8, 30 + i * 30);
 		slotItem->setParentItem(m_control);
@@ -131,15 +137,14 @@ void NodeGraphicsItem::updateInputLinks() const
 	{
 		++slotId;
 
-		if (!modelIndex().isValid())
+		if (!node())
 		{
 			item->removeInputLink();
 			continue;
 		}
 
-		// TODO: make this easier and avoid cast
-		const NodeGraphModel *model = static_cast<const NodeGraphModel*>(modelIndex().model());
-		SlotIndex sourceSlot = model->originSlot(SlotIndex(modelIndex().row(), slotId));
+		// TODO: use node()->originSlot when it will exist
+		SlotIndex sourceSlot = node()->inputLinks[slotId];
 
 		if (!sourceSlot.isValid())
 		{
@@ -147,8 +152,7 @@ void NodeGraphicsItem::updateInputLinks() const
 			continue;
 		}
 
-		const QModelIndex & sourceIndex = model->index(sourceSlot.node, 0);
-		NodeGraphicsItem *sourceNodeItem = m_graphScene->nodeItemAtIndex(sourceIndex);
+		NodeGraphicsItem *sourceNodeItem = m_graphScene->nodeItemAtIndex(sourceSlot.node);
 		QPointF startPos = sourceNodeItem->outputSlotPosition(sourceSlot.slot);
 
 		item->ensureInputLink();
@@ -165,18 +169,16 @@ void NodeGraphicsItem::updateOutputLinks() const
 	{
 		++slotId;
 
-		if (!modelIndex().isValid())
+		if (!node())
 		{
 			continue;
 		}
 
-		// TODO: make this easier and avoid cast
-		const NodeGraphModel *model = static_cast<const NodeGraphModel*>(modelIndex().model());
-		const std::set<SlotIndex> & destinationSlots = model->destinationSlots(SlotIndex(modelIndex().row(), slotId));
+		// TODO: use node()->destinationSlots when it will exist
+		const std::set<SlotIndex> & destinationSlots = node()->outputLinks[slotId];
 		for (const SlotIndex & destination : destinationSlots)
 		{
-			const QModelIndex & destinationIndex = model->index(destination.node, 0);
-			if (NodeGraphicsItem *destinationNodeItem = m_graphScene->nodeItemAtIndex(destinationIndex))
+			if (NodeGraphicsItem *destinationNodeItem = m_graphScene->nodeItemAtIndex(destination.node))
 			{
 				destinationNodeItem->updateInputLinks();
 			}
@@ -196,28 +198,14 @@ QPointF NodeGraphicsItem::outputSlotPosition(int i) const
 	}
 }
 
-void NodeGraphicsItem::onDataChanged(const QModelIndex & topLeft, const QModelIndex & bottomRight)
+void NodeGraphicsItem::update()
 {
-	const QModelIndex & currentIndex = modelIndex();
-	if (topLeft.parent() == currentIndex.parent()
-		&& bottomRight.parent() == currentIndex.parent()
-		&& currentIndex.row() >= topLeft.row()
-		&& currentIndex.row() <= bottomRight.row())
-	{
-		float x;
-		float y;
-		QString name;
-		const QAbstractItemModel *model = modelIndex().model();
-		x = model->data(model->index(modelIndex().row(), NodeGraphModel::PosXColumn, modelIndex().parent())).toInt();
-		y = model->data(model->index(modelIndex().row(), NodeGraphModel::PosYColumn, modelIndex().parent())).toInt();
-		name = model->data(model->index(modelIndex().row(), NodeGraphModel::NameColumn, modelIndex().parent())).toString();
-		setPos(QPointF(x, y));
-		m_control->setName(name);
+	setPos(QPointF(node()->x, node()->y));
+	m_control->setName(QString::fromStdString(node()->name));
 
-		updateInputSlots();
-		updateOutputSlots();
+	updateInputSlots();
+	updateOutputSlots();
 
-		updateInputLinks();
-		updateOutputLinks();
-	}
+	updateInputLinks();
+	updateOutputLinks();
 }

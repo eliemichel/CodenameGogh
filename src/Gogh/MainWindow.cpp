@@ -61,16 +61,7 @@ MainWindow::MainWindow(EnvModel *envModel, QString graphFilename, QWidget *paren
 		}
 	}
 
-	// Node creation has been moved to NodeGraphModel::LoadGraph
-	NodeGraphicsItem *nodeItem;
-	for (int i = 0 ; i < m_model->rowCount() ; ++i)
-	{
-		float x = m_model->data(m_model->index(i, NodeGraphModel::PosXColumn)).toFloat();
-		float y = m_model->data(m_model->index(i, NodeGraphModel::PosYColumn)).toFloat();
-		nodeItem = new NodeGraphicsItem(m_scene, m_model->node(i));
-		nodeItem->setPos(QPointF(x, y));
-	}
-
+	m_scene->setGraphModel(m_model);
 	m_scene->setSceneRect(-1000, -1000, 2000, 2000);
 
 	ui->splitter->setSizes(QList<int>() << 300 << 10);

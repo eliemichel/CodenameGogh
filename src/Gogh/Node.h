@@ -81,8 +81,8 @@ public:
 	void setEnvModel(EnvModel *envModel) { m_envModel = envModel; }
 	void setGraphModel(NodeGraphModel *model) { m_graphModel = model; }
 
-	const QModelIndex & modelIndex() const { return m_modelIndex; }
-	void setModelIndex(const QModelIndex & index) { m_modelIndex = index; }
+	int nodeIndex() const { return m_nodeIndex; }
+	void setNodeIndex(int index) { m_nodeIndex = index; }
 
 public:
 	// parm model
@@ -149,7 +149,7 @@ protected:
 private:
 	EnvModel *m_envModel;
 	NodeGraphModel *m_graphModel;
-	QModelIndex m_modelIndex;
+	int m_nodeIndex;
 };
 
 #endif // H_NODE

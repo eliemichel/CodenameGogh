@@ -172,10 +172,11 @@ void NodeGraphView::mousePressEvent(QMouseEvent *event)
 					return;
 				}
 
-				if (!m_selectionModel->isSelected(nodeItem->modelIndex()))
+				const QModelIndex & index = model()->index(nodeItem->node()->nodeIndex(), 0);
+				if (!m_selectionModel->isSelected(index))
 				{
 					bool addToSelection = (event->modifiers() & Qt::ShiftModifier) == Qt::ShiftModifier;
-					m_selectionModel->select(nodeItem->modelIndex(), addToSelection ? QItemSelectionModel::Select : QItemSelectionModel::ClearAndSelect);
+					m_selectionModel->select(index, addToSelection ? QItemSelectionModel::Select : QItemSelectionModel::ClearAndSelect);
 				}
 
 				startMoveNodes(event->pos());
@@ -277,9 +278,19 @@ void NodeGraphView::keyPressEvent(QKeyEvent *event)
 	{
 		m_currentToolState = CutToolState;
 	}
-	if (event->key() == Qt::Key_A && event->modifiers() & Qt::ControlModifier)
+	else if (event->key() == Qt::Key_A && event->modifiers() & Qt::ControlModifier)
 	{
 		selectAll();
+	}
+	else if (event->key() == Qt::Key_Delete)
+	{
+		if (selectionModel())
+		{
+			for (const QModelIndex & index : selectionModel()->selectedIndexes())
+			{
+				model()->removeRow(index.row());
+			}
+		}
 	}
 	else
 	{
@@ -450,7 +461,7 @@ void NodeGraphView::onSelectionChanged(const QItemSelection & selected, const QI
 
 	for (const QModelIndex & index : deselected.indexes())
 	{
-		if (NodeGraphicsItem *nodeItem = nodeGraphScene()->nodeItemAtIndex(index))
+		if (NodeGraphicsItem *nodeItem = nodeGraphScene()->nodeItemAtIndex(index.row()))
 		{
 			nodeItem->setSelected(false);
 		}
@@ -458,7 +469,7 @@ void NodeGraphView::onSelectionChanged(const QItemSelection & selected, const QI
 
 	for (const QModelIndex & index : selected.indexes())
 	{
-		if (NodeGraphicsItem *nodeItem = nodeGraphScene()->nodeItemAtIndex(index))
+		if (NodeGraphicsItem *nodeItem = nodeGraphScene()->nodeItemAtIndex(index.row()))
 		{
 			nodeItem->setSelected(true);
 		}

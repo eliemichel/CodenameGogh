@@ -17,6 +17,11 @@ SlotGraphicsItem::SlotGraphicsItem(QGraphicsItem *parent)
 	setZValue(NodeGraphScene::SlotLayer);
 }
 
+SlotGraphicsItem::~SlotGraphicsItem()
+{
+	removeInputLink();
+}
+
 void SlotGraphicsItem::removeInputLink()
 {
 	if (m_inputLink)
