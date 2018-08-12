@@ -17,6 +17,7 @@
 #include <QAbstractItemModel>
 #include <QItemSelectionModel>
 #include <QMenu>
+#include <QTimer>
 
 #include <math.h>
 
@@ -125,7 +126,6 @@ void NodeGraphView::mouseMoveEvent(QMouseEvent *event)
 {
 	if (m_panTool.isActive())
 	{
-		//updatePan(event->pos());
 		m_panTool.update(event->pos());
 	}
 	else if (m_isMovingNodes)
@@ -197,8 +197,10 @@ void NodeGraphView::mousePressEvent(QMouseEvent *event)
 
 				for (LinkGraphicsItem *l : m_pendingLinks)
 				{
-					scene()->removeItem(l);
-					delete l;
+					// Remove linkes once the currently queued events are processed
+					QTimer::singleShot(0, this, [=]() {
+						delete l;
+					});
 				}
 				m_pendingLinks.clear();
 				m_pendingLinksSources.clear();
@@ -253,9 +255,9 @@ void NodeGraphView::wheelEvent(QWheelEvent *event)
 	float oldZoom = m_zoom;
 
 	// 1.1 ^ angle makes zoom exponential and reversible
-	m_zoom *= exp(event->angleDelta().y()/180.f * 2.f * log(1.1f));
+	m_zoom *= exp(event->angleDelta().y() / 180.f * 2.f * log(1.1f));
 
-	m_zoom = std::max<double>(0.1, std::min<double>(m_zoom, 2.0));
+	m_zoom = std::max(0.1f, std::min(m_zoom, 2.0f));
 
 	// /!\ relative zoom has a risk of numerical error accumulation
 	// this would be changed if we would go for a manual management of the view transform
