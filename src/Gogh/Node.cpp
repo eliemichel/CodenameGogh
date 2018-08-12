@@ -137,3 +137,26 @@ void Node::newOutputSlot()
 		graphModel()->broadcastNodeChange(nodeIndex());
 	}
 }
+
+void Node::removeOutputSlots()
+{
+	if (!graphModel())
+	{
+		return;
+	}
+
+	// Remove links
+	for (std::set<SlotIndex> & destinationSet : outputLinks)
+	{
+		while (!destinationSet.empty())
+		{
+			graphModel()->removeLink(*destinationSet.begin());
+		}
+	}
+
+	// Remove slots
+	// TODO: remove graphicsslots
+	outputLinks.clear();
+
+	graphModel()->broadcastNodeChange(nodeIndex());
+}

@@ -115,6 +115,8 @@ protected:
 	void newInputSlot();
 	void newOutputSlot();
 
+	void removeOutputSlots();
+
 	EnvModel * envModel() const { return m_envModel; }
 	NodeGraphModel *graphModel() const { return m_graphModel; }
 

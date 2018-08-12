@@ -36,6 +36,8 @@ set(SRC
 	RenderDialog.cpp
 	RenderProcess.h
 	RenderProcess.cpp
+	FileProbeProcess.h
+	FileProbeProcess.cpp
 
 	LinkGraphicsItem.h
 	LinkGraphicsItem.cpp

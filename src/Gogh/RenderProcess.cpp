@@ -11,7 +11,13 @@ std::string RenderProcess::locateFfmpeg()
 RenderProcess::RenderProcess(const std::vector<std::string> & args, QObject *parent)
 	: QProcess(parent)
 	, m_args(args)
-{}
+{
+	connect(this, QOverload<int>::of(&QProcess::finished), this, &RenderProcess::onProcessFinished);
+	connect(this, &QProcess::readyReadStandardOutput, this, &RenderProcess::readStdout);
+	connect(this, &QProcess::readyReadStandardError, this, &RenderProcess::readStderr);
+
+	setInputChannelMode(ForwardedInputChannel);
+}
 
 void RenderProcess::start()
 {
@@ -21,10 +27,6 @@ void RenderProcess::start()
 	{
 		arguments << QString::fromStdString(arg);
 	}
-
-	connect(this, QOverload<int>::of(&QProcess::finished), this, &RenderProcess::onProcessFinished);
-	connect(this, &QProcess::readyReadStandardOutput, this, &RenderProcess::readStdout);
-	connect(this, &QProcess::readyReadStandardError, this, &RenderProcess::readStderr);
 
 	//Prompts the command sent to ffmpeg right before
 	DEBUG_LOG << program.toStdString() << " " << arguments.join(" ").toStdString();
