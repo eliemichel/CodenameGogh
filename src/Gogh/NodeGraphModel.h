@@ -3,6 +3,7 @@
 
 #include "SlotIndex.h"
 #include "Node.h"
+#include "NodeType.h"
 
 #include <QString> // should be replaced by a stream path class
 #include <QAbstractItemModel>
@@ -17,16 +18,6 @@ class Link;
 class NodeGraphModel : public QAbstractItemModel
 {
 public:
-	// When adding a new type here, handle it in the body of buildNode() and nodeTypeToString() as well
-	enum NodeType
-	{
-		NODE_OUTPUT = 0,
-		NODE_INPUT  = 1,
-		NODE_SCALE  = 2,
-		NODE_CODEC  = 3,
-		NODE_MIX    = 4,
-	};
-
 	enum Column
 	{
 		TypeColumn,
@@ -71,16 +62,6 @@ private:
 	};
 
 public:
-	// Factory function building a new node from a given type.
-	// This is the only place holding a mapping from type enum to type classes
-	// and must be updated any time a new node type is defined
-	static Node * buildNode(int type);
-
-	/**
-	 * Convert node type to a string, for display purpose only
-	 */
-	static std::string nodeTypeToString(int type);
-
 	/**
 	 * Utility function making the code much easier to reed
 	 */

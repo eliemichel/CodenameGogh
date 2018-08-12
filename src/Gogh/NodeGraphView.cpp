@@ -16,9 +16,9 @@
 #include <QDrag>
 #include <QAbstractItemModel>
 #include <QItemSelectionModel>
-#include <math.h>
+#include <QMenu>
 
-//using std::ceil;
+#include <math.h>
 
 NodeGraphView::NodeGraphView(QWidget *parent)
 	: QGraphicsView(parent)
@@ -33,23 +33,16 @@ NodeGraphView::NodeGraphView(QWidget *parent)
 	setBackgroundBrush(QColor(57, 57, 57));
 	setRenderHint(QPainter::Antialiasing);
 	setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
+	createActions();
 }
 
-NodeGraphView::~NodeGraphView()
-{
-}
-
-void NodeGraphView::setModel(QAbstractItemModel *model)
+void NodeGraphView::setModel(NodeGraphModel *model)
 {
 	if (m_model)
 	{
 		disconnect(m_model, 0, this, 0);
 	}
 	m_model = model;
-	if (m_model)
-	{
-		connect(m_model, &QAbstractItemModel::dataChanged, this, &NodeGraphView::onDataChanged);
-	}
 }
 
 void NodeGraphView::setSelectionModel(QItemSelectionModel *selectionModel)
@@ -58,10 +51,11 @@ void NodeGraphView::setSelectionModel(QItemSelectionModel *selectionModel)
 	{
 		disconnect(m_selectionModel, 0, this, 0);
 	}
+
 	m_selectionModel = selectionModel;
+
 	if (m_selectionModel)
 	{
-		connect(m_selectionModel, &QItemSelectionModel::currentChanged, this, &NodeGraphView::onCurrentChanged);
 		connect(m_selectionModel, &QItemSelectionModel::selectionChanged, this, &NodeGraphView::onSelectionChanged);
 	}
 }
@@ -394,6 +388,39 @@ void NodeGraphView::dropEvent(QDropEvent *event)
 	}
 }
 
+void NodeGraphView::contextMenuEvent(QContextMenuEvent *event)
+{
+	QMenu menu(this);
+	for (QAction *action : m_addNodeActions)
+	{
+		menu.addAction(action);
+	}
+	m_newNodePos = mapToScene(event->pos());
+	menu.exec(event->globalPos());
+}
+
+void NodeGraphView::createActions()
+{
+	for (QAction *action : m_addNodeActions)
+	{
+		delete action;
+	}
+	m_addNodeActions.clear();
+
+	for (NodeType type : NodeType::availableTypes())
+	{
+		QAction *action = new QAction(tr("Add ") + QString::fromStdString(type.name()) + tr(" Node"), this);
+		connect(action, &QAction::triggered, [=]() {
+			Node *node = type.create();
+			node->x = m_newNodePos.x();
+			node->y = m_newNodePos.y();
+			node->name = type.name();
+			model()->addNode(node);
+		});
+		m_addNodeActions.push_back(action);
+	}
+}
+
 void NodeGraphView::startMoveNodes(QPoint position)
 {
 	if (!selectionModel())
@@ -442,14 +469,6 @@ void NodeGraphView::selectAll()
 	const QModelIndex & topLeft = model()->index(0, 0);
 	const QModelIndex & bottomRight = model()->index(n - 1, 0);
 	selectionModel()->select(QItemSelection(topLeft, bottomRight), QItemSelectionModel::Select);
-}
-
-void NodeGraphView::onDataChanged()
-{
-}
-
-void NodeGraphView::onCurrentChanged()
-{
 }
 
 void NodeGraphView::onSelectionChanged(const QItemSelection & selected, const QItemSelection & deselected)

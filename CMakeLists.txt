@@ -4,6 +4,9 @@ project(Gogh)
 set(CMAKE_CXX_STANDARD 11)
 
 include(cmake/utils.cmake)
+
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
 add_subdirectory(src)
 
 # Define Gogh as startup project in VS

@@ -73,11 +73,15 @@ void NodeGraphScene::setGraphModel(NodeGraphModel *model)
 
 	for (int i = 0; i < model->nodeCount(); ++i)
 	{
-		Node *node = model->node(i);
-		NodeGraphicsItem *nodeItem = new NodeGraphicsItem(this, node);
-		nodeItem->setPos(QPointF(node->x, node->y));
-		m_nodeItems.push_back(nodeItem);
+		addNodeItem(model->node(i));
 	}
+}
+
+void NodeGraphScene::addNodeItem(Node *node)
+{
+	NodeGraphicsItem *nodeItem = new NodeGraphicsItem(this, node);
+	nodeItem->setPos(QPointF(node->x, node->y));
+	m_nodeItems.push_back(nodeItem);
 }
 
 void NodeGraphScene::onDataChanged(const QModelIndex & topLeft, const QModelIndex & bottomRight)
@@ -91,6 +95,15 @@ void NodeGraphScene::onDataChanged(const QModelIndex & topLeft, const QModelInde
 				&& nodeIndex >= topLeft.row() && nodeIndex <= bottomRight.row()))
 		{
 			item->update();
+		}
+	}
+
+	if (!bottomRight.isValid() || !bottomRight.parent().isValid())
+	{
+		while (m_nodeItems.size() < m_nodeGraphModel->rowCount())
+		{
+			int n = static_cast<int>(m_nodeItems.size());
+			addNodeItem(m_nodeGraphModel->node(n));
 		}
 	}
 }

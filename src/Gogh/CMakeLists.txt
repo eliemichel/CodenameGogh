@@ -7,8 +7,7 @@ if(Qt5Widgets_FOUND)
 	message("Using Qt ${Qt5Widgets_VERSION} from ${Qt5Widgets_INCLUDE_DIRS}")
 endif()
 
-add_executable(
-	Gogh
+set(SRC
 	resources.qrc
 	Logger.h
 	Logger.cpp
@@ -18,6 +17,8 @@ add_executable(
 	utils/fileutils.cpp
 	Node.h
 	Node.cpp
+	NodeType.h
+	NodeType.cpp
 	DefaultNodeEditor.h
 	DefaultNodeEditor.cpp
 	MainWindow.h
@@ -72,8 +73,16 @@ add_executable(
 	main.cpp
 )
 
+add_executable(
+	Gogh
+	${SRC}
+)
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 target_link_libraries_and_dll(Gogh Qt5::Core)
 target_link_libraries_and_dll(Gogh Qt5::Gui)
 target_link_libraries_and_dll(Gogh Qt5::Widgets)
+
+# For IDE projects
+group_source_by_folder(${SRC})

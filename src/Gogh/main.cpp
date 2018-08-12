@@ -109,7 +109,7 @@ int mainCmd(const Args & args)
 
 	Node *node = model.node(outputIndex.row());
 	// TODO: move this cast to a method in model
-	OutputNode *outputNode = node->type == NodeGraphModel::NODE_OUTPUT ? static_cast<OutputNode*>(node) : nullptr;
+	OutputNode *outputNode = node->type == NodeType::NODE_OUTPUT ? static_cast<OutputNode*>(node) : nullptr;
 	if (!outputNode)
 	{
 		ERR_LOG << "Node '" << args.renderNodename << "' is not an output node";

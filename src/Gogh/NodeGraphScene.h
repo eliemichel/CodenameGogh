@@ -10,6 +10,7 @@ class NodeGraphicsItem;
 class SlotGraphicsItem;
 class LinkGraphicsItem;
 class NodeGraphModel;
+class Node;
 
 class NodeGraphScene : public QGraphicsScene
 {
@@ -41,6 +42,8 @@ public:
 	NodeGraphicsItem * nodeItemAtIndex(int index);
 
 	void setGraphModel(NodeGraphModel *model);
+
+	void addNodeItem(Node *node);
 
 private slots:
 	void onDataChanged(const QModelIndex & topLeft, const QModelIndex & bottomRight);

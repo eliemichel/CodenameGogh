@@ -12,9 +12,10 @@
 class LinkGraphicsItem;
 class SlotGraphicsItem;
 class NodeGraphicsItem;
-class QAbstractItemModel;
+class NodeGraphModel;
 class QItemSelectionModel;
 class NodeGraphScene;
+class QAction;
 
 /**
  * Node view, handles zooming/panning
@@ -42,10 +43,9 @@ private:
 
 public:
 	explicit NodeGraphView(QWidget *parent = 0);
-	~NodeGraphView();
-
-	QAbstractItemModel * model() const { return m_model; }
-	void setModel(QAbstractItemModel *model);
+	
+	NodeGraphModel * model() const { return m_model; }
+	void setModel(NodeGraphModel *model);
 
 	QItemSelectionModel * selectionModel() const { return m_selectionModel; }
 	void setSelectionModel(QItemSelectionModel *selectionModel);
@@ -68,8 +68,12 @@ protected:
 	void dragMoveEvent(QDragMoveEvent *event) override;
 	void dropEvent(QDropEvent *event) override;
 
+	void contextMenuEvent(QContextMenuEvent *event) override;
+
 private:
 	void setScene(QGraphicsScene *scene) {} // remove from public API
+
+	void createActions();
 
 	// TODO: move to a tool
 	void startMoveNodes(QPoint position);
@@ -79,12 +83,10 @@ private:
 	void selectAll();
 
 private slots:
-	void onDataChanged();
-	void onCurrentChanged();
 	void onSelectionChanged(const QItemSelection & selected, const QItemSelection & deselected);
 
 private:
-	QAbstractItemModel *m_model;
+	NodeGraphModel *m_model;
 	QItemSelectionModel *m_selectionModel;
 	std::vector<NodeMoveData> m_nodeMoveData;
 
@@ -102,6 +104,9 @@ private:
 
 	PanTool m_panTool;
 	CutTool m_cutTool;
+
+	std::vector<QAction*> m_addNodeActions;
+	QPointF m_newNodePos;
 };
 
 #endif // H_NODEGRAPHVIEW

@@ -2,12 +2,6 @@
 
 #include "Logger.h"
 
-#include "Nodes/InputNode.h"
-#include "Nodes/OutputNode.h"
-#include "Nodes/ScaleNode.h"
-#include "Nodes/CodecNode.h"
-#include "Nodes/MixNode.h"
-
 #include <QFile>
 #include <QDataStream>
 #include <QModelIndex>
@@ -28,44 +22,6 @@ NodeGraphModel::~NodeGraphModel()
 		delete entry->node;
 		delete entry;
 		m_nodeEntries.pop_back();
-	}
-}
-
-Node * NodeGraphModel::buildNode(int type)
-{
-	switch (type)
-	{
-	case NODE_INPUT:
-		return new InputNode();
-	case NODE_OUTPUT:
-		return new OutputNode();
-	case NODE_SCALE:
-		return new ScaleNode();
-	case NODE_CODEC:
-		return new CodecNode();
-	case NODE_MIX:
-		return new MixNode();
-	default:
-		return nullptr;
-	}
-}
-
-std::string NodeGraphModel::nodeTypeToString(int type)
-{
-	switch (type)
-	{
-	case NODE_INPUT:
-		return "NODE_INPUT";
-	case NODE_OUTPUT:
-		return "NODE_OUTPUT";
-	case NODE_SCALE:
-		return "NODE_SCALE";
-	case NODE_CODEC:
-		return "NODE_CODEC";
-	case NODE_MIX:
-		return "NODE_MIX";
-	default:
-		return nullptr;
 	}
 }
 
@@ -370,7 +326,7 @@ QVariant NodeGraphModel::data(const QModelIndex & index, int role) const
 			}
 			else
 			{
-				return QString::fromStdString(nodeTypeToString(node->type));
+				return QString::fromStdString(NodeType(node->type).name());
 			}
 		case PosXColumn:
 			return node->x;
@@ -692,36 +648,31 @@ void NodeGraphModel::LoadDefaultGraph()
 {
 	Node *node;
 
-	node = new InputNode();
-	node->type = NODE_INPUT;
+	node = NodeType(NodeType::NODE_INPUT).create();
 	node->x = -300;
 	node->y = -200;
 	node->name = "Input";
 	addNode(node);
 
-	node = new ScaleNode();
-	node->type = NODE_SCALE;
+	node = NodeType(NodeType::NODE_SCALE).create();
 	node->x = 0;
 	node->y = -250;
 	node->name = "Scale";
 	addNode(node);
 
-	node = new CodecNode();
-	node->type = NODE_CODEC;
+	node = NodeType(NodeType::NODE_CODEC).create();
 	node->x = 0;
 	node->y = -100;
 	node->name = "Codec";
 	addNode(node);
 
-	node = new MixNode();
-	node->type = NODE_MIX;
+	node = NodeType(NodeType::NODE_MIX).create();
 	node->x = -100;
 	node->y = -100;
 	node->name = "Mix";
 	addNode(node);
 	
-	node = new OutputNode();
-	node->type = NODE_OUTPUT;
+	node = NodeType(NodeType::NODE_OUTPUT).create();
 	node->x = 300;
 	node->y = -200;
 	node->name = "Output";
@@ -752,7 +703,7 @@ bool NodeGraphModel::LoadGraph(QString filename)
 		QString name;
 		in >> type >> x >> y >> name;
 
-		Node *node = buildNode(type);
+		Node *node = NodeType(type).create();
 		if (!node)
 		{
 			ERR_LOG << "Invalid node type: " << type << " (in file " << filename.toStdString() << ")";
@@ -857,6 +808,7 @@ void NodeGraphModel::addNode(Node *node)
 	node->setNodeIndex(nodeIndex);
 
 	endInsertRows();
+	emit dataChanged(QModelIndex(), QModelIndex());
 }
 
 bool NodeGraphModel::removeNode(Node *node)
