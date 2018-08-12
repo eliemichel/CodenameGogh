@@ -17,8 +17,17 @@ DefaultNodeEditor::DefaultNodeEditor(Node *_node, QWidget *parent)
 	for (int i = 0; i < node()->parmCount(); ++i)
 	{
 		addParmInput(i);
+		m_layout->setRowMinimumHeight(i, 26);
+		m_layout->setVerticalSpacing(4);
+		m_layout->setRowStretch(i, 0);
 	}
-	setLayout(m_layout);
+
+	QVBoxLayout *layout = new QVBoxLayout();
+	layout->setContentsMargins(15, 3, 15, 3);
+	layout->addLayout(m_layout);
+	layout->addStretch();
+
+	setLayout(layout);
 
 	connect(node(), &Node::parmChanged, this, &DefaultNodeEditor::updateParm);
 }
