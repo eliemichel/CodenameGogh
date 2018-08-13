@@ -1,6 +1,10 @@
 #include "MainWindow.h"
 #include "Logger.h"
 #include "EnvModel.h"
+#include "NodeGraphModel.h"
+#include "Node.h"
+#include "Nodes/OutputNode.h"
+#include "RenderProcess.h"
 
 #include <QApplication>
 #include <QFile>
@@ -14,13 +18,20 @@ QString loadCss(const QString & filename);
 
 struct Args
 {
+	int argc;
+	char **argv;
 	std::string graphFilename;
 	bool isGraphFilenameProvided = false;
 	std::map<std::string, std::string> env;
 	std::string helpMessage;
 	bool displayHelpMessage = false;
+	std::string renderNodename;
+	bool runNonInteractive = false;
 };
 Args parseArgs(int argc, char *argv[]);
+
+int mainGui(const Args & args);
+int mainCmd(const Args & args);
 
 int main(int argc, char *argv[])
 {
@@ -32,21 +43,95 @@ int main(int argc, char *argv[])
 		return EXIT_SUCCESS;
 	}
 
-	QApplication a(argc, argv);
-	//a.setStyleSheet(loadCss(":styles/default.css"));
+	if (args.runNonInteractive)
+	{
+		return mainCmd(args);
+	}
+	else
+	{
+		return mainGui(args);
+	}
+}
+
+int mainGui(const Args & args)
+{
+	// Import command line env
+	EnvModel envModel;
+	for (auto it = args.env.cbegin(); it != args.env.cend(); ++it)
+	{
+		envModel.at(it->first) = it->second;
+	}
 
 	QString filename = args.isGraphFilenameProvided ? QString::fromStdString(args.graphFilename) : QString();
-	MainWindow w(filename);
 
-	// Import command line env
-	for (auto it = args.env.cbegin() ; it != args.env.cend() ; ++it)
-	{
-		w.envModel()->env()[it->first] = it->second;
-	}
+	int argc = args.argc;
+	QApplication a(argc, args.argv);
+	//a.setStyleSheet(loadCss(":styles/default.css"));
+
+	MainWindow w(&envModel, filename);
 
 	w.show();
 
 	return a.exec();
+}
+
+int mainCmd(const Args & args)
+{
+	// Import command line env
+	EnvModel envModel;
+	for (auto it = args.env.cbegin(); it != args.env.cend(); ++it)
+	{
+		envModel.at(it->first) = it->second;
+	}
+
+	QString filename = args.isGraphFilenameProvided ? QString::fromStdString(args.graphFilename) : QString();
+
+	NodeGraphModel model;
+	model.setEnvModel(&envModel);
+
+	if (filename.isNull())
+	{
+		ERR_LOG << "You must provide a graph file when running non interactive";
+		return EXIT_FAILURE;
+	}
+
+	if (!model.LoadGraph(filename))
+	{
+		return EXIT_FAILURE;
+	}
+
+	const QModelIndex & outputIndex = model.findByName(args.renderNodename);
+	if (!outputIndex.isValid())
+	{
+		ERR_LOG << "Output node not found: " << args.renderNodename;
+		return EXIT_FAILURE;
+	}
+
+	Node *node = model.node(outputIndex.row());
+	// TODO: move this cast to a method in model
+	OutputNode *outputNode = node->type == NodeType::NODE_OUTPUT ? static_cast<OutputNode*>(node) : nullptr;
+	if (!outputNode)
+	{
+		ERR_LOG << "Node '" << args.renderNodename << "' is not an output node";
+		return EXIT_FAILURE;
+	}
+
+	RenderCommand cmd;
+	if (!outputNode->buildRenderCommand(-1, cmd))
+	{
+		ERR_LOG << "Could not build render command";
+		return EXIT_FAILURE;
+	}
+
+	RenderProcess job(cmd.cmd);
+	job.start();
+	if (!job.waitForFinished())
+	{
+		ERR_LOG << "Render job failed";
+		return EXIT_FAILURE;
+	}
+
+	return EXIT_SUCCESS;
 }
 
 QString loadCss(const QString & filename)
@@ -62,6 +147,8 @@ QString loadCss(const QString & filename)
 Args parseArgs(int argc, char *argv[])
 {
 	Args args;
+	args.argc = argc;
+	args.argv = argv;
 	for (int i = 1 ; i < argc ; ++i)
 	{
 		std::string value;
@@ -89,7 +176,7 @@ Args parseArgs(int argc, char *argv[])
 		else
 		{
 			// unparsed arguments are scene files to open
-			args.graphFilename = value;
+			args.graphFilename = argv[i];
 			args.isGraphFilenameProvided = true;
 			continue;
 		}
@@ -109,6 +196,7 @@ Args parseArgs(int argc, char *argv[])
 				<< "    --graph=<filename> OR -g <filename> : Open node graph from gog file <filename>" << std::endl
 				<< "    --help OR -h : Display thif help message" << std::endl
 				<< "    -D<varname>=<value> : Add an anvironment variable <varname> with value <value> to Gogh's environment variables register" << std::endl
+				<< "    --render=<nodename> OR -r <nodename> : Run in non interactive mode and directly renders the node called <nodename>" << std::endl
 				<< "" << std::endl
 				<< "Report bugs to: https://github.com/eliemichel/CodenameGogh" << std::endl
 				;
@@ -133,6 +221,11 @@ Args parseArgs(int argc, char *argv[])
 		{
 			args.graphFilename = value;
 			args.isGraphFilenameProvided = true;
+		}
+		else if (param == "--render" || param == "-r")
+		{
+			args.renderNodename = value;
+			args.runNonInteractive = true;
 		}
 		else if (param == "-D")
 		{

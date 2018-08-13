@@ -34,10 +34,9 @@ class NodeGraphicsItem : public QObject
 	Q_OBJECT
 public:
 	NodeGraphicsItem(NodeGraphScene *scene, Node *node);
+	~NodeGraphicsItem();
 
-	const QModelIndex & modelIndex() const { return m_modelIndex; }
-
-	const NodeGraphModel *graphModel() const { return static_cast<const NodeGraphModel*>(modelIndex().model()); }
+	Node * node() const { return m_node; }
 
 	void setPos(QPointF pos) { if (m_control) m_control->setPos(pos); }
 
@@ -52,18 +51,16 @@ public:
 
 	QPointF outputSlotPosition(int i) const;
 
-private slots:
-	void onDataChanged(const QModelIndex & topLeft, const QModelIndex & bottomRight);
+	void update();
 
 private:
-
+	Node * m_node;
 	NodeGraphScene *m_graphScene;
 	NodeGraphicsItemControl *m_control;
 	QWidget * m_content;
 	QGraphicsProxyWidget *m_proxy;
 	std::vector<SlotGraphicsItem*> m_outputSlotItems;
 	std::vector<SlotGraphicsItem*> m_inputSlotItems;
-	QModelIndex m_modelIndex;
 	bool m_isSelected;
 };
 

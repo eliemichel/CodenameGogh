@@ -27,6 +27,7 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 
 	// special output index for render function
 	if (outputIndex != -1) {
+		ERR_LOG << "Invalid output index: #" << outputIndex;
 		return false;
 	}
 
@@ -43,7 +44,7 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 
 int OutputNode::parmCount() const
 {
-	return 1;
+	return 2;
 }
 
 QString OutputNode::parmName(int parm) const
@@ -52,6 +53,8 @@ QString OutputNode::parmName(int parm) const
 	{
 	case 0:
 		return "filename";
+	case 1:
+		return "Render";
 	default:
 		return QString();
 	}
@@ -63,6 +66,8 @@ ParmType OutputNode::parmType(int parm) const
 	{
 	case 0:
 		return StringType;
+	case 1:
+		return ButtonType;
 	default:
 		return NoneType;
 	}

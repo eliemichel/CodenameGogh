@@ -16,9 +16,10 @@
 #include <QDrag>
 #include <QAbstractItemModel>
 #include <QItemSelectionModel>
-#include <math.h>
+#include <QMenu>
+#include <QTimer>
 
-//using std::ceil;
+#include <math.h>
 
 NodeGraphView::NodeGraphView(QWidget *parent)
 	: QGraphicsView(parent)
@@ -33,23 +34,16 @@ NodeGraphView::NodeGraphView(QWidget *parent)
 	setBackgroundBrush(QColor(57, 57, 57));
 	setRenderHint(QPainter::Antialiasing);
 	setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
+	createActions();
 }
 
-NodeGraphView::~NodeGraphView()
-{
-}
-
-void NodeGraphView::setModel(QAbstractItemModel *model)
+void NodeGraphView::setModel(NodeGraphModel *model)
 {
 	if (m_model)
 	{
 		disconnect(m_model, 0, this, 0);
 	}
 	m_model = model;
-	if (m_model)
-	{
-		connect(m_model, &QAbstractItemModel::dataChanged, this, &NodeGraphView::onDataChanged);
-	}
 }
 
 void NodeGraphView::setSelectionModel(QItemSelectionModel *selectionModel)
@@ -58,10 +52,11 @@ void NodeGraphView::setSelectionModel(QItemSelectionModel *selectionModel)
 	{
 		disconnect(m_selectionModel, 0, this, 0);
 	}
+
 	m_selectionModel = selectionModel;
+
 	if (m_selectionModel)
 	{
-		connect(m_selectionModel, &QItemSelectionModel::currentChanged, this, &NodeGraphView::onCurrentChanged);
 		connect(m_selectionModel, &QItemSelectionModel::selectionChanged, this, &NodeGraphView::onSelectionChanged);
 	}
 }
@@ -131,7 +126,6 @@ void NodeGraphView::mouseMoveEvent(QMouseEvent *event)
 {
 	if (m_panTool.isActive())
 	{
-		//updatePan(event->pos());
 		m_panTool.update(event->pos());
 	}
 	else if (m_isMovingNodes)
@@ -172,10 +166,11 @@ void NodeGraphView::mousePressEvent(QMouseEvent *event)
 					return;
 				}
 
-				if (!m_selectionModel->isSelected(nodeItem->modelIndex()))
+				const QModelIndex & index = model()->index(nodeItem->node()->nodeIndex(), 0);
+				if (!m_selectionModel->isSelected(index))
 				{
 					bool addToSelection = (event->modifiers() & Qt::ShiftModifier) == Qt::ShiftModifier;
-					m_selectionModel->select(nodeItem->modelIndex(), addToSelection ? QItemSelectionModel::Select : QItemSelectionModel::ClearAndSelect);
+					m_selectionModel->select(index, addToSelection ? QItemSelectionModel::Select : QItemSelectionModel::ClearAndSelect);
 				}
 
 				startMoveNodes(event->pos());
@@ -202,8 +197,10 @@ void NodeGraphView::mousePressEvent(QMouseEvent *event)
 
 				for (LinkGraphicsItem *l : m_pendingLinks)
 				{
-					scene()->removeItem(l);
-					delete l;
+					// Remove linkes once the currently queued events are processed
+					QTimer::singleShot(0, this, [=]() {
+						delete l;
+					});
 				}
 				m_pendingLinks.clear();
 				m_pendingLinksSources.clear();
@@ -258,9 +255,9 @@ void NodeGraphView::wheelEvent(QWheelEvent *event)
 	float oldZoom = m_zoom;
 
 	// 1.1 ^ angle makes zoom exponential and reversible
-	m_zoom *= exp(event->angleDelta().y()/180.f * 2.f * log(1.1f));
+	m_zoom *= exp(event->angleDelta().y() / 180.f * 2.f * log(1.1f));
 
-	m_zoom = std::max<double>(0.1, std::min<double>(m_zoom, 2.0));
+	m_zoom = std::max(0.1f, std::min(m_zoom, 2.0f));
 
 	// /!\ relative zoom has a risk of numerical error accumulation
 	// this would be changed if we would go for a manual management of the view transform
@@ -277,9 +274,20 @@ void NodeGraphView::keyPressEvent(QKeyEvent *event)
 	{
 		m_currentToolState = CutToolState;
 	}
-	if (event->key() == Qt::Key_A && event->modifiers() & Qt::ControlModifier)
+	else if (event->key() == Qt::Key_A && event->modifiers() & Qt::ControlModifier)
 	{
 		selectAll();
+	}
+	else if (event->key() == Qt::Key_Delete)
+	{
+		if (selectionModel())
+		{
+			while (!selectionModel()->selectedIndexes().empty())
+			{
+				int nodeIndex = selectionModel()->selectedIndexes().back().row();
+				model()->removeRow(nodeIndex);
+			}
+		}
 	}
 	else
 	{
@@ -383,6 +391,39 @@ void NodeGraphView::dropEvent(QDropEvent *event)
 	}
 }
 
+void NodeGraphView::contextMenuEvent(QContextMenuEvent *event)
+{
+	QMenu menu(this);
+	for (QAction *action : m_addNodeActions)
+	{
+		menu.addAction(action);
+	}
+	m_newNodePos = mapToScene(event->pos());
+	menu.exec(event->globalPos());
+}
+
+void NodeGraphView::createActions()
+{
+	for (QAction *action : m_addNodeActions)
+	{
+		delete action;
+	}
+	m_addNodeActions.clear();
+
+	for (NodeType type : NodeType::availableTypes())
+	{
+		QAction *action = new QAction(tr("Add ") + QString::fromStdString(type.name()) + tr(" Node"), this);
+		connect(action, &QAction::triggered, [=]() {
+			Node *node = type.create();
+			node->x = m_newNodePos.x();
+			node->y = m_newNodePos.y();
+			node->name = type.name();
+			model()->addNode(node);
+		});
+		m_addNodeActions.push_back(action);
+	}
+}
+
 void NodeGraphView::startMoveNodes(QPoint position)
 {
 	if (!selectionModel())
@@ -433,14 +474,6 @@ void NodeGraphView::selectAll()
 	selectionModel()->select(QItemSelection(topLeft, bottomRight), QItemSelectionModel::Select);
 }
 
-void NodeGraphView::onDataChanged()
-{
-}
-
-void NodeGraphView::onCurrentChanged()
-{
-}
-
 void NodeGraphView::onSelectionChanged(const QItemSelection & selected, const QItemSelection & deselected)
 {
 	if (!nodeGraphScene())
@@ -450,7 +483,7 @@ void NodeGraphView::onSelectionChanged(const QItemSelection & selected, const QI
 
 	for (const QModelIndex & index : deselected.indexes())
 	{
-		if (NodeGraphicsItem *nodeItem = nodeGraphScene()->nodeItemAtIndex(index))
+		if (NodeGraphicsItem *nodeItem = nodeGraphScene()->nodeItemAtIndex(index.row()))
 		{
 			nodeItem->setSelected(false);
 		}
@@ -458,7 +491,7 @@ void NodeGraphView::onSelectionChanged(const QItemSelection & selected, const QI
 
 	for (const QModelIndex & index : selected.indexes())
 	{
-		if (NodeGraphicsItem *nodeItem = nodeGraphScene()->nodeItemAtIndex(index))
+		if (NodeGraphicsItem *nodeItem = nodeGraphScene()->nodeItemAtIndex(index.row()))
 		{
 			nodeItem->setSelected(true);
 		}

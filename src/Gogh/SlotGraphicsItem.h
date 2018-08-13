@@ -14,6 +14,7 @@ class SlotGraphicsItem : public QGraphicsEllipseItem
 {
 public:
 	SlotGraphicsItem(QGraphicsItem *parent = nullptr);
+	~SlotGraphicsItem();
 
 	/// Point to which attaching links
 	QPointF slotCenter() const { return sceneBoundingRect().center(); };

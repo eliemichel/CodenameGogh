@@ -1,5 +1,5 @@
 #include "RenderDialog.h"
-
+#include "RenderProcess.h"
 #include "Logger.h"
 
 #include <QLabel>
@@ -13,12 +13,6 @@
 #include <QFontDatabase>
 #include <QtGlobal>
 #include <QProcess>
-
-std::string RenderDialog::locateFfmpeg()
-{
-	return "ffmpeg";
-	//return "E:/Program Files/ffmpeg/bin/ffmpeg";
-}
 
 RenderDialog::RenderDialog(std::vector<std::string> cmd, QWidget *parent)
 	: QDialog(parent)
@@ -80,7 +74,7 @@ void RenderDialog::showEvent(QShowEvent *event)
 		return;
 	}
 
-	QString program = QString::fromStdString(RenderDialog::locateFfmpeg());
+	QString program = QString::fromStdString(RenderProcess::locateFfmpeg());
 	QStringList arguments;
 	for (int i = 0; i < m_cmd.size(); i ++)
 	{

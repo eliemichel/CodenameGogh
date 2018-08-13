@@ -1,13 +1,13 @@
 #ifndef H_OUTPUTNODEEDITOR
 #define H_OUTPUTNODEEDITOR
 
-#include <QWidget>
+#include "DefaultNodeEditor.h"
 #include <vector>
 
 class OutputNode;
 class QLineEdit;
 
-class OutputNodeEditor : public QWidget
+class OutputNodeEditor : public DefaultNodeEditor
 {
 	Q_OBJECT
 public:
@@ -16,8 +16,15 @@ public:
 private:
 	OutputNode * node() const { return m_node; }
 
-private slots:
+	/**
+	 * Opens the render dialog.
+	 * Nothing important for the building of the render command should be here
+	 * since in command line mode this method is never called.
+	 */
 	void render();
+
+private slots:
+	void onButtonClicked(int parm);
 	void setUserDefined();
 
 private:

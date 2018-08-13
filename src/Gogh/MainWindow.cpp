@@ -21,10 +21,11 @@
 #include <QDir>
 #include <QModelIndex>
 
-MainWindow::MainWindow(QString graphFilename, QWidget *parent)
+MainWindow::MainWindow(EnvModel *envModel, QString graphFilename, QWidget *parent)
 	: QMainWindow(parent)
 	, ui(new Ui::MainWindow)
 	, m_currentFilename(graphFilename)
+	, m_envModel(envModel)
 {
 	//TODO: Temporary fixes the MenuBar issue by setting it in the Mainwindow, try to set back native menubar
 	QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
@@ -37,11 +38,10 @@ MainWindow::MainWindow(QString graphFilename, QWidget *parent)
 	connect(ui->saveAsAction, &QAction::triggered, this, &MainWindow::showSaveAsFileDialog);
 	connect(ui->envAction, &QAction::triggered, this, &MainWindow::showEnvDialog);
 
-	m_scene = new NodeGraphScene();
 	m_model = new NodeGraphModel();
-	m_envModel = new EnvModel();
-
 	m_model->setEnvModel(m_envModel);
+
+	m_scene = new NodeGraphScene();
 
 	if (m_currentFilename.isNull())
 	{
@@ -61,16 +61,7 @@ MainWindow::MainWindow(QString graphFilename, QWidget *parent)
 		}
 	}
 
-	// Node creation has been moved to NodeGraphModel::LoadGraph
-	NodeGraphicsItem *nodeItem;
-	for (int i = 0 ; i < m_model->rowCount() ; ++i)
-	{
-		float x = m_model->data(m_model->index(i, NodeGraphModel::PosXColumn)).toFloat();
-		float y = m_model->data(m_model->index(i, NodeGraphModel::PosYColumn)).toFloat();
-		nodeItem = new NodeGraphicsItem(m_scene, m_model->node(i));
-		nodeItem->setPos(QPointF(x, y));
-	}
-
+	m_scene->setGraphModel(m_model);
 	m_scene->setSceneRect(-1000, -1000, 2000, 2000);
 
 	ui->splitter->setSizes(QList<int>() << 300 << 10);
@@ -88,7 +79,6 @@ MainWindow::MainWindow(QString graphFilename, QWidget *parent)
 MainWindow::~MainWindow()
 {
 	delete m_model;
-	delete m_envModel;
 	delete m_scene;
 }
 
