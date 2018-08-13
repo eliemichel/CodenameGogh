@@ -1,7 +1,7 @@
 #include "OutputNodeEditor.h"
 #include "DefaultNodeEditor.h"
 #include "OutputNode.h"
-#include "RenderDialog.h"
+#include "Dialogs/RenderDialog.h"
 #include "Logger.h"
 
 #include <QMessageBox>

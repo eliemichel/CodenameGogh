@@ -37,8 +37,6 @@ set(SRC
 	NodeGraphScene.cpp
 	NodeParmListView.h
 	NodeParmListView.cpp
-	RenderDialog.h
-	RenderDialog.cpp
 	RenderProcess.h
 	RenderProcess.cpp
 	FileProbeProcess.h
@@ -73,9 +71,12 @@ set(SRC
 
 	EnvModel.h
 	EnvModel.cpp
+
 	Dialogs/EnvDialog.h
 	Dialogs/EnvDialog.ui
 	Dialogs/EnvDialog.cpp
+	Dialogs/RenderDialog.h
+	Dialogs/RenderDialog.cpp
 
 	main.cpp
 )
