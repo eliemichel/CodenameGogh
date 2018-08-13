@@ -7,6 +7,8 @@ if(Qt5Widgets_FOUND)
 	message("Using Qt ${Qt5Widgets_VERSION} from ${Qt5Widgets_INCLUDE_DIRS}")
 endif()
 
+add_compile_definitions(SHARE_DIR="${GOGH_SHARE_DIR}")
+
 set(SRC
 	resources.qrc
 	Logger.h
@@ -78,6 +80,13 @@ set(SRC
 	Dialogs/RenderDialog.h
 	Dialogs/RenderDialog.cpp
 
+	Ui/UiBase.h
+	Ui/UiBoxLayout.inc.h
+	Ui/UiApp.h
+	Ui/UiApp.cpp
+	Ui/UiWindow.h
+	Ui/UiWindow.cpp
+
 	main.cpp
 )
 
@@ -91,6 +100,10 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries_and_dll(Gogh Qt5::Core)
 target_link_libraries_and_dll(Gogh Qt5::Gui)
 target_link_libraries_and_dll(Gogh Qt5::Widgets)
+
+target_link_libraries(Gogh glad)
+target_link_libraries(Gogh glfw)
+target_link_libraries(Gogh nanovg)
 
 # For IDE projects
 group_source_by_folder(${SRC})

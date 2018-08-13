@@ -1,3 +1,11 @@
+#include "Ui/UiApp.h"
+#include "Ui/UiWindow.h"
+#include "Ui/MainLayout.h"
+#include "Ui/UiBase.h"
+
+#include <GLFW/glfw3.h>
+#include <nanovg.h>
+
 #include "MainWindow.h"
 #include "Logger.h"
 #include "EnvModel.h"
@@ -30,6 +38,7 @@ struct Args
 };
 Args parseArgs(int argc, char *argv[]);
 
+int oldMainGui(const Args & args);
 int mainGui(const Args & args);
 int mainCmd(const Args & args);
 
@@ -53,7 +62,40 @@ int main(int argc, char *argv[])
 	}
 }
 
+#include "Ui/ExtraUi.hpp"
 int mainGui(const Args & args)
+{
+	UiApp app;
+	UiWindow window(&app);
+	
+	//MainLayout *popupLayout = new MainLayout();
+	//window.SetContent(popupLayout);
+
+	UiVBoxLayout *layout = new UiVBoxLayout();
+
+	TextButton *button = new TextButton();
+	button->SetText("Test 1");
+	layout->AddItem(button);
+
+	button = new TextButton();
+	button->SetText("Test 2");
+	layout->AddItem(button);
+
+	//popupLayout->AddItem(layout);
+	//popupLayout->SetRect(0, 0, window.Width(), window.Height());
+	layout->SetRect(0, 0, WIDTH, HEIGHT);
+	window.SetContent(layout);
+
+	while (!window.ShouldClose())
+	{
+		window.Render();
+		window.Poll();
+	}
+
+	return EXIT_SUCCESS;
+}
+
+int oldMainGui(const Args & args)
 {
 	// Import command line env
 	EnvModel envModel;
