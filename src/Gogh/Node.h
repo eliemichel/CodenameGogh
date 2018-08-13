@@ -2,6 +2,7 @@
 #define H_NODE
 
 #include "SlotIndex.h"
+#include "Parameter.h"
 
 #include <QObject>
 #include <QString>
@@ -15,15 +16,6 @@
 class EnvModel;
 class NodeGraphModel;
 class QWidget;
-
-enum ParmType
-{
-	NoneType,
-	StringType,
-	IntType,
-	EnumType,
-	ButtonType,
-};
 
 /**
  * This structure is transmitted among the graph nodes while building the
@@ -109,6 +101,7 @@ public:
 
 signals:
 	void parmChanged(int parm);
+
 
 protected:
 	// slot structure write

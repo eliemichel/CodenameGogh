@@ -87,7 +87,7 @@ void NodeGraphicsItem::setSelected(bool selected)
 void NodeGraphicsItem::updateInputSlots()
 {
 	// remove extra slots
-	while (!m_inputSlotItems.empty() && m_inputSlotItems.size() >= node()->inputSlotCount())
+	while (!m_inputSlotItems.empty() && m_inputSlotItems.size() > node()->inputSlotCount())
 	{
 		SlotGraphicsItem *inputItem = m_inputSlotItems.back();
 		m_inputSlotItems.pop_back();
@@ -121,7 +121,7 @@ void NodeGraphicsItem::updateInputSlots()
 void NodeGraphicsItem::updateOutputSlots()
 {
 	// remove extra slots
-	while (!m_outputSlotItems.empty() && m_outputSlotItems.size() >= node()->outputSlotCount())
+	while (!m_outputSlotItems.empty() && m_outputSlotItems.size() > node()->outputSlotCount())
 	{
 		SlotGraphicsItem *outputItem = m_outputSlotItems.back();
 		m_outputSlotItems.pop_back();

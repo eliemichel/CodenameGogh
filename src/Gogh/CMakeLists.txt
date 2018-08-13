@@ -15,10 +15,14 @@ set(SRC
 	utils/strutils.cpp
 	utils/fileutils.h
 	utils/fileutils.cpp
+
 	Node.h
 	Node.cpp
 	NodeType.h
 	NodeType.cpp
+	Parameter.h
+	Parameter.cpp
+
 	DefaultNodeEditor.h
 	DefaultNodeEditor.cpp
 	MainWindow.h

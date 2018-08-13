@@ -15,6 +15,12 @@ public:
 
 private:
 	OutputNode * node() const { return m_node; }
+
+	/**
+	 * Opens the render dialog.
+	 * Nothing important for the building of the render command should be here
+	 * since in command line mode this method is never called.
+	 */
 	void render();
 
 private slots:
