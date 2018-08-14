@@ -19,6 +19,10 @@ set(SRC
 	utils/fileutils.cpp
 	utils/stringlist.h
 	utils/stringlist.cpp
+	ArgParse.h
+	ArgParse.cpp
+	mainGui.h
+	mainGui.cpp
 	Node.h
 	Node.cpp
 	NodeType.h
