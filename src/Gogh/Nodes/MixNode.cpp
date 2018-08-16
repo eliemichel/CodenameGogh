@@ -9,10 +9,13 @@
 MixNode::MixNode()
 {
 	newInputSlot();
-	newInputSlot();
-	newOutputSlot();
-
 	m_streams.push_back("");
+	newInputSlot();
+	m_streams.push_back("");
+	newInputSlot();
+	m_streams.push_back("");
+
+	newOutputSlot();
 }
 
 bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
@@ -26,8 +29,51 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		return false;
 	}
 
-	//cmd.cmd.push_back("-c:v");
-	//cmd.cmd.push_back(parmEvalAsString(0).toStdString());
+	// Clear cmd
+	//std::vector<std::string>().swap(cmd);
+	cmd.cmd.clear();
+
+	// Map inputs
+	stringlist inputFiles;
+	int currentFileID = 0;
+
+	for (int i = 0; i < parmCount(); i++)
+	{
+		RenderCommand cmx;
+		parentBuildRenderCommand(i, cmx);
+		bool isNewFile = true;
+		for (int j = 0; j <= inputFiles.size(); j++)
+		{
+			if (inputFiles.size() > 0 && cmx.cmd[1] == inputFiles[j])
+			{
+				isNewFile = false;
+				currentFileID = j;
+				break;
+			}
+		}
+		if (isNewFile)
+		{
+			inputFiles.push_back(cmx.cmd[1]);
+			currentFileID = i;
+		}
+
+		//Build command
+		cmd.cmd.push_back("-i");
+		cmd.cmd.push_back(inputFiles[i]);
+		cmd.cmd.push_back("-map");
+		cmd.cmd.push_back(std::to_string(currentFileID));
+		cmd.cmd.push_back(":");
+		cmd.cmd.push_back(std::to_string(cmx.map));
+	}
+
+	
+	/*for (int i = 0; i < cmd.cmd.size(); i++)
+	{
+		ss << cmd.cmd[i];
+	}*/
+
+	//DEBUG_LOG << cmd.cmd;
+
 	return true;
 }
 
@@ -111,6 +157,7 @@ void MixNode::slotConnectEvent(SlotEvent *event)
 {
 	if (event->isInputSlot() && event->slotIndex() == 0)
 	{
+		return;
 		newInputSlot();
 		m_streams.push_back("");
 		emit parmChanged(parmCount() - 1);

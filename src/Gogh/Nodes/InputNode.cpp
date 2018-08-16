@@ -27,9 +27,9 @@ QWidget * InputNode::createEditor(QWidget *parent)
 
 bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 {
-	if (outputIndex != 0) {
+	/*if (outputIndex != 0) {
 		return false;
-	}
+	}*/
 
 	QString filename = parmEvalAsString(0);
 	QFileInfo fileinfo(filename);
@@ -46,6 +46,8 @@ bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	cmd.env["ext"] = fileinfo.suffix().toStdString();
 	cmd.env["input"] = filename.toStdString();
 	//TODO: Set default keys from ffprobe file properties, like "codec" or "scale"
+	
+	cmd.map = outputIndex;
 
 	cmd.cmd.push_back("-i");
 	cmd.cmd.push_back(filename.toStdString());

@@ -110,9 +110,9 @@ void OutputNode::slotConnectEvent(SlotEvent *event)
 
 			if (buildRenderCommand(-1, cmd))
 			{
-				for (auto const& k : cmd.env)
+				for (auto const& e : cmd.env)
 				{
-					replace(userPattern, "$" + k.first, cmd.env[k.first]);
+					replace(userPattern, "$" + e.first, cmd.env[e.first]);
 				}
 			}
 			setParm(0, QString().fromStdString(userPattern));

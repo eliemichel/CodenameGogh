@@ -32,6 +32,9 @@ struct RenderCommand {
 	// OutputNode's smart renaming : keys (like : "codec", "scale") associated to current nodes values (like : "h264", "1920x1080")
 	std::map<std::string, std::string> env;
 
+	// Map informations for MixNode :
+	int map;
+
 	// error message that may be filled when returning false in buildRenderCommand
 	std::string err;
 };
