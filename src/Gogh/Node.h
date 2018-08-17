@@ -122,6 +122,9 @@ protected:
 
 	void removeOutputSlots();
 
+	Connection inputConnection(int inputSlotIndex);
+	std::set<Connection> outputConnection(int outputSlotIndex);
+
 	EnvModel * envModel() const { return m_envModel; }
 	NodeGraphModel *graphModel() const { return m_graphModel; }
 
