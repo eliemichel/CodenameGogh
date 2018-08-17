@@ -29,13 +29,13 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		return false;
 	}
 
-	// Clear cmd
-	//std::vector<std::string>().swap(cmd);
+	// Clear cmd.cmd
 	cmd.cmd.clear();
 
 	// Map inputs
 	stringlist inputFiles;
 	int currentFileID = 0;
+	std::map<std::string, std::vector<int>> fileMaps;
 
 	for (int i = 0; i < parmCount(); i++)
 	{
@@ -57,22 +57,30 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 			currentFileID = i;
 		}
 
-		//Build command
-		cmd.cmd.push_back("-i");
-		cmd.cmd.push_back(inputFiles[i]);
-		cmd.cmd.push_back("-map");
-		cmd.cmd.push_back(std::to_string(currentFileID));
-		cmd.cmd.push_back(":");
-		cmd.cmd.push_back(std::to_string(cmx.map));
+		fileMaps[cmx.cmd[1]].push_back(cmx.map);
 	}
 
-	
-	/*for (int i = 0; i < cmd.cmd.size(); i++)
+	//Build RenderCommand
+	//Input files
+	for (int j = 0; j < inputFiles.size(); j++)
 	{
-		ss << cmd.cmd[i];
-	}*/
+		cmd.cmd.push_back("-i");
+		cmd.cmd.push_back(inputFiles[j]);
+	}
 
-	//DEBUG_LOG << cmd.cmd;
+	//Files' streams mapping
+	currentFileID = 0;
+	for (auto const& m : fileMaps)
+	{
+		for (int i = 0; i < fileMaps[m.first].size(); i++)
+		{
+			cmd.cmd.push_back("-map");
+			std::ostringstream ss;
+			ss << currentFileID << ":" << fileMaps[m.first][i];
+			cmd.cmd.push_back(ss.str());
+		}
+		currentFileID++;
+	}
 
 	return true;
 }
