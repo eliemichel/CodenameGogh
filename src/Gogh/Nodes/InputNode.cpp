@@ -50,7 +50,7 @@ bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	cmd.map = outputIndex;
 
 	cmd.stream = m_probeProcess.streamsAsChar(outputIndex);
-
+	
 	cmd.cmd.push_back("-i");
 	cmd.cmd.push_back(filename.toStdString());
 

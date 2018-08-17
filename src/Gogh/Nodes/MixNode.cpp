@@ -34,6 +34,8 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 
 	// Map inputs
 	stringlist inputFiles;
+	std::vector<char> parmStreams;
+	std::vector<stringlist> parmCommands;
 	int currentFileID = 0;
 	std::map<std::string, std::vector<int>> fileMaps;
 
@@ -41,6 +43,8 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	{
 		RenderCommand cmx;
 		parentBuildRenderCommand(i, cmx);
+
+		//Get every input file and if it already exists, get the ID
 		bool isNewFile = true;
 		for (int j = 0; j <= inputFiles.size(); j++)
 		{
@@ -56,8 +60,20 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 			inputFiles.push_back(cmx.cmd[1]);
 			currentFileID = i;
 		}
-		
+
+		//For each input file, every used output stream is stored
 		fileMaps[cmx.cmd[1]].push_back(cmx.map);
+
+		//Get every stream of each input parm
+		parmStreams.push_back(cmx.stream);
+
+		// Keep built command without "-i filename"
+		stringlist currentCommand;
+		for (int c = 2; c < cmx.cmd.size(); c++)
+		{
+			currentCommand.push_back(cmx.cmd[c]);
+		}
+		parmCommands.push_back(currentCommand);
 	}
 
 	//Build RenderCommand
@@ -74,12 +90,51 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	{
 		for (int i = 0; i < fileMaps[m.first].size(); i++)
 		{
+			//DEBUG_LOG << parmStreams[currentFileID + i] << " " << toString(parmCommands[currentFileID + i]);
 			cmd.cmd.push_back("-map");
 			std::ostringstream ss;
 			ss << currentFileID << ":" << fileMaps[m.first][i];
 			cmd.cmd.push_back(ss.str());
 		}
 		currentFileID++;
+	}
+
+	//Correct RenderCommand parameters depending on the mapping
+	int videoStreamN = 0;
+	int audioStreamN = 0;
+	int subtitleStreamN = 0;
+	int dataStreamN = 0;
+	for (int i = 0; i < parmCount(); i++)
+	{
+		int* currentStreamN = &videoStreamN;
+		switch (parmStreams[i]) {
+			case 'v':
+				currentStreamN = &videoStreamN;
+				break;
+			case 'a':
+				currentStreamN = &audioStreamN;
+				break;
+			case 's':
+				currentStreamN = &subtitleStreamN;
+				break;
+			case 'd':
+				currentStreamN = &dataStreamN;
+				break;
+		}
+		for (auto& pc : parmCommands[i])
+		{
+			if (pc == "-c:v")
+			{
+				pc = pc + ":" + std::to_string(*currentStreamN);
+			} else if (pc == "-c:b")
+			{
+				pc = pc + ":" + std::to_string(*currentStreamN);
+			}
+		}
+		*currentStreamN += 1;
+
+		//Final build of RenderCommand
+		cmd.cmd.insert(std::end(cmd.cmd), std::begin(parmCommands[i]), std::end(parmCommands[i]));
 	}
 
 	return true;
