@@ -52,6 +52,38 @@ void FileProbeProcess::cancel()
 	kill();
 }
 
+std::string FileProbeProcess::streamsAsString(int i) const
+{
+	StreamType stream = streams()[i];
+	switch (stream)
+	{
+	case VideoStream:
+		return "VideoStream";
+	case AudioStream:
+		return "AudioStream";
+	case SubtitleStream:
+		return "SubtitleStream";
+	case DataStream:
+		return "DataStream";
+	}
+}
+
+char FileProbeProcess::streamsAsChar(int i) const
+{
+	StreamType stream = streams()[i];
+	switch (stream)
+	{
+	case VideoStream:
+		return 'v';
+	case AudioStream:
+		return 'a';
+	case SubtitleStream:
+		return 's';
+	case DataStream:
+		return 'd';
+	}
+}
+
 void FileProbeProcess::onProcessFinished()
 {
 	m_isRunning = false;
@@ -63,7 +95,7 @@ void FileProbeProcess::onProcessFinished()
 			probe(m_filename);
 		}
 	}
-	
+
 	// Parse output
 	m_streams.clear();
 	QTextStream stream(this);
@@ -103,4 +135,3 @@ void FileProbeProcess::readStderr()
 {
 	WARN_LOG << readAllStandardError().toStdString();
 }
-

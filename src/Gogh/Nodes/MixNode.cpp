@@ -56,7 +56,7 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 			inputFiles.push_back(cmx.cmd[1]);
 			currentFileID = i;
 		}
-
+		
 		fileMaps[cmx.cmd[1]].push_back(cmx.map);
 	}
 

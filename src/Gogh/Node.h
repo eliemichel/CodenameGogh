@@ -35,6 +35,9 @@ struct RenderCommand {
 	// Map informations for MixNode :
 	int map;
 
+	// StreamType
+	char stream;
+
 	// error message that may be filled when returning false in buildRenderCommand
 	std::string err;
 };
