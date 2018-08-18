@@ -41,16 +41,19 @@ bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		return false;
 	}
 
+	//Output smart-renaming
 	cmd.env["path"] = fileinfo.absolutePath().toStdString() + "/";
 	cmd.env["filename"] = fileinfo.baseName().toStdString();
 	cmd.env["ext"] = fileinfo.suffix().toStdString();
 	cmd.env["input"] = filename.toStdString();
 	//TODO: Set default keys from ffprobe file properties, like "codec" or "scale"
 
+	//MixNode mapping
 	cmd.map = outputIndex;
 
 	cmd.stream = m_probeProcess.streamsAsChar(outputIndex);
-	
+
+	//RenderCommand
 	cmd.cmd.push_back("-i");
 	cmd.cmd.push_back(filename.toStdString());
 

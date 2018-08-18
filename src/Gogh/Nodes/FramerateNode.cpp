@@ -22,10 +22,10 @@ bool FramerateNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) con
 		return false;
 	}
 
-	//For output smart-renaming
+	//Output smart-renaming
 	cmd.env["framerate"] = parmEvalAsString(0).toStdString();
 
-	//For RenderCommand
+	//RenderCommand
 	cmd.cmd.push_back("-r");
 	cmd.cmd.push_back(parmEvalAsString(0).toStdString());
 

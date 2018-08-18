@@ -22,10 +22,13 @@ bool CodecNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		return false;
 	}
 
+	//Output smart-renaming
 	cmd.env["codec"] = parmEvalAsString(0).toStdString();
 
+	//RenderCommand
 	cmd.cmd.push_back("-c:v");
 	cmd.cmd.push_back(parmEvalAsString(0).toStdString());
+	
 	return true;
 }
 
