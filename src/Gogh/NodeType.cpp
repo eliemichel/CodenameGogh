@@ -7,6 +7,7 @@
 #include "Nodes/ScaleNode.h"
 #include "Nodes/CodecNode.h"
 #include "Nodes/MixNode.h"
+#include "Nodes/FramerateNode.h"
 
 std::vector<NodeType> NodeType::availableTypes()
 {
@@ -16,6 +17,7 @@ std::vector<NodeType> NodeType::availableTypes()
 		NodeType(NODE_SCALE),
 		NodeType(NODE_CODEC),
 		NodeType(NODE_MIX),
+		NodeType(NODE_FRAMERATE),
 	};
 }
 
@@ -46,6 +48,8 @@ std::string NodeType::name() const
 		return "Codec";
 	case NODE_MIX:
 		return "Mix";
+	case NODE_FRAMERATE:
+		return "Framerate";
 	default:
 		WARN_LOG << "Unknown node type id: " << m_typeId;
 		return "<unknown type>";
@@ -66,6 +70,8 @@ std::string NodeType::systemName() const
 		return "NODE_CODEC";
 	case NODE_MIX:
 		return "NODE_MIX";
+	case NODE_FRAMERATE:
+		return "NODE_FRAMERATE";
 	default:
 		WARN_LOG << "Unknown node type id: " << m_typeId;
 		return "<unknown type>";
@@ -86,6 +92,8 @@ std::string NodeType::info() const
 		return "Change streams codec";
 	case NODE_MIX:
 		return "Mix streams";
+	case NODE_FRAMERATE:
+		return "Set output framerate";
 	default:
 		WARN_LOG << "Unknown node type id: " << m_typeId;
 		return "<unknown type>";
@@ -112,6 +120,9 @@ Node * NodeType::create() const
 		break;
 	case NODE_MIX:
 		node = new MixNode();
+		break;
+	case NODE_FRAMERATE:
+		node = new FramerateNode();
 		break;
 	default:
 		WARN_LOG << "Unknown node type id: " << m_typeId;

@@ -62,6 +62,8 @@ set(SRC
 	Nodes/CodecNode.cpp
 	Nodes/MixNode.h
 	Nodes/MixNode.cpp
+	Nodes/FramerateNode.h
+	Nodes/FramerateNode.cpp
 
 	Tools/AbstractGraphTool.h
 	Tools/PanTool.h

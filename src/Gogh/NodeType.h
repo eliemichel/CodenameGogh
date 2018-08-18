@@ -20,6 +20,7 @@ public:
 		NODE_SCALE = 2,
 		NODE_CODEC = 3,
 		NODE_MIX = 4,
+		NODE_FRAMERATE = 5,
 		_NodeTypeCount, // special item, must remain the last one
 	};
 
