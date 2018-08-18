@@ -41,6 +41,39 @@ bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		return false;
 	}
 
+	//Image Sequence parsing
+	//We are supposed to have the basename of the file, no path, no extension
+	std::string firstImageName = "foo_00";
+	bool isImageSequence = false;
+	int digitCount = 0;
+	int firstDigit = 0;
+	if(isImageSequence)
+	{
+		const char *splitedName = firstImageName.c_str();
+		for (int i = firstImageName.length()-1; i >= 0; i--)
+		{
+			if(isdigit(splitedName[i]))
+			{
+				digitCount++;
+			}
+			else
+			{
+				firstDigit = i + 1;
+				break;
+			}
+		}
+		//TODO: startframe if the first file number is not 0.
+		std::ostringstream s;
+		for (int i = 0; i < firstDigit; i++)
+		{
+			s << splitedName[i];
+		}
+		s << "%" << digitCount << "d";
+		//TODO: Add the extension and the path to make the whole command.
+		DEBUG_LOG << s.str();
+		delete[] splitedName;
+	}
+
 	//Output smart-renaming
 	cmd.env["path"] = fileinfo.absolutePath().toStdString() + "/";
 	cmd.env["filename"] = fileinfo.baseName().toStdString();
@@ -50,7 +83,6 @@ bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 
 	//MixNode mapping
 	cmd.map = outputIndex;
-
 	cmd.stream = m_probeProcess.streamsAsChar(outputIndex);
 
 	//RenderCommand
