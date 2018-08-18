@@ -90,7 +90,7 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	{
 		for (int i = 0; i < fileMaps[m.first].size(); i++)
 		{
-			//DEBUG_LOG << parmStreams[currentFileID + i] << " " << toString(parmCommands[currentFileID + i]);
+			//Mapping
 			cmd.cmd.push_back("-map");
 			std::ostringstream ss;
 			ss << currentFileID << ":" << fileMaps[m.first][i];
@@ -104,8 +104,10 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	int audioStreamN = 0;
 	int subtitleStreamN = 0;
 	int dataStreamN = 0;
+
 	for (int i = 0; i < parmCount(); i++)
 	{
+		//Get the counter for the current stream
 		int* currentStreamN = &videoStreamN;
 		switch (parmStreams[i]) {
 			case 'v':
@@ -121,16 +123,22 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 				currentStreamN = &dataStreamN;
 				break;
 		}
+		//Correct name based on mapping
 		for (auto& pc : parmCommands[i])
 		{
-			if (pc == "-c:v")
-			{
-				pc = pc + ":" + std::to_string(*currentStreamN);
-			} else if (pc == "-c:b")
+			if (pc == "-c:v" || pc == "-c:b")
 			{
 				pc = pc + ":" + std::to_string(*currentStreamN);
 			}
 		}
+		//Streams Naming
+		std::ostringstream ss;
+		ss << "-metadata:s:" << parmStreams[i] << ":" << *currentStreamN;
+		cmd.cmd.push_back(ss.str());
+		ss.str(std::string());
+		ss << "title=\"" << parmEvalAsString(i).toStdString() << "\"";
+		cmd.cmd.push_back(ss.str());
+
 		*currentStreamN += 1;
 
 		//Final build of RenderCommand
