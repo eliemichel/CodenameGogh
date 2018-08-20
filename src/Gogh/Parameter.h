@@ -5,15 +5,7 @@
 #include <QString>
 #include <QVariant>
 #include <vector>
-
-enum ParmType
-{
-	NoneType,
-	StringType,
-	IntType,
-	EnumType,
-	ButtonType,
-};
+#include "ParameterType.h"
 
 /**
  * A parameter is a user editable property of a node. They represent properties
@@ -70,6 +62,17 @@ public:
 	bool set(const QVariant & value);
 
 	/**
+	 * Set the display name the parameter. This fires a nameChanged() signal.
+	 */
+	void setName(const QString & name);
+
+	/**
+	 * Set the type of the parameter. This tries to cast the raw value to the
+	 * new type and fires a typeChanged() signal.
+	 */
+	void setType(ParmType type);
+
+	/**
 	 * Set the label of a menu entry if <item> refers to a valid menu item, and
 	 * emit a menuLabelChanged signal.
 	 */
@@ -103,6 +106,12 @@ public:
 signals:
 	/// emitted when the raw value of the parameter changed
 	void valueChanged();
+
+	/// emitted when the display name of the parameter changed
+	void nameChanged();
+
+	/// emitted when the type of the parameter changed
+	void typeChanged();
 
 	/// emitted when the menu item label at <item> changed
 	void menuLabelChanged(int item);

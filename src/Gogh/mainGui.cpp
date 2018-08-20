@@ -4,15 +4,15 @@
 #include "Ui/UiWindow.h"
 #include "Ui/MainLayout.h"
 #include "Ui/UiBase.h"
+#include "Parameter.h"
 
 #include <GLFW/glfw3.h>
 #include <nanovg.h>
 
 #include "Ui/ExtraUi.hpp"
+#include "Ui/ParameterWidget.h"
 
 class NodeArea : public UiTrackMouseElement {
-public:
-
 public: // protected
 	void Paint(NVGcontext *vg) const override {
 		UiTrackMouseElement::Paint(vg);
@@ -81,21 +81,42 @@ int mainGui(const ArgParse & args)
 	//MainLayout *popupLayout = new MainLayout();
 	//window.SetContent(popupLayout);
 
+	UiHBoxLayout *mainLayout = new UiHBoxLayout();
+
+	// Node Area
+	NodeArea *nodeArea = new NodeArea();
+	mainLayout->AddItem(nodeArea);
+
+	// Sidebar
 	UiVBoxLayout *layout = new UiVBoxLayout();
+
+	Parameter *param = new Parameter();
+	param->setType(StringType);
+	param->setName("Yo");
+	param->set(QString::fromStdString("bloum"));
+	ParameterWidget *paramWidget = new ParameterWidget();
+	paramWidget->SetParameter(param);
+	paramWidget->SetInnerSizeHint(0, 0, 0, 30);
+	layout->AddItem(paramWidget);
 
 	TextButton *button = new TextButton();
 	button->SetText("Test 1");
+	button->SetInnerSizeHint(0, 0, 0, 30);
 	layout->AddItem(button);
 
 	button = new TextButton();
 	button->SetText("Test 2");
+	button->SetInnerSizeHint(0, 0, 0, 30);
 	layout->AddItem(button);
 
-	//popupLayout->AddItem(layout);
+	layout->SetInnerSizeHint(0, 0, 300, 0);
+	mainLayout->AddItem(layout);
+
+	//popupLayout->AddItem(mainLayout);
 	//popupLayout->SetRect(0, 0, window.Width(), window.Height());
-	NodeArea *nodeArea = new NodeArea();
-	nodeArea->SetRect(0, 0, WIDTH, HEIGHT);
-	window.SetContent(nodeArea);
+
+	window.SetContent(mainLayout);
+	mainLayout->SetRect(0, 0, WIDTH, HEIGHT);
 
 	while (!window.ShouldClose())
 	{

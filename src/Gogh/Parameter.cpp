@@ -23,9 +23,27 @@ QVariant Parameter::menuValue(int item) const
 
 bool Parameter::set(const QVariant & value)
 {
-	m_rawValue = value;
-	emit valueChanged();
+	if (m_rawValue != value) {
+		m_rawValue = value;
+		emit valueChanged();
+	}
 	return true;
+}
+
+void Parameter::setName(const QString & name)
+{
+	if (m_name != name) {
+		m_name = name;
+		emit nameChanged();
+	}
+}
+
+void Parameter::setType(ParmType type)
+{
+	if (m_type != type) {
+		m_type = type;
+		emit typeChanged();
+	}
 }
 
 void Parameter::setMenuLabel(int item, const QString & label)

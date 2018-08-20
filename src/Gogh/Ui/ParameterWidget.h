@@ -1,70 +1,65 @@
 #ifndef H_PARAMETERWIDGET
 #define H_PARAMETERWIDGET
 
-#include <QWidget>
-#include "Parameter.h"
-
-class QLineEdit;
-class QSpinBox;
-class QComboBox;
-class QPushButton;
-class QLayout;
+#include "Ui/UiBase.h"
+#include "ParameterType.h"
+class Parameter;
 
 /**
  * A parameter widget is a widget designed to display and edit any parameter.
  * It monitors the parameter changes and automatically updates when the
  * parameter data is edited somewhere else.
  */
-class ParameterWidget : public QWidget
+class ParameterWidget : public UiHBoxLayout
 {
-	Q_OBJECT
-
 public:
-	explicit ParameterWidget(QWidget *parent = nullptr);
+	ParameterWidget();
 
 	/**
 	 * Set the parameter controlled by this widget.
 	 * This must be a valid pointer or nullptr.
 	 */
-	void setParameter(Parameter *parm);
+	void SetParameter(::Parameter *param);
 
 	/**
 	 * @return the currently controlled parameter or nullptr
 	 */
-	Parameter * parameter() const { return m_parm; }
+	::Parameter * Parameter() const { return m_param; }
 
 private:
 	/**
 	 * Rebuild the widget content, when controller parameter changes or switch types.
 	 */
-	void updateStructure();
+	void UpdateStructure();
 
 	/**
 	 * Destroy any control widget, prior to reconstruction
 	 */
-	void destroyStructure();
+	void DestroyStructure();
 
-private slots:
-	void updateValue();
-	void updateMenuLabel(int item);
-	void insertMenuItems(int first, int last);
-	void removeMenuItems(int first, int last);
+private: // slots
+	void UpdateValue();
+	void UpdateName();
+	void UpdateMenuLabel(int item);
+	void InsertMenuItems(int first, int last);
+	void RemoveMenuItems(int first, int last);
 
 private:
-	Parameter *m_parm;
+	::Parameter *m_param;
 
 	/// Type for which the parameter widget is currently set
 	ParmType m_currentType;
 
-	QLayout *m_layout;
+	/// Label with the parameter name
+	UiLabel *m_label;
 
 	union
 	{
-		QWidget *widget;
-		QLineEdit* lineEdit;
-		QSpinBox* spinBox;
-		QComboBox* comboBox;
-		QPushButton* pushButton;
+		UiElement *widget;
+		UiLabel* lineEdit;
+		UiLabel* spinBox;
+		UiLabel* comboBox;
+		UiLabel* pushButton;
 	} m_input;
 };
 

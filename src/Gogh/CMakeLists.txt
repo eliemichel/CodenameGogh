@@ -90,6 +90,8 @@ set(SRC
 	Ui/UiApp.cpp
 	Ui/UiWindow.h
 	Ui/UiWindow.cpp
+	Ui/ParameterWidget.h
+	Ui/ParameterWidget.cpp
 
 	main.cpp
 )

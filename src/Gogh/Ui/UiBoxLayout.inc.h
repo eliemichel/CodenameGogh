@@ -26,20 +26,6 @@ public:
 	void SetOverflowBehavior(BoxLayoutOverflowBehavior behavior) { m_overflowBehavior = behavior; }
 	BoxLayoutOverflowBehavior OverflowBehavior() const { return m_overflowBehavior; }
 
-	/// Take ownership of the item
-	void AddItem(UiElement *item) {
-		Items().push_back(item);
-	}
-	/// Hand ownership of the item
-	UiElement *RemoveItem() {
-		if (Items().size() == 0) {
-			return NULL;
-		}
-		UiElement *item = Items().back();
-		Items().pop_back();
-		return item;
-	}
-
 	/// Automatically infer size hint from content.
 	void AutoSizeHint() {
 		int sum = 0;
@@ -70,7 +56,7 @@ public:
 
 public:
 	void Update() override {
-		/* for regular items
+		/* for constant sized items
 		int itemHeight = floor(Rect().h / m_items.size());
 		// Prevent rounding issues
 		int lastItemHeight = Rect().h - (m_items.size() - 1) * itemHeight;

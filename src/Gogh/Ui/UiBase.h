@@ -29,6 +29,8 @@ struct Rect {
 
 class UiElement {
 public:
+	virtual ~UiElement();
+
 	// Getters / Setters
 
 	void SetRect(Rect rect) {
@@ -157,6 +159,7 @@ private:
 	bool m_isMouseOver, m_wasMouseOver;
 };
 
+/// Warning: Do NOT insert a UiElement twice in a layout, neither in two different layouts
 /// When inheriting, override  Update() and GetIndexAt()
 class UiLayout : public UiElement {
 public:
@@ -178,9 +181,23 @@ public:
 	}
 	/// Give back ownership of the item
 	UiElement *RemoveItem() {
+		if (m_items.empty()) {
+			return nullptr;
+		}
 		UiElement *item = m_items.back();
 		m_items.pop_back();
 		return item;
+	}
+	/// Give back ownership of the item
+	bool RemoveItem(UiElement *item) {
+		auto it = m_items.begin();
+		for (; it != m_items.end(); ++it) {
+			if (*it == item) {
+				m_items.erase(it);
+				return true;
+			}
+		}
+		return false;
 	}
 
 	size_t ItemCount() const {
@@ -357,8 +374,10 @@ typedef enum {
 #undef BUI_HBOX_IMPLEMENTATION
 #include "UiBoxLayout.inc.h"
 
-class Label : public UiElement {
+class UiLabel : public UiElement {
 public: // protected
+	UiLabel() : m_color(nvgRGBA(255, 255, 255, 255)) {}
+
 	void Paint(NVGcontext *vg) const override {
 		const ::Rect & r = InnerRect();
 		nvgTextAlign(vg, NVG_ALIGN_CENTER);
