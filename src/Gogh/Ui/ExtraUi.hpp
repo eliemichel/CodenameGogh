@@ -1,27 +1,31 @@
+#ifndef H_EXTRAUI
+#define H_EXTRAUI
+
 // Custom UI elements
 
-/// Add IsMouseOver() to UiMouseAwareElement
+/// Add MouseX() and MouseY() to UiMouseAwareElement
+/// TODO: avoid storing this information in every single uielement that need it since it is the same for everybody
 class UiTrackMouseElement : public UiMouseAwareElement {
 public:
 	UiTrackMouseElement()
 		: UiMouseAwareElement()
-		, m_isMouseOver(false)
+		, m_mouseX(0)
+		, m_mouseY(0)
 	{}
 
 public: // protected
-	void OnMouseEnter() override {
-		m_isMouseOver = true;
-	}
-
-	void OnMouseLeave() override {
-		m_isMouseOver = false;
+	void OnMouseOver(int x, int y) override {
+		UiMouseAwareElement::OnMouseOver(x, y);
+		m_mouseX = x;
+		m_mouseY = y;
 	}
 
 protected:
-	bool IsMouseOver() const { return m_isMouseOver; }
+	int MouseX() const { return m_mouseX; }
+	int MouseY() const { return m_mouseY; }
 
 private:
-	bool m_isMouseOver;
+	int m_mouseX, m_mouseY;
 };
 
 /// Blue-bordered buttons
@@ -75,3 +79,5 @@ public: // protected
 private:
 	std::string m_text;
 };
+
+#endif // H_EXTRAUI

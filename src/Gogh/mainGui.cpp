@@ -32,12 +32,11 @@ public: // protected
 	}
 
 	void OnMouseOver(int x, int y) override {
-		m_mouseX = x;
-		m_mouseY = y;
+		UiTrackMouseElement::OnMouseOver(x, y);
 
 		if (m_isMovingNode) {
-			m_nodeX = m_moveStartNodeX + m_mouseX - m_moveStartMouseX;
-			m_nodeY = m_moveStartNodeY + m_mouseY - m_moveStartMouseY;
+			m_nodeX = m_moveStartNodeX + MouseX() - m_moveStartMouseX;
+			m_nodeY = m_moveStartNodeY + MouseY() - m_moveStartMouseY;
 		}
 	}
 
@@ -46,9 +45,9 @@ public: // protected
 			const ::Rect & r = InnerRect();
 			const ::Rect & nodeRect = ::Rect(r.x + m_nodeX, r.y + m_nodeY, 200, 100);
 
-			if (nodeRect.Contains(m_mouseX, m_mouseY)) {
-				m_moveStartMouseX = m_mouseX;
-				m_moveStartMouseY = m_mouseY;
+			if (nodeRect.Contains(MouseX(), MouseY())) {
+				m_moveStartMouseX = MouseX();
+				m_moveStartMouseY = MouseY();
 				m_moveStartNodeX = m_nodeX;
 				m_moveStartNodeY = m_nodeY;
 				m_isMovingNode = true;
@@ -61,8 +60,6 @@ public: // protected
 	}
 
 private:
-	int m_mouseX;
-	int m_mouseY;
 	float m_nodeX;
 	float m_nodeY;
 

@@ -29,7 +29,8 @@ struct Rect {
 
 class UiElement {
 public:
-	virtual ~UiElement();
+	UiElement() : m_parent(nullptr) {}
+	virtual ~UiElement() {}
 
 	// Getters / Setters
 
@@ -73,6 +74,31 @@ public:
 		return m_sizeHint;
 	}
 
+	/**
+	 * Parent must always be a valid UiElement or nullptr. COntainers are
+	 * responsible for setting it when adding elements and resetting it to
+	 * nullptr when removing the element. A container must not accept a UiElement
+	 * that already has a parent.
+	 */
+	void SetParent(UiElement *parent) {
+		m_parent = parent;
+	}
+	UiElement * Parent() const {
+		return m_parent;
+	}
+
+	/**
+	 * Returns the oldest non null ancestor, ie parent of parent of parent etc.
+	 * If parent is null, simply returns this UiElement itself
+	 */
+	UiElement * RootParent() {
+		UiElement *el = this;
+		while (el->Parent()) {
+			el = el->Parent();
+		}
+		return el;
+	}
+
 public:
 	virtual void OnMouseOver(int x, int y) {
 	}
@@ -111,6 +137,7 @@ public:
 	}
 
 private:
+	UiElement *m_parent;
 	::Rect m_rect, m_sizeHint, m_innerRect, m_margin;
 	bool m_debug;
 };
@@ -153,7 +180,8 @@ public: // protected
 	virtual void OnMouseLeave() {
 	}
 
-	// TODO: Add IsMouseOver() instead of recoding it in subclasses
+protected:
+	bool IsMouseOver() const { return m_isMouseOver; }
 
 private:
 	bool m_isMouseOver, m_wasMouseOver;
@@ -175,9 +203,14 @@ public:
 		}
 	}
 
-	/// Take ownership of the item
-	void AddItem(UiElement *item) {
+	/// Take ownership of the item. Returns false if the item is null or already has a parent (and doesn't add it)
+	bool AddItem(UiElement *item) {
+		if (!item || item->Parent()) {
+			return false;
+		}
+		item->SetParent(this);
 		m_items.push_back(item);
+		return true;
 	}
 	/// Give back ownership of the item
 	UiElement *RemoveItem() {
@@ -186,6 +219,9 @@ public:
 		}
 		UiElement *item = m_items.back();
 		m_items.pop_back();
+		if (item) {
+			item->SetParent(nullptr);
+		}
 		return item;
 	}
 	/// Give back ownership of the item
@@ -194,6 +230,9 @@ public:
 		for (; it != m_items.end(); ++it) {
 			if (*it == item) {
 				m_items.erase(it);
+				if (item) {
+					item->SetParent(nullptr);
+				}
 				return true;
 			}
 		}
@@ -375,15 +414,8 @@ typedef enum {
 #include "UiBoxLayout.inc.h"
 
 class UiLabel : public UiElement {
-public: // protected
+public:
 	UiLabel() : m_color(nvgRGBA(255, 255, 255, 255)) {}
-
-	void Paint(NVGcontext *vg) const override {
-		const ::Rect & r = InnerRect();
-		nvgTextAlign(vg, NVG_ALIGN_CENTER);
-		nvgFillColor(vg, Color());
-		nvgText(vg, r.x + r.w / 2.0, r.y + r.h - 6, Text().c_str(), NULL);
-	}
 
 	void SetText(const std::string & text) { m_text = text; }
 	const std::string & Text() const { return m_text; }
@@ -391,6 +423,14 @@ public: // protected
 	void SetColor(int r, int g, int b, int a = 255) { m_color = nvgRGBA(r, g, b, a); }
 	void SetColor(NVGcolor color) { m_color = color; }
 	const NVGcolor & Color() const { return m_color; }
+
+public: // protected
+	void Paint(NVGcontext *vg) const override {
+		const ::Rect & r = InnerRect();
+		nvgTextAlign(vg, NVG_ALIGN_CENTER);
+		nvgFillColor(vg, Color());
+		nvgText(vg, r.x + r.w / 2.0, r.y + r.h - 6, Text().c_str(), NULL);
+	}
 
 private:
 	std::string m_text;

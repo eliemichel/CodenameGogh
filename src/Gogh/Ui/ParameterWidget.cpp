@@ -1,6 +1,7 @@
 #include "ParameterWidget.h"
 #include "Logger.h"
 #include "Parameter.h"
+#include "Ui/UiTextInput.h"
 
 ParameterWidget::ParameterWidget()
 	: m_param(nullptr)
@@ -63,7 +64,7 @@ void ParameterWidget::UpdateStructure()
 		break;
 	case StringType:
 	{
-		m_input.lineEdit = new UiLabel();
+		m_input.lineEdit = new UiTextInput();
 		m_input.lineEdit->SetText("<string>");
 		// TODO
 		//connect(m_input.lineEdit, &QLineEdit::textEdited, [=](const QString &text) { parameter()->set(text); });

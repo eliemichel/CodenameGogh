@@ -3,7 +3,9 @@
 
 #include "Ui/UiBase.h"
 #include "ParameterType.h"
+
 class Parameter;
+class UiTextInput;
 
 /**
  * A parameter widget is a widget designed to display and edit any parameter.
@@ -56,7 +58,7 @@ private:
 	union
 	{
 		UiElement *widget;
-		UiLabel* lineEdit;
+		UiTextInput* lineEdit;
 		UiLabel* spinBox;
 		UiLabel* comboBox;
 		UiLabel* pushButton;
