@@ -36,6 +36,11 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		return false;
 	}
 
+	if(parmEvalAsBool(1))
+	{
+		cmd.cmd.push_back("-movflags");
+		cmd.cmd.push_back("faststart");
+	}
 	cmd.cmd.push_back(parmEvalAsString(0).toStdString());
 	return true;
 }
@@ -44,7 +49,7 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 
 int OutputNode::parmCount() const
 {
-	return 2;
+	return 3;
 }
 
 QString OutputNode::parmName(int parm) const
@@ -54,6 +59,8 @@ QString OutputNode::parmName(int parm) const
 	case 0:
 		return "filename";
 	case 1:
+		return "Web Optimized";
+	case 2:
 		return "Render";
 	default:
 		return QString();
@@ -67,6 +74,8 @@ ParmType OutputNode::parmType(int parm) const
 	case 0:
 		return StringType;
 	case 1:
+		return CheckboxType;
+	case 2:
 		return ButtonType;
 	default:
 		return NoneType;
@@ -79,6 +88,8 @@ QVariant OutputNode::parmRawValue(int parm) const
 	{
 	case 0:
 		return QString::fromStdString(m_filename);
+	case 1:
+		return bool(m_weboptimized);
 	default:
 		return QVariant();
 	}
@@ -90,6 +101,10 @@ bool OutputNode::setParm(int parm, QVariant value)
 	{
 	case 0:
 		m_filename = value.toString().toStdString();
+		emit parmChanged(parm);
+		return true;
+	case 1:
+		m_weboptimized = value.toBool();
 		emit parmChanged(parm);
 		return true;
 	default:

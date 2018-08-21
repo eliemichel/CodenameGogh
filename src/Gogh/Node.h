@@ -106,6 +106,7 @@ public:
 
 	QString parmEvalAsString(int parm) const;
 	int parmEvalAsInt(int parm) const;
+	bool parmEvalAsBool(int parm) const;
 
 	// slot structure read
 	int inputSlotCount() const { return static_cast<int>(inputLinks.size()); }

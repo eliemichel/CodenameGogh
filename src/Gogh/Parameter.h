@@ -13,6 +13,7 @@ enum ParmType
 	IntType,
 	EnumType,
 	ButtonType,
+	CheckboxType,
 };
 
 /**

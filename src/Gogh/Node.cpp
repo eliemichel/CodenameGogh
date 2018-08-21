@@ -120,6 +120,22 @@ int Node::parmEvalAsInt(int parm) const
 	}
 }
 
+bool Node::parmEvalAsBool(int parm) const
+{
+	QString value;
+	switch (parmType(parm))
+	{
+	case EnumType:
+	{
+		int menu = parmRawValue(parm).toBool();
+		return parmMenuValue(parm, menu).toBool();
+		break;
+	}
+	default:
+		return parmRawValue(parm).toBool();
+	}
+}
+
 void Node::newInputSlot()
 {
 	inputLinks.resize(inputLinks.size() + 1);
