@@ -99,6 +99,21 @@ public:
 		return el;
 	}
 
+	/**
+	 * Ask for some global focus. The default implementation just recursively
+	 * asks the parent element, but a layout or most probably the root window
+	 * will implement it to remember that focused events (like keyboard events)
+	 * must be sent to this element.
+	 * This returns true if the provided element now has the focus.
+	 */
+	bool RequireFocus(UiElement *target) {
+		if (UiElement *parent = Parent()) {
+			return parent->RequireFocus(target);
+		} else {
+			return false;
+		}
+	}
+
 public:
 	virtual void OnMouseOver(int x, int y) {
 	}

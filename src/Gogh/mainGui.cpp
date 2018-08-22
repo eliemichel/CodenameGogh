@@ -23,7 +23,7 @@ public: // protected
 		nvgRect(vg, r.x, r.y, r.w, r.h);
 		nvgFillColor(vg, nvgRGB(30, 57, 91));
 		nvgFill(vg);
-
+		
 		// Node
 		nvgBeginPath(vg);
 		nvgRect(vg, r.x + m_nodeX, r.y + m_nodeY, 200, 100);
