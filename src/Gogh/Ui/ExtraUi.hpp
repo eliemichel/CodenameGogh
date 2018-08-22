@@ -13,7 +13,7 @@ public:
 		, m_mouseY(0)
 	{}
 
-public: // protected
+public: // protected:
 	void OnMouseOver(int x, int y) override {
 		UiMouseAwareElement::OnMouseOver(x, y);
 		m_mouseX = x;
@@ -34,7 +34,7 @@ protected:
 	/// To be overridden
 	virtual bool IsCurrent() const { return false; }
 
-public: // protected
+public: // protected:
 	void Paint(NVGcontext *vg) const override {
 		const ::Rect & r = InnerRect();
 		bool isCurrent = IsCurrent();
@@ -70,7 +70,7 @@ protected:
 		nvgTextBox(vg, r.x + 2, r.y + r.h - 6 - 11, r.w - 4, Text().c_str(), NULL);
 	}
 
-public: // protected
+public: // protected:
 	void Paint(NVGcontext *vg) const override {
 		UiDefaultButton::Paint(vg);
 		PaintLabel(vg);

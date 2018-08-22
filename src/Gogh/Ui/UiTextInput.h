@@ -16,9 +16,10 @@ public:
 	void SetColor(NVGcolor color) { m_color = color; }
 	const NVGcolor & Color() const { return m_color; }
 
-public: // protected
+public: // protected:
 	void Paint(NVGcontext *vg) const override;
 	void OnMouseClick(int button, int action, int mods) override;
+	void OnKey(int key, int scancode, int action, int mode) override;
 
 private:
 	/// Positioning of the text

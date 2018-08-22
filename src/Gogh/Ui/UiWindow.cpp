@@ -10,6 +10,7 @@
 UiWindow::UiWindow(UiApp *app)
 	: m_isValid(false)
 	, m_content(nullptr)
+	, m_focusedElement(nullptr)
 {
 	if (!app)
 	{
@@ -111,6 +112,30 @@ void UiWindow::Poll() const {
 	glfwPollEvents();
 }
 
+void UiWindow::SetContent(UiElement *element) {
+	if (element->Parent()) {
+		return;
+	}
+	element->SetParent(this);
+	m_content = element;
+}
+
+bool UiWindow::RequestFocus(UiElement *target) {
+	if (!target) {
+		return false;
+	}
+
+	SetFocusedElement(target);
+	return true;
+}
+
+bool UiWindow::ClearFocus(UiElement *target) {
+	if (target == FocusedElement()) {
+		SetFocusedElement(nullptr);
+		return true;
+	}
+	return false;
+}
 
 // Callbacks
 
@@ -122,8 +147,15 @@ void UiWindow::key_callback(GLFWwindow* glfwWindow, int key, int scancode, int a
 		return;
 	}
 
-	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS)
+	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
 		glfwSetWindowShouldClose(glfwWindow, GL_TRUE);
+	}
+
+	if (!window->FocusedElement()) {
+		return;
+	}
+
+	window->FocusedElement()->OnKey(key, scancode, action, mode);
 }
 
 void UiWindow::cursor_pos_callback(GLFWwindow* glfwWindow, double xpos, double ypos)

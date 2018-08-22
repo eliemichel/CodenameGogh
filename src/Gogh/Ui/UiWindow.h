@@ -14,7 +14,7 @@ const GLuint WIDTH = 1200, HEIGHT = 600;
  * TODO: separate into an App class and this class, and put every init/free
  * that must run only once in it, so that several windows can be opened
  */
-class UiWindow {
+class UiWindow : public UiElement {
 public:
 	UiWindow(UiApp *app);
 	~UiWindow();
@@ -37,7 +37,15 @@ public:
 	int Height() const { return m_height; }
 
 	UiElement *Content() const { return m_content; }
-	void SetContent(UiElement *element) { m_content = element; }
+	void SetContent(UiElement *element);
+
+protected:
+	bool RequestFocus(UiElement *target = nullptr) override;
+	bool ClearFocus(UiElement *target = nullptr) override;
+
+private:
+	UiElement *FocusedElement() { return m_focusedElement; }
+	void SetFocusedElement(UiElement *element) { m_focusedElement = element; }
 
 private:
 	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
@@ -49,7 +57,7 @@ private:
 	bool m_isValid;
 	GLFWwindow* m_window;
 	struct NVGcontext* m_vg;
-	UiElement *m_content;
+	UiElement *m_content, *m_focusedElement;
 	mutable int m_width, m_height;
 	int m_font;
 };

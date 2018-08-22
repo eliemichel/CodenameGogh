@@ -11,9 +11,10 @@
 
 #include "Ui/ExtraUi.hpp"
 #include "Ui/ParameterWidget.h"
+#include "Ui/UiTextInput.h"
 
 class NodeArea : public UiTrackMouseElement {
-public: // protected
+protected:
 	void Paint(NVGcontext *vg) const override {
 		UiTrackMouseElement::Paint(vg);
 		const ::Rect & r = InnerRect();
@@ -105,6 +106,11 @@ int mainGui(const ArgParse & args)
 	button->SetText("Test 2");
 	button->SetInnerSizeHint(0, 0, 0, 30);
 	layout->AddItem(button);
+
+	UiTextInput *textInput = new UiTextInput();
+	textInput->SetText("blabla");
+	textInput->SetInnerSizeHint(0, 0, 0, 30);
+	layout->AddItem(textInput);
 
 	layout->SetInnerSizeHint(0, 0, 300, 0);
 	mainLayout->AddItem(layout);

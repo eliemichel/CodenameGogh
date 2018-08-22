@@ -51,8 +51,22 @@ void UiTextInput::Paint(NVGcontext *vg) const {
 
 void UiTextInput::OnMouseClick(int button, int action, int mods) {
 	if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT) {
-		m_isEditing = true;
 		m_mustUpdateCursorPos = true;
+		m_isEditing = RequestFocus();
+	}
+}
+
+void UiTextInput::OnKey(int key, int scancode, int action, int mode) {
+	if (action == GLFW_PRESS || action == GLFW_REPEAT) {
+		const char* c = glfwGetKeyName(key, scancode);
+		if (c) {
+			if (m_cursorTextIndex != -1) {
+				m_text.insert(m_cursorTextIndex, c);
+				m_cursorTextIndex += static_cast<int>(strlen(c));
+			} else {
+				m_text += c;
+			}
+		}
 	}
 }
 
@@ -63,10 +77,11 @@ void UiTextInput::textPosition(float & x, float & y) const {
 }
 
 int UiTextInput::characterAtPos(NVGcontext *vg, float x, float y) const {
+	// TODO: use nvgTextGlyphPositions instead of repeated calls to nvgTextBounds
 	float bounds[4];
 	int pmid;
 	int pmin = 0;
-	int pmax = Text().size();
+	int pmax = static_cast<int>(Text().size());
 	const char *text = Text().c_str();
 	float xafterpivot, tx, ty;
 	textPosition(tx, ty);

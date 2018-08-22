@@ -30,7 +30,9 @@ struct Rect {
 class UiElement {
 public:
 	UiElement() : m_parent(nullptr) {}
-	virtual ~UiElement() {}
+	virtual ~UiElement() {
+
+	}
 
 	// Getters / Setters
 
@@ -81,7 +83,19 @@ public:
 	 * that already has a parent.
 	 */
 	void SetParent(UiElement *parent) {
+		if (m_parent == parent) {
+			return;
+		}
+
+		UiElement *prevParent = m_parent;
+
+		bool focused = ClearFocus();
 		m_parent = parent;
+		if (focused) {
+			RequestFocus();
+		}
+
+		OnParentChanged(prevParent, parent);
 	}
 	UiElement * Parent() const {
 		return m_parent;
@@ -99,45 +113,28 @@ public:
 		return el;
 	}
 
-	/**
-	 * Ask for some global focus. The default implementation just recursively
-	 * asks the parent element, but a layout or most probably the root window
-	 * will implement it to remember that focused events (like keyboard events)
-	 * must be sent to this element.
-	 * This returns true if the provided element now has the focus.
-	 */
-	bool RequireFocus(UiElement *target) {
-		if (UiElement *parent = Parent()) {
-			return parent->RequireFocus(target);
-		} else {
-			return false;
-		}
-	}
+public: // protected:
+	virtual void OnMouseOver(int x, int y) {}
 
-public:
-	virtual void OnMouseOver(int x, int y) {
-	}
+	virtual void OnMouseClick(int button, int action, int mods) {}
 
-	virtual void OnMouseClick(int button, int action, int mods) {
-	}
+	/// This is called only on the focused element
+	virtual void OnKey(int key, int scancode, int action, int mode) {}
 
-	// Called whenever the mouse moved anywhere, before OnMouseOver might be called
-	// This is used to keep track of when mouse comes in and gets out
-	// TODO: avoid dispatching to absolutely every object, only send to ones touched by the last mouse move.
-	virtual void ResetMouse() {
-	}
+	/// Called whenever the mouse moved anywhere, before OnMouseOver might be called
+	/// This is used to keep track of when mouse comes in and gets out
+	/// TODO: avoid dispatching to absolutely every object, only send to ones touched by the last mouse move.
+	virtual void ResetMouse() {}
 
 	virtual void ResetDebug() {
 		m_debug = false;
 	}
 
 	/// Call when geometry gets updated
-	/// MUST NOT call this->SetRect()
-	virtual void Update() {
-	}
+	/// MUST NOT call this->SetRect() or there would be infinite loops
+	virtual void Update() {}
 
-	virtual void OnTick() {
-	}
+	virtual void OnTick() {}
 
 	virtual void Paint(NVGcontext *vg) const {
 		PaintDebug(vg);
@@ -150,6 +147,43 @@ public:
 			nvgFill(vg);
 		}
 	}
+
+	/**
+	 * Ask for some global focus. If the target is NULL, this asks the parent
+	 * to give the focus to `this` object. If the target is not NULL, this asks
+	 * `this` object to give the focus to the target element.
+	 * The default implementation just recursively asks the parent element, but
+	 * a layout or most probably the root window will implement it to remember
+	 * that focused events (like keyboard events) must be sent to this element.
+	 * This returns true if the provided element now has the focus.
+	 */
+	virtual bool RequestFocus(UiElement *target = nullptr) {
+		if (UiElement *parent = Parent()) {
+			return parent->RequestFocus(target != nullptr ? target : this);
+		}
+		else {
+			return false;
+		}
+	}
+
+	/**
+	 * Clear the focus, to ensure that the parent does not keep a pointer to
+	 * this. It is important to call it before modifying the chain of ancestors
+	 * Return true if the target was the currently focused element.
+	 */
+	virtual bool ClearFocus(UiElement *target = nullptr) {
+		if (UiElement *parent = Parent()) {
+			return parent->ClearFocus(target != nullptr ? target : this);
+		}
+		else {
+			return false;
+		}
+	}
+
+	/** 
+	 * Called after the parent changed
+	 */
+	virtual void OnParentChanged(UiElement *prevParent, UiElement *parent) {}
 
 private:
 	UiElement *m_parent;
@@ -168,7 +202,7 @@ public:
 		, m_wasMouseOver(false)
 	{}
 
-public: // protected
+public: // protected:
 	void OnMouseOver(int x, int y) override {
 		UiElement::OnMouseOver(x, y);
 		if (InnerRect().Contains(x, y)) {
@@ -209,6 +243,7 @@ public:
 	UiLayout()
 		: UiElement()
 		, m_mouseFocusIdx(-1)
+		, m_focusedDescendent(nullptr)
 	{}
 
 	~UiLayout() {
@@ -236,6 +271,9 @@ public:
 		m_items.pop_back();
 		if (item) {
 			item->SetParent(nullptr);
+			if (item == m_focusedDescendent) {
+				m_focusedDescendent = nullptr;
+			}
 		}
 		return item;
 	}
@@ -247,6 +285,9 @@ public:
 				m_items.erase(it);
 				if (item) {
 					item->SetParent(nullptr);
+					if (item == m_focusedDescendent) {
+						m_focusedDescendent = nullptr;
+					}
 				}
 				return true;
 			}
@@ -258,7 +299,7 @@ public:
 		return Items().size();
 	}
 
-public: // protected
+public: // protected:
 	void OnMouseOver(int x, int y) override {
 		UiElement::OnMouseOver(x, y);
 		size_t i;
@@ -305,6 +346,41 @@ public: // protected
 		PaintDebug(vg);
 	}
 
+	/*
+	* The layout keep track of whether one of its descendent requested focus
+	* so that it can be cleared when the layout parent changes. This focus
+	* thing is a bit anoying and adds a lot of tedious code...
+	*/
+
+	bool RequestFocus(UiElement *target = nullptr) override {
+		if (UiElement *parent = Parent()) {
+			bool focused = parent->RequestFocus(target != nullptr ? target : this);
+			if (target && focused) {
+				m_focusedDescendent = target;
+			}
+		}
+		return false;
+	}
+
+	bool ClearFocus(UiElement *target = nullptr) override {
+		if (UiElement *parent = Parent()) {
+			if (m_focusedDescendent == target) {
+				m_focusedDescendent = nullptr;
+			}
+			return parent->ClearFocus(target != nullptr ? target : this);
+		}
+		return false;
+	}
+
+	void OnParentChanged(UiElement *prevParent, UiElement *parent) override {
+		if (prevParent && m_focusedDescendent) {
+			prevParent->ClearFocus(m_focusedDescendent);
+		}
+		if (parent && m_focusedDescendent) {
+			parent->ClearFocus(m_focusedDescendent);
+		}
+	}
+
 protected:
 	std::vector<UiElement*> & Items() { return m_items; }
 	const std::vector<UiElement*> & Items() const { return m_items; }
@@ -318,11 +394,12 @@ protected:
 private:
 	std::vector<UiElement*> m_items;
 	int m_mouseFocusIdx;
+	UiElement *m_focusedDescendent;
 };
 
 // Item 0 is the background, other items are stacked popups
 class PopupStackLayout : public UiLayout {
-public: // protected
+public: // protected:
 	void Update() override {
 		const ::Rect & r = InnerRect();
 		if (Items().size() > 0) {
@@ -368,7 +445,7 @@ public:
 	void SetColSpacing(int spacing) { m_colSpacing = spacing; }
 	int ColSpacing() const { return m_colSpacing; }
 
-public: // protected
+public: // protected:
 	void Update() override {
 		const ::Rect & r = InnerRect();
 		int itemWidth = (r.w - ColSpacing() * (ColCount() - 1)) / ColCount() + ColSpacing();
@@ -439,7 +516,7 @@ public:
 	void SetColor(NVGcolor color) { m_color = color; }
 	const NVGcolor & Color() const { return m_color; }
 
-public: // protected
+public: // protected:
 	void Paint(NVGcontext *vg) const override {
 		const ::Rect & r = InnerRect();
 		nvgTextAlign(vg, NVG_ALIGN_CENTER);
