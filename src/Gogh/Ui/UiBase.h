@@ -185,6 +185,8 @@ public: // protected:
 	 */
 	virtual void OnParentChanged(UiElement *prevParent, UiElement *parent) {}
 
+	virtual void OnDefocus() {}
+
 private:
 	UiElement *m_parent;
 	::Rect m_rect, m_sizeHint, m_innerRect, m_margin;
@@ -242,7 +244,8 @@ class UiLayout : public UiElement {
 public:
 	UiLayout()
 		: UiElement()
-		, m_mouseFocusIdx(-1)
+		, m_mouseOverFocusIdx(-1)
+		, m_mouseClickFocusIdx(-1)
 		, m_focusedDescendent(nullptr)
 	{}
 
@@ -267,8 +270,17 @@ public:
 		if (m_items.empty()) {
 			return nullptr;
 		}
+
+		// CLear focus before removing the element
+		if (m_mouseClickFocusIdx >= m_items.size() - 1) {
+			SetClickFocus(-1);
+		}
+
+		// Pop the last element out
 		UiElement *item = m_items.back();
 		m_items.pop_back();
+
+		// Clear element
 		if (item) {
 			item->SetParent(nullptr);
 			if (item == m_focusedDescendent) {
@@ -282,7 +294,19 @@ public:
 		auto it = m_items.begin();
 		for (; it != m_items.end(); ++it) {
 			if (*it == item) {
+				// Clear focus before removing the element, or shift focusIdx
+				// if it was targetting an element placed after the removed one
+				int index = it - m_items.begin();
+				if (m_mouseClickFocusIdx == index) {
+					SetClickFocus(-1);
+				} else if (m_mouseClickFocusIdx > index) {
+					m_mouseClickFocusIdx--;
+				}
+
+				// Remove the element
 				m_items.erase(it);
+
+				// Clear element
 				if (item) {
 					item->SetParent(nullptr);
 					if (item == m_focusedDescendent) {
@@ -305,14 +329,24 @@ public: // protected:
 		size_t i;
 		if (GetIndexAt(i, x, y)) {
 			Items()[i]->OnMouseOver(x, y);
-			m_mouseFocusIdx = static_cast<int>(i);
+			m_mouseOverFocusIdx = static_cast<int>(i);
 		}
 	}
 
 	void OnMouseClick(int button, int action, int mods) override {
+		// Forward click events to the move-focused item
 		UiElement::OnMouseClick(button, action, mods);
-		if (m_mouseFocusIdx > -1 && m_mouseFocusIdx < Items().size()) {
-			Items()[m_mouseFocusIdx]->OnMouseClick(button, action, mods);
+		if (m_mouseOverFocusIdx > -1 && m_mouseOverFocusIdx < Items().size()) {
+			Items()[m_mouseOverFocusIdx]->OnMouseClick(button, action, mods);
+			SetClickFocus(m_mouseOverFocusIdx);
+		}
+	}
+
+	void OnKey(int key, int scancode, int action, int mode) override {
+		// Forward key events to the click-focused item
+		UiElement::OnKey(key, scancode, action, mode);
+		if (m_mouseClickFocusIdx > -1 && m_mouseClickFocusIdx < Items().size()) {
+			Items()[m_mouseClickFocusIdx]->OnKey(key, scancode, action, mode);
 		}
 	}
 
@@ -321,7 +355,7 @@ public: // protected:
 		for (auto item : Items()) {
 			item->ResetMouse();
 		}
-		m_mouseFocusIdx = -1;
+		m_mouseOverFocusIdx = -1;
 	}
 
 	void ResetDebug() override {
@@ -381,19 +415,44 @@ public: // protected:
 		}
 	}
 
+	void OnDefocus() override {
+		SetClickFocus(-1);
+	}
+
 protected:
 	std::vector<UiElement*> & Items() { return m_items; }
 	const std::vector<UiElement*> & Items() const { return m_items; }
 
-	int MouseFocusIdx() const { return m_mouseFocusIdx; }
+	int MouseFocusIdx() const { return m_mouseOverFocusIdx; }
 
 	virtual bool GetIndexAt(size_t & idx, int x, int y) {
 		return false;
 	}
 
 private:
+	void SetClickFocus(int idx) {
+		// If item already has focus, change nothing
+		if (m_mouseClickFocusIdx == idx) {
+			return;
+		}
+
+		if (m_mouseClickFocusIdx >= 0 && m_mouseClickFocusIdx < Items().size()) {
+			Items()[m_mouseClickFocusIdx]->OnDefocus();
+		}
+
+		m_mouseClickFocusIdx = idx;
+
+		if (m_mouseClickFocusIdx >= 0 && m_mouseClickFocusIdx < Items().size()) {
+			//Items()[m_mouseClickFocusIdx]->OnFocus();
+		} else {
+			m_mouseClickFocusIdx = -1;
+		}
+	}
+
+private:
 	std::vector<UiElement*> m_items;
-	int m_mouseFocusIdx;
+	int m_mouseOverFocusIdx;
+	int m_mouseClickFocusIdx;
 	UiElement *m_focusedDescendent;
 };
 

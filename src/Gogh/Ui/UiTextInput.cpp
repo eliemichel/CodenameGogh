@@ -34,25 +34,30 @@ void UiTextInput::Paint(NVGcontext *vg) const {
 	nvgStrokeColor(vg, m_isEditing ? nvgRGB(128, 128, 255) : nvgRGB(64, 64, 64));
 	nvgStroke(vg);
 
-	// Text and Cursor
+	// Prepare Text and Cursor
 	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
-	float bounds[4];
+	nvgFillColor(vg, Color());
 	float tx, ty;
 	textPosition(tx, ty);
-	nvgTextBounds(vg, tx, ty, Text().c_str(), Text().c_str() + m_cursorTextIndex, bounds);
 
-	nvgBeginPath(vg);
-	nvgRect(vg, bounds[2] - 1, bounds[1], 1, bounds[3] - bounds[1]);
-	nvgFillColor(vg, Color());
-	nvgFill(vg);
+	// Cursor
+	if (m_isEditing) {
+		float bounds[4];
+		nvgTextBounds(vg, tx, ty, Text().c_str(), Text().c_str() + m_cursorTextIndex, bounds);
 
+		nvgBeginPath(vg);
+		nvgRect(vg, bounds[2] - 1, bounds[1], 1, bounds[3] - bounds[1]);
+		nvgFill(vg);
+	}
+
+	// Text
 	nvgText(vg, tx, ty, Text().c_str(), NULL);
 }
 
 void UiTextInput::OnMouseClick(int button, int action, int mods) {
 	if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT) {
 		m_mustUpdateCursorPos = true;
-		m_isEditing = RequestFocus();
+		m_isEditing = true;
 	}
 }
 
@@ -68,6 +73,11 @@ void UiTextInput::OnKey(int key, int scancode, int action, int mode) {
 			}
 		}
 	}
+}
+
+void UiTextInput::OnDefocus() {
+	DEBUG_LOG << "OnDefocus";
+	m_isEditing = false;
 }
 
 void UiTextInput::textPosition(float & x, float & y) const {

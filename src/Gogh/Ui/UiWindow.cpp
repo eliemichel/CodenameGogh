@@ -151,11 +151,11 @@ void UiWindow::key_callback(GLFWwindow* glfwWindow, int key, int scancode, int a
 		glfwSetWindowShouldClose(glfwWindow, GL_TRUE);
 	}
 
-	if (!window->FocusedElement()) {
+	if (!window->Content()) {
 		return;
 	}
 
-	window->FocusedElement()->OnKey(key, scancode, action, mode);
+	window->Content()->OnKey(key, scancode, action, mode);
 }
 
 void UiWindow::cursor_pos_callback(GLFWwindow* glfwWindow, double xpos, double ypos)

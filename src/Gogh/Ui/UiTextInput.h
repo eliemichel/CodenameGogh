@@ -21,6 +21,8 @@ public: // protected:
 	void OnMouseClick(int button, int action, int mods) override;
 	void OnKey(int key, int scancode, int action, int mode) override;
 
+	void OnDefocus() override;
+
 private:
 	/// Positioning of the text
 	/// /!\ Only works with left aligned text
