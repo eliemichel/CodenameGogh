@@ -3,6 +3,9 @@
 
 #include <GLFW/glfw3.h>
 
+#include <locale>
+#include <codecvt>
+
 UiTextInput::UiTextInput()
 	: m_color(nvgRGB(0, 0, 0))
 	, m_isEditing(false)
@@ -62,28 +65,39 @@ void UiTextInput::OnMouseClick(int button, int action, int mods) {
 }
 
 void UiTextInput::OnKey(int key, int scancode, int action, int mode) {
+	// TODO Prevent from placing cursor index between two chars of a given utf8 codepoint
 	if (action == GLFW_PRESS || action == GLFW_REPEAT) {
-		const char* c = glfwGetKeyName(key, scancode);
-		if (c) {
-			if (m_cursorTextIndex != -1) {
-				m_text.insert(m_cursorTextIndex, c);
-				m_cursorTextIndex += static_cast<int>(strlen(c));
-			} else {
-				m_text += c;
-			}
+		switch (key) {
+		case GLFW_KEY_LEFT:
+			m_cursorTextIndex = std::max(0, m_cursorTextIndex - 1);
+			break;
+
+		case GLFW_KEY_RIGHT:
+			m_cursorTextIndex = std::min(m_cursorTextIndex + 1, static_cast<int>(m_text.size()));
+			break;
 		}
 	}
 }
 
 void UiTextInput::OnChar(unsigned int codepoint) {
-	// TODO: do a proper convertion, and use unicode in m_text
-	std::u32string str = std::u32string(1, static_cast<char32_t>(codepoint));
-	std::string res;
-	for (auto c = str.begin(); c != str.end(); ++c) {
-		char t = *c;
-		res.push_back(t);
+	std::u32string utf32 = std::u32string(1, static_cast<char32_t>(codepoint));
+
+#ifdef _WIN32
+	std::wstring wide_string(utf32.begin(), utf32.end());
+	std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> convert;
+	std::string utf8 = convert.to_bytes(wide_string);
+#else // _WIN32
+	std::wstring_convert<std::codecvt_utf8<char32_t>, char32_t> convert;
+	std::string utf8 = convert.to_bytes(utf32);
+#endif // _WIN32
+	
+	if (m_cursorTextIndex != -1) {
+		m_text.insert(m_cursorTextIndex, utf8);
+		m_cursorTextIndex += utf8.size();
 	}
-	DEBUG_LOG << "codepoint: " << codepoint << " (" << res << ")";
+	else {
+		m_text += utf8;
+	}
 }
 
 void UiTextInput::OnDefocus() {
