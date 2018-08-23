@@ -30,10 +30,21 @@ UiWindow::UiWindow(UiApp *app)
 
 	// Set the required callback functions
 	glfwSetWindowUserPointer(m_window, static_cast<void*>(this));
-	glfwSetKeyCallback(m_window, key_callback);
-	glfwSetCursorPosCallback(m_window, cursor_pos_callback);
-	glfwSetMouseButtonCallback(m_window, mouse_button_callback);
-	glfwSetWindowSizeCallback(m_window, window_size_callback);
+	glfwSetKeyCallback(m_window, [](GLFWwindow* glfwWindow, int key, int scancode, int action, int mode) {
+		static_cast<UiWindow*>(glfwGetWindowUserPointer(glfwWindow))->OnKey(key, scancode, action, mode);
+	});
+	glfwSetCharCallback(m_window, [](GLFWwindow* glfwWindow, unsigned int codepoint) {
+		static_cast<UiWindow*>(glfwGetWindowUserPointer(glfwWindow))->OnChar(codepoint);
+	});
+	glfwSetCursorPosCallback(m_window, [](GLFWwindow* glfwWindow, double xpos, double ypos) {
+		static_cast<UiWindow*>(glfwGetWindowUserPointer(glfwWindow))->OnMouseOver(static_cast<int>(xpos), static_cast<int>(ypos));
+	});
+	glfwSetMouseButtonCallback(m_window, [](GLFWwindow* glfwWindow, int button, int action, int mods) {
+		static_cast<UiWindow*>(glfwGetWindowUserPointer(glfwWindow))->OnMouseClick(button, action, mods);
+	});
+	glfwSetWindowSizeCallback(m_window, [](GLFWwindow* glfwWindow, int width, int height) {
+		static_cast<UiWindow*>(glfwGetWindowUserPointer(glfwWindow))->OnResize(width, height);
+	});
 
 	if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress))
 	{
@@ -119,55 +130,38 @@ void UiWindow::SetContent(UiElement *element) {
 	m_content = element;
 }
 
-// Callbacks
-
-// Is called whenever a key is pressed/released via GLFW
-void UiWindow::key_callback(GLFWwindow* glfwWindow, int key, int scancode, int action, int mode)
-{
-	UiWindow* window = static_cast<UiWindow*>(glfwGetWindowUserPointer(glfwWindow));
-	if (!window) {
-		return;
+void UiWindow::OnMouseOver(int x, int y) {
+	if (Content()) {
+		Content()->ResetDebug();
+		Content()->ResetMouse();
+		Content()->OnMouseOver(x, y);
 	}
+}
 
+void UiWindow::OnMouseClick(int button, int action, int mods) {
+	if (Content()) {
+		Content()->OnMouseClick(button, action, mods);
+	}
+}
+
+void UiWindow::OnKey(int key, int scancode, int action, int mode) {
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
-		glfwSetWindowShouldClose(glfwWindow, GL_TRUE);
+		glfwSetWindowShouldClose(m_window, GL_TRUE);
 	}
 
-	if (!window->Content()) {
-		return;
+	if (Content()) {
+		Content()->OnKey(key, scancode, action, mode);
 	}
-
-	window->Content()->OnKey(key, scancode, action, mode);
 }
 
-void UiWindow::cursor_pos_callback(GLFWwindow* glfwWindow, double xpos, double ypos)
-{
-	UiWindow* window = static_cast<UiWindow*>(glfwGetWindowUserPointer(glfwWindow));
-	if (!window || !window->Content()) {
-		return;
+void UiWindow::OnChar(unsigned int codepoint) {
+	if (Content()) {
+		Content()->OnChar(codepoint);
 	}
-
-	window->Content()->ResetDebug();
-	window->Content()->ResetMouse();
-	window->Content()->OnMouseOver(static_cast<int>(xpos), static_cast<int>(ypos));
 }
 
-
-void UiWindow::mouse_button_callback(GLFWwindow* glfwWindow, int button, int action, int mods)
-{
-	UiWindow* window = static_cast<UiWindow*>(glfwGetWindowUserPointer(glfwWindow));
-	if (!window || !window->Content()) {
-		return;
+void UiWindow::OnResize(int width, int height) {
+	if (Content()) {
+		Content()->SetRect(0, 0, width, height);
 	}
-
-	window->Content()->OnMouseClick(button, action, mods);
-}
-
-void UiWindow::window_size_callback(GLFWwindow* glfwWindow, int width, int height) {
-	UiWindow* window = static_cast<UiWindow*>(glfwGetWindowUserPointer(glfwWindow));
-	if (!window || !window->Content()) {
-		return;
-	}
-
-	window->Content()->SetRect(0, 0, width, height);
 }

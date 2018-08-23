@@ -20,6 +20,7 @@ public: // protected:
 	void Paint(NVGcontext *vg) const override;
 	void OnMouseClick(int button, int action, int mods) override;
 	void OnKey(int key, int scancode, int action, int mode) override;
+	void OnChar(unsigned int codepoint) override;
 
 	void OnDefocus() override;
 

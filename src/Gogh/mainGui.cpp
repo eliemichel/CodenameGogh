@@ -6,12 +6,12 @@
 #include "Ui/UiBase.h"
 #include "Parameter.h"
 
-#include <GLFW/glfw3.h>
-#include <nanovg.h>
-
 #include "Ui/ExtraUi.hpp"
 #include "Ui/ParameterWidget.h"
 #include "Ui/UiTextInput.h"
+
+#include <GLFW/glfw3.h>
+#include <nanovg.h>
 
 class NodeArea : public UiTrackMouseElement {
 protected:

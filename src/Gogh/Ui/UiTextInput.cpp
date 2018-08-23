@@ -75,6 +75,17 @@ void UiTextInput::OnKey(int key, int scancode, int action, int mode) {
 	}
 }
 
+void UiTextInput::OnChar(unsigned int codepoint) {
+	// TODO: do a proper convertion, and use unicode in m_text
+	std::u32string str = std::u32string(1, static_cast<char32_t>(codepoint));
+	std::string res;
+	for (auto c = str.begin(); c != str.end(); ++c) {
+		char t = *c;
+		res.push_back(t);
+	}
+	DEBUG_LOG << "codepoint: " << codepoint << " (" << res << ")";
+}
+
 void UiTextInput::OnDefocus() {
 	m_isEditing = false;
 }

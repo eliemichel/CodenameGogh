@@ -112,6 +112,8 @@ public: // protected:
 	/// This is called only on the focused element
 	virtual void OnKey(int key, int scancode, int action, int mode) {}
 
+	virtual void OnChar(unsigned int codepoint) {}
+
 	/// Called whenever the mouse moved anywhere, before OnMouseOver might be called
 	/// This is used to keep track of when mouse comes in and gets out
 	/// TODO: avoid dispatching to absolutely every object, only send to ones touched by the last mouse move.
@@ -193,7 +195,8 @@ private:
 };
 
 /**
- * Generic layout, that must be an ancestor of any element containing others.
+ * Generic layout, that must be an ancestor of any element containing others,
+ * because it handles the dispatching of events.
  * When inheriting, override at least Update() and GetIndexAt().
  * Warning: Do NOT insert a UiElement twice in a layout, neither in two
  * different layouts.
@@ -301,6 +304,14 @@ public: // protected:
 		UiElement::OnKey(key, scancode, action, mode);
 		if (m_mouseClickFocusIdx > -1 && m_mouseClickFocusIdx < Items().size()) {
 			Items()[m_mouseClickFocusIdx]->OnKey(key, scancode, action, mode);
+		}
+	}
+
+	void OnChar(unsigned int codepoint) override {
+		// Forward key events to the click-focused item
+		UiElement::OnChar(codepoint);
+		if (m_mouseClickFocusIdx > -1 && m_mouseClickFocusIdx < Items().size()) {
+			Items()[m_mouseClickFocusIdx]->OnChar(codepoint);
 		}
 	}
 

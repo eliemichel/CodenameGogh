@@ -39,11 +39,12 @@ public:
 	UiElement *Content() const { return m_content; }
 	void SetContent(UiElement *element);
 
-private:
-	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
-	static void cursor_pos_callback(GLFWwindow* window, double xpos, double ypos);
-	static void mouse_button_callback(GLFWwindow* glfwWindow, int button, int action, int mods);
-	static void window_size_callback(GLFWwindow* glfwWindow, int width, int height);
+public: // protected
+	void OnMouseOver(int x, int y) override;
+	void OnMouseClick(int button, int action, int mods) override;
+	void OnKey(int key, int scancode, int action, int mode) override;
+	void OnChar(unsigned int codepoint) override;
+	void OnResize(int width, int height);
 
 private:
 	bool m_isValid;
