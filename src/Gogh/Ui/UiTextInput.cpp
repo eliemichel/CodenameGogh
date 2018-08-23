@@ -76,7 +76,6 @@ void UiTextInput::OnKey(int key, int scancode, int action, int mode) {
 }
 
 void UiTextInput::OnDefocus() {
-	DEBUG_LOG << "OnDefocus";
 	m_isEditing = false;
 }
 

@@ -10,7 +10,6 @@
 UiWindow::UiWindow(UiApp *app)
 	: m_isValid(false)
 	, m_content(nullptr)
-	, m_focusedElement(nullptr)
 {
 	if (!app)
 	{
@@ -118,23 +117,6 @@ void UiWindow::SetContent(UiElement *element) {
 	}
 	element->SetParent(this);
 	m_content = element;
-}
-
-bool UiWindow::RequestFocus(UiElement *target) {
-	if (!target) {
-		return false;
-	}
-
-	SetFocusedElement(target);
-	return true;
-}
-
-bool UiWindow::ClearFocus(UiElement *target) {
-	if (target == FocusedElement()) {
-		SetFocusedElement(nullptr);
-		return true;
-	}
-	return false;
 }
 
 // Callbacks

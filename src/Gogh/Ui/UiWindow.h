@@ -39,14 +39,6 @@ public:
 	UiElement *Content() const { return m_content; }
 	void SetContent(UiElement *element);
 
-protected:
-	bool RequestFocus(UiElement *target = nullptr) override;
-	bool ClearFocus(UiElement *target = nullptr) override;
-
-private:
-	UiElement *FocusedElement() { return m_focusedElement; }
-	void SetFocusedElement(UiElement *element) { m_focusedElement = element; }
-
 private:
 	static void key_callback(GLFWwindow* window, int key, int scancode, int action, int mode);
 	static void cursor_pos_callback(GLFWwindow* window, double xpos, double ypos);
@@ -57,7 +49,7 @@ private:
 	bool m_isValid;
 	GLFWwindow* m_window;
 	struct NVGcontext* m_vg;
-	UiElement *m_content, *m_focusedElement;
+	UiElement *m_content;
 	mutable int m_width, m_height;
 	int m_font;
 };

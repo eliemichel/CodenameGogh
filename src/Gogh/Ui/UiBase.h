@@ -77,7 +77,7 @@ public:
 	}
 
 	/**
-	 * Parent must always be a valid UiElement or nullptr. COntainers are
+	 * Parent must always be a valid UiElement or nullptr. Containers are
 	 * responsible for setting it when adding elements and resetting it to
 	 * nullptr when removing the element. A container must not accept a UiElement
 	 * that already has a parent.
@@ -86,16 +86,7 @@ public:
 		if (m_parent == parent) {
 			return;
 		}
-
-		UiElement *prevParent = m_parent;
-
-		bool focused = ClearFocus();
 		m_parent = parent;
-		if (focused) {
-			RequestFocus();
-		}
-
-		OnParentChanged(prevParent, parent);
 	}
 	UiElement * Parent() const {
 		return m_parent;
@@ -147,43 +138,6 @@ public: // protected:
 			nvgFill(vg);
 		}
 	}
-
-	/**
-	 * Ask for some global focus. If the target is NULL, this asks the parent
-	 * to give the focus to `this` object. If the target is not NULL, this asks
-	 * `this` object to give the focus to the target element.
-	 * The default implementation just recursively asks the parent element, but
-	 * a layout or most probably the root window will implement it to remember
-	 * that focused events (like keyboard events) must be sent to this element.
-	 * This returns true if the provided element now has the focus.
-	 */
-	virtual bool RequestFocus(UiElement *target = nullptr) {
-		if (UiElement *parent = Parent()) {
-			return parent->RequestFocus(target != nullptr ? target : this);
-		}
-		else {
-			return false;
-		}
-	}
-
-	/**
-	 * Clear the focus, to ensure that the parent does not keep a pointer to
-	 * this. It is important to call it before modifying the chain of ancestors
-	 * Return true if the target was the currently focused element.
-	 */
-	virtual bool ClearFocus(UiElement *target = nullptr) {
-		if (UiElement *parent = Parent()) {
-			return parent->ClearFocus(target != nullptr ? target : this);
-		}
-		else {
-			return false;
-		}
-	}
-
-	/** 
-	 * Called after the parent changed
-	 */
-	virtual void OnParentChanged(UiElement *prevParent, UiElement *parent) {}
 
 	virtual void OnDefocus() {}
 
@@ -238,15 +192,21 @@ private:
 	bool m_isMouseOver, m_wasMouseOver;
 };
 
-/// Warning: Do NOT insert a UiElement twice in a layout, neither in two different layouts
-/// When inheriting, override  Update() and GetIndexAt()
+/**
+ * Generic layout, that must be an ancestor of any element containing others.
+ * When inheriting, override at least Update() and GetIndexAt().
+ * Warning: Do NOT insert a UiElement twice in a layout, neither in two
+ * different layouts.
+ * There are two notions of focus: the over focus, tracking over which the
+ * mouse moved, which is reset at each frame, and the click focus, which is not
+ * cleared and keeps track of the lastly clicked item to forward it key events.
+ */ 
 class UiLayout : public UiElement {
 public:
 	UiLayout()
 		: UiElement()
 		, m_mouseOverFocusIdx(-1)
 		, m_mouseClickFocusIdx(-1)
-		, m_focusedDescendent(nullptr)
 	{}
 
 	~UiLayout() {
@@ -283,9 +243,6 @@ public:
 		// Clear element
 		if (item) {
 			item->SetParent(nullptr);
-			if (item == m_focusedDescendent) {
-				m_focusedDescendent = nullptr;
-			}
 		}
 		return item;
 	}
@@ -309,9 +266,6 @@ public:
 				// Clear element
 				if (item) {
 					item->SetParent(nullptr);
-					if (item == m_focusedDescendent) {
-						m_focusedDescendent = nullptr;
-					}
 				}
 				return true;
 			}
@@ -380,41 +334,6 @@ public: // protected:
 		PaintDebug(vg);
 	}
 
-	/*
-	* The layout keep track of whether one of its descendent requested focus
-	* so that it can be cleared when the layout parent changes. This focus
-	* thing is a bit anoying and adds a lot of tedious code...
-	*/
-
-	bool RequestFocus(UiElement *target = nullptr) override {
-		if (UiElement *parent = Parent()) {
-			bool focused = parent->RequestFocus(target != nullptr ? target : this);
-			if (target && focused) {
-				m_focusedDescendent = target;
-			}
-		}
-		return false;
-	}
-
-	bool ClearFocus(UiElement *target = nullptr) override {
-		if (UiElement *parent = Parent()) {
-			if (m_focusedDescendent == target) {
-				m_focusedDescendent = nullptr;
-			}
-			return parent->ClearFocus(target != nullptr ? target : this);
-		}
-		return false;
-	}
-
-	void OnParentChanged(UiElement *prevParent, UiElement *parent) override {
-		if (prevParent && m_focusedDescendent) {
-			prevParent->ClearFocus(m_focusedDescendent);
-		}
-		if (parent && m_focusedDescendent) {
-			parent->ClearFocus(m_focusedDescendent);
-		}
-	}
-
 	void OnDefocus() override {
 		SetClickFocus(-1);
 	}
@@ -443,6 +362,8 @@ private:
 		m_mouseClickFocusIdx = idx;
 
 		if (m_mouseClickFocusIdx >= 0 && m_mouseClickFocusIdx < Items().size()) {
+			// There is no need for an "OnFocus", elements just assume that
+			// they got it as soon as they receive a OnClick event.
 			//Items()[m_mouseClickFocusIdx]->OnFocus();
 		} else {
 			m_mouseClickFocusIdx = -1;
@@ -453,7 +374,6 @@ private:
 	std::vector<UiElement*> m_items;
 	int m_mouseOverFocusIdx;
 	int m_mouseClickFocusIdx;
-	UiElement *m_focusedDescendent;
 };
 
 // Item 0 is the background, other items are stacked popups
