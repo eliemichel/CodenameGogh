@@ -21,7 +21,7 @@ void UiTextInput::Paint(NVGcontext *vg) const {
 	// the nanovg context
 	// This forces m_cursorTextIndex to be mutable
 	if (m_mustUpdateCursorPos) {
-		m_cursorTextIndex = characterAtPos(vg, MouseX(), MouseY());
+		m_cursorTextIndex = CharacterAtPos(vg, MouseX(), MouseY());
 		m_mustUpdateCursorPos = false;
 	}
 
@@ -41,39 +41,88 @@ void UiTextInput::Paint(NVGcontext *vg) const {
 	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
 	nvgFillColor(vg, Color());
 	float tx, ty;
-	textPosition(tx, ty);
+	TextPosition(tx, ty);
 
 	// Cursor
 	if (m_isEditing) {
-		float bounds[4];
-		nvgTextBounds(vg, tx, ty, Text().c_str(), Text().c_str() + m_cursorTextIndex, bounds);
+		if (m_cursorBlink) {
+			float bounds[4];
+			nvgTextBounds(vg, tx, ty, DisplayText().c_str(), DisplayText().c_str() + m_cursorTextIndex, bounds);
+			if (m_cursorTextIndex == 0) {
+				bounds[2]++; // cosmetic fix
+			}
 
-		nvgBeginPath(vg);
-		nvgRect(vg, bounds[2] - 1, bounds[1], 1, bounds[3] - bounds[1]);
-		nvgFill(vg);
+			nvgBeginPath(vg);
+			nvgRect(vg, bounds[2] - 1, bounds[1], 1, bounds[3] - bounds[1]);
+			nvgFill(vg);
+		}
 	}
 
 	// Text
-	nvgText(vg, tx, ty, Text().c_str(), NULL);
+	nvgText(vg, tx, ty, DisplayText().c_str(), NULL);
+}
+
+void UiTextInput::OnTick(float time) {
+	if (m_isEditing) {
+		if (m_cursorBlinkStart == -1.f) {
+			m_cursorBlinkStart = time;
+		}
+		m_cursorBlink = (static_cast<int>(m_cursorBlinkStart * 2.f) % 2) == 1;
+		m_cursorBlink = true;
+	}
 }
 
 void UiTextInput::OnMouseClick(int button, int action, int mods) {
 	if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT) {
 		m_mustUpdateCursorPos = true;
-		m_isEditing = true;
+		StartEditing();
 	}
 }
 
-void UiTextInput::OnKey(int key, int scancode, int action, int mode) {
+void UiTextInput::OnKey(int key, int scancode, int action, int mods) {
 	// TODO Prevent from placing cursor index between two chars of a given utf8 codepoint
 	if (action == GLFW_PRESS || action == GLFW_REPEAT) {
 		switch (key) {
 		case GLFW_KEY_LEFT:
 			m_cursorTextIndex = std::max(0, m_cursorTextIndex - 1);
+			// TODO: ctrl+arrow: move by one word
+			// missing: isAlphaNumeric for utf chars (maybe use http://site.icu-project.org/)
+			/*
+			if (mods & GLFW_MOD_CONTROL) {
+				while (m_cursorTextIndex > 0 && isAlphaNumeric(m_editText[m_cursorTextIndex - 1])) {
+					m_cursorTextIndex = std::max(0, m_cursorTextIndex - 1);
+				}
+			}
+			*/
 			break;
 
 		case GLFW_KEY_RIGHT:
-			m_cursorTextIndex = std::min(m_cursorTextIndex + 1, static_cast<int>(m_text.size()));
+			m_cursorTextIndex = std::min(m_cursorTextIndex + 1, static_cast<int>(m_editText.size()));
+			break;
+
+		case GLFW_KEY_BACKSPACE:
+			if (m_cursorTextIndex > 0) {
+				m_cursorTextIndex--;
+				m_editText.erase(m_editText.begin() + m_cursorTextIndex);
+			}
+			break;
+
+		case GLFW_KEY_DELETE:
+			if (m_cursorTextIndex < m_editText.size()) {
+				m_editText.erase(m_editText.begin() + m_cursorTextIndex);
+			}
+			break;
+
+		case GLFW_KEY_ENTER:
+			SubmitEditing();
+			break;
+
+		case GLFW_KEY_ESCAPE:
+			CancelEditing();
+			break;
+
+		case GLFW_KEY_TAB:
+			// TODO: focus next element
 			break;
 		}
 	}
@@ -92,33 +141,52 @@ void UiTextInput::OnChar(unsigned int codepoint) {
 #endif // _WIN32
 	
 	if (m_cursorTextIndex != -1) {
-		m_text.insert(m_cursorTextIndex, utf8);
+		m_editText.insert(m_cursorTextIndex, utf8);
 		m_cursorTextIndex += utf8.size();
 	}
 	else {
-		m_text += utf8;
+		m_editText += utf8;
 	}
 }
 
 void UiTextInput::OnDefocus() {
-	m_isEditing = false;
+	SubmitEditing();
 }
 
-void UiTextInput::textPosition(float & x, float & y) const {
+void UiTextInput::StartEditing() {
+	m_isEditing = true;
+	m_cursorBlink = true;
+	m_cursorBlinkStart = -1.f;
+	m_editText = m_text;
+}
+
+void UiTextInput::SubmitEditing() {
+	m_isEditing = false;
+	m_text = m_editText;
+	m_editText.clear();
+	// TODO: emit textEdited() signal
+}
+
+void UiTextInput::CancelEditing() {
+	m_isEditing = false;
+	m_editText.clear();
+}
+
+void UiTextInput::TextPosition(float & x, float & y) const {
 	const ::Rect & r = InnerRect();
 	x = r.x + 6.f;
 	y = r.y + r.h / 2.f + 6.f;
 }
 
-int UiTextInput::characterAtPos(NVGcontext *vg, float x, float y) const {
+int UiTextInput::CharacterAtPos(NVGcontext *vg, float x, float y) const {
 	// TODO: use nvgTextGlyphPositions instead of repeated calls to nvgTextBounds
 	float bounds[4];
 	int pmid;
 	int pmin = 0;
-	int pmax = static_cast<int>(Text().size());
-	const char *text = Text().c_str();
+	int pmax = static_cast<int>(DisplayText().size());
+	const char *text = DisplayText().c_str();
 	float xafterpivot, tx, ty;
-	textPosition(tx, ty);
+	TextPosition(tx, ty);
 
 	nvgTextAlign(vg, NVG_ALIGN_LEFT | NVG_ALIGN_BASELINE);
 

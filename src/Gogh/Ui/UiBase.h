@@ -110,7 +110,7 @@ public: // protected:
 	virtual void OnMouseClick(int button, int action, int mods) {}
 
 	/// This is called only on the focused element
-	virtual void OnKey(int key, int scancode, int action, int mode) {}
+	virtual void OnKey(int key, int scancode, int action, int mods) {}
 
 	virtual void OnChar(unsigned int codepoint) {}
 
@@ -127,7 +127,7 @@ public: // protected:
 	/// MUST NOT call this->SetRect() or there would be infinite loops
 	virtual void Update() {}
 
-	virtual void OnTick() {}
+	virtual void OnTick(float time) {}
 
 	virtual void Paint(NVGcontext *vg) const {
 		PaintDebug(vg);
@@ -299,11 +299,11 @@ public: // protected:
 		}
 	}
 
-	void OnKey(int key, int scancode, int action, int mode) override {
+	void OnKey(int key, int scancode, int action, int mods) override {
 		// Forward key events to the click-focused item
-		UiElement::OnKey(key, scancode, action, mode);
+		UiElement::OnKey(key, scancode, action, mods);
 		if (m_mouseClickFocusIdx > -1 && m_mouseClickFocusIdx < Items().size()) {
-			Items()[m_mouseClickFocusIdx]->OnKey(key, scancode, action, mode);
+			Items()[m_mouseClickFocusIdx]->OnKey(key, scancode, action, mods);
 		}
 	}
 
@@ -330,10 +330,10 @@ public: // protected:
 		}
 	}
 
-	void OnTick() override {
-		UiElement::OnTick();
+	void OnTick(float time) override {
+		UiElement::OnTick(time);
 		for (UiElement *item : Items()) {
-			item->OnTick();
+			item->OnTick(time);
 		}
 	}
 

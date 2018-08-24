@@ -31,7 +31,7 @@ protected:
 		nvgFillColor(vg, nvgRGB(128, 57, 91));
 		nvgFill(vg);
 	}
-
+	
 	void OnMouseOver(int x, int y) override {
 		UiTrackMouseElement::OnMouseOver(x, y);
 

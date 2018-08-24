@@ -19,24 +19,32 @@ public:
 public: // protected:
 	void Paint(NVGcontext *vg) const override;
 	void OnMouseClick(int button, int action, int mods) override;
-	void OnKey(int key, int scancode, int action, int mode) override;
+	void OnKey(int key, int scancode, int action, int mods) override;
 	void OnChar(unsigned int codepoint) override;
 
 	void OnDefocus() override;
+	void OnTick(float time) override;
 
 private:
+	void StartEditing();
+	void SubmitEditing();
+	void CancelEditing();
+	const std::string & DisplayText() const { return m_isEditing ? m_editText : m_text; }
 	/// Positioning of the text
 	/// /!\ Only works with left aligned text
-	void textPosition(float & x, float & y) const;
+	void TextPosition(float & x, float & y) const;
 	/// Return the index of the character of m_text located at (x,y)
-	int characterAtPos(NVGcontext *vg, float x, float y) const;
+	int CharacterAtPos(NVGcontext *vg, float x, float y) const;
 
 private:
 	std::string m_text;
+	std::string m_editText; // temporary text used for editting
 	NVGcolor m_color;
 	bool m_isEditing;
 	mutable int m_cursorTextIndex; // index 0 is *before* the first character
 	mutable bool m_mustUpdateCursorPos;
+	float m_cursorBlinkStart;
+	bool m_cursorBlink;
 };
 
 #endif // H_UITEXTINPUT

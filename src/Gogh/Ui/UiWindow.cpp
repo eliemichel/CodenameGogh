@@ -108,7 +108,7 @@ void UiWindow::Render() const {
 
 	// UI Objects
 	if (m_content) {
-		m_content->OnTick();
+		m_content->OnTick(static_cast<float>(glfwGetTime()));
 		m_content->Paint(m_vg);
 	}
 
@@ -144,13 +144,15 @@ void UiWindow::OnMouseClick(int button, int action, int mods) {
 	}
 }
 
-void UiWindow::OnKey(int key, int scancode, int action, int mode) {
+void UiWindow::OnKey(int key, int scancode, int action, int mods) {
+	/*
 	if (key == GLFW_KEY_ESCAPE && action == GLFW_PRESS) {
 		glfwSetWindowShouldClose(m_window, GL_TRUE);
 	}
+	*/
 
 	if (Content()) {
-		Content()->OnKey(key, scancode, action, mode);
+		Content()->OnKey(key, scancode, action, mods);
 	}
 }
 

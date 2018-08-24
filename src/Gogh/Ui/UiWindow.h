@@ -42,7 +42,7 @@ public:
 public: // protected
 	void OnMouseOver(int x, int y) override;
 	void OnMouseClick(int button, int action, int mods) override;
-	void OnKey(int key, int scancode, int action, int mode) override;
+	void OnKey(int key, int scancode, int action, int mods) override;
 	void OnChar(unsigned int codepoint) override;
 	void OnResize(int width, int height);
 
