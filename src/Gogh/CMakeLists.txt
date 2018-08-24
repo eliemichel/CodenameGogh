@@ -88,6 +88,8 @@ set(SRC
 	Ui/UiBoxLayout.inc.h
 	Ui/UiTextInput.h
 	Ui/UiTextInput.cpp
+	Ui/UiIntInput.h
+	Ui/UiIntInput.cpp
 	Ui/UiApp.h
 	Ui/UiApp.cpp
 	Ui/UiWindow.h

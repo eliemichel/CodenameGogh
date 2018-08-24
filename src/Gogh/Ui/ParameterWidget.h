@@ -6,6 +6,7 @@
 
 class Parameter;
 class UiTextInput;
+class UiIntInput;
 
 /**
  * A parameter widget is a widget designed to display and edit any parameter.
@@ -59,7 +60,7 @@ private:
 	{
 		UiElement *widget;
 		UiTextInput* lineEdit;
-		UiLabel* spinBox;
+		UiIntInput* spinBox;
 		UiLabel* comboBox;
 		UiLabel* pushButton;
 	} m_input;

@@ -80,7 +80,7 @@ void UiTextInput::OnMouseClick(int button, int action, int mods) {
 }
 
 void UiTextInput::OnKey(int key, int scancode, int action, int mods) {
-	// TODO Prevent from placing cursor index between two chars of a given utf8 codepoint
+	// TODO Prevent from placing cursor index between two chars of a given utf8 codepoint!!
 	if (action == GLFW_PRESS || action == GLFW_REPEAT) {
 		switch (key) {
 		case GLFW_KEY_LEFT:
@@ -119,6 +119,14 @@ void UiTextInput::OnKey(int key, int scancode, int action, int mods) {
 
 		case GLFW_KEY_ESCAPE:
 			CancelEditing();
+			break;
+
+		case GLFW_KEY_END:
+			m_cursorTextIndex = m_editText.size();
+			break;
+
+		case GLFW_KEY_HOME:
+			m_cursorTextIndex = 0;
 			break;
 
 		case GLFW_KEY_TAB:

@@ -9,6 +9,7 @@
 #include "Ui/ExtraUi.hpp"
 #include "Ui/ParameterWidget.h"
 #include "Ui/UiTextInput.h"
+#include "Ui/UiIntInput.h"
 
 #include <GLFW/glfw3.h>
 #include <nanovg.h>
@@ -49,8 +50,6 @@ protected:
 			if (nodeRect.Contains(MouseX(), MouseY())) {
 				m_moveStartMouseX = MouseX();
 				m_moveStartMouseY = MouseY();
-				m_moveStartNodeX = m_nodeX;
-				m_moveStartNodeY = m_nodeY;
 				m_isMovingNode = true;
 			}
 		}
@@ -111,6 +110,11 @@ int mainGui(const ArgParse & args)
 	textInput->SetText("blabla");
 	textInput->SetInnerSizeHint(0, 0, 0, 30);
 	layout->AddItem(textInput);
+
+	UiIntInput *intInput = new UiIntInput();
+	intInput->SetValue(42);
+	intInput->SetInnerSizeHint(0, 0, 0, 30);
+	layout->AddItem(intInput);
 
 	layout->SetInnerSizeHint(0, 0, 300, 0);
 	mainLayout->AddItem(layout);

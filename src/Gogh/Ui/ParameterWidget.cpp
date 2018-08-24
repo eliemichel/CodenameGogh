@@ -2,6 +2,7 @@
 #include "Logger.h"
 #include "Parameter.h"
 #include "Ui/UiTextInput.h"
+#include "Ui/UiIntInput.h"
 
 ParameterWidget::ParameterWidget()
 	: m_param(nullptr)
@@ -74,8 +75,8 @@ void ParameterWidget::UpdateStructure()
 	case IntType:
 	{
 		// TODO
-		m_input.spinBox = new UiLabel();
-		m_input.spinBox->SetText("<int>");
+		m_input.spinBox = new UiIntInput();
+		m_input.spinBox->SetValue(0);
 		//connect(m_input.spinBox, &QLineEdit::textEdited, [=](const QString &text) { parameter()->set(text); });
 		AddItem(m_input.spinBox);
 		break;
@@ -139,7 +140,7 @@ void ParameterWidget::UpdateValue()
 	}
 	case IntType:
 	{
-		m_input.spinBox->SetText(m_param->rawValue().toString().toStdString());
+		m_input.spinBox->SetValue(m_param->rawValue().toInt());
 		break;
 	}
 	case EnumType:
