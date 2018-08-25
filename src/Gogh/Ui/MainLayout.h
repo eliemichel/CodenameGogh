@@ -21,13 +21,6 @@ public: // protected
 		}
 	}
 
-	void Paint(struct NVGcontext *vg) const override {
-		nvgBeginPath(vg);
-		nvgRect(vg, 0, 24, 500, 92);
-		nvgFillColor(vg, nvgRGBA(245, 246, 247, 255));
-		nvgFill(vg);
-	}
-
 private:
 	bool m_isSizePopupOpened;
 };

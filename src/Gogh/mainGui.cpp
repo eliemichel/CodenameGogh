@@ -6,6 +6,7 @@
 #include "Ui/UiBase.h"
 #include "Parameter.h"
 
+#include "Logger.h"
 #include "Ui/ExtraUi.hpp"
 #include "Ui/ParameterWidget.h"
 #include "Ui/UiTextInput.h"
@@ -16,7 +17,7 @@
 #include <nanovg.h>
 
 class NodeArea : public UiTrackMouseElement {
-protected:
+public: // protected:
 	void Paint(NVGcontext *vg) const override {
 		UiTrackMouseElement::Paint(vg);
 		const ::Rect & r = InnerRect();
@@ -71,13 +72,72 @@ private:
 	bool m_isMovingNode = false;
 };
 
+class TestElement : public UiElement {
+public:
+	TestElement() {
+		SetRect(0, 0, 150, 50);
+	}
+
+public: // protected:
+	void Paint(NVGcontext *vg) const override {
+		UiElement::Paint(vg);
+		const ::Rect & r = InnerRect();
+
+		DEBUG_LOG << "rect: " << r.x << ", " << r.y << ", " << r.w << ", " << r.h;
+
+		nvgBeginPath(vg);
+		nvgRect(vg, r.x, r.y, r.w, r.h);
+		nvgFillColor(vg, nvgRGB(130, 57, 91));
+		nvgFill(vg);
+	}
+};
+
+class UiEnumInput : public UiTrackMouseElement {
+public:
+	UiEnumInput(UiLayout *popupLayout)
+		: m_popupLayout(popupLayout)
+		, m_popupElement(nullptr)
+	{}
+
+public: // protected:
+	void OnMouseClick(int button, int action, int mods) override {
+		if (!m_popupLayout) {
+			return;
+		}
+
+		if (action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT) {
+			if (m_popupElement && m_popupLayout->RemoveItem(m_popupElement)) {
+				delete m_popupElement;
+				m_popupElement = nullptr;
+			} else {
+				m_popupElement = new TestElement();
+				m_popupLayout->AddItem(m_popupElement);
+				m_popupLayout->Update();
+			}
+		}
+	}
+
+	void Paint(NVGcontext *vg) const override {
+		UiElement::Paint(vg);
+		const ::Rect & r = InnerRect();
+
+		nvgBeginPath(vg);
+		nvgRect(vg, r.x, r.y, r.w, r.h);
+		nvgFillColor(vg, nvgRGB(80, 257, 191));
+		nvgFill(vg);
+	}
+
+private:
+	UiLayout * m_popupLayout;
+	UiElement * m_popupElement;
+};
+
 int mainGui(const ArgParse & args)
 {
 	UiApp app;
 	UiWindow window(1200, 600, "Gogh");
 
-	//MainLayout *popupLayout = new MainLayout();
-	//window.SetContent(popupLayout);
+	MainLayout *popupLayout = new MainLayout();
 
 	UiHBoxLayout *mainLayout = new UiHBoxLayout();
 
@@ -117,17 +177,16 @@ int mainGui(const ArgParse & args)
 	intInput->SetInnerSizeHint(0, 0, 0, 30);
 	layout->AddItem(intInput);
 
+	UiEnumInput *enumInput = new UiEnumInput(popupLayout);
+	enumInput->SetInnerSizeHint(0, 0, 0, 30);
+	layout->AddItem(enumInput);
+
 	layout->SetInnerSizeHint(0, 0, 300, 0);
 	mainLayout->AddItem(layout);
-	
-	//popupLayout->AddItem(mainLayout);
-	//popupLayout->SetRect(0, 0, window.Width(), window.Height());
 
-	window.SetContent(mainLayout);
-	mainLayout->SetRect(0, 0, 1200, 600);
-
-	UiFloatting *floatting = new UiFloatting();
-	floatting->Exec();
+	popupLayout->AddItem(mainLayout);
+	window.SetContent(popupLayout);
+	popupLayout->SetRect(0, 0, 1200, 600);
 
 	while (!window.ShouldClose())
 	{
