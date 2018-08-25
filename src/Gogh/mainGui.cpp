@@ -51,19 +51,227 @@ private:
 	std::vector<std::string> m_itemLabels;
 };
 
+class QuadTree {
+public:
+	struct Item {
+		Item() : isValid(false) {}
+		Item(Rect _bbox, void *_data) : bbox(_bbox), data(_data), isValid(true) {}
+		Item(Rect _bbox, int _index) : bbox(_bbox), index(_index), isValid(true) {}
+
+		Rect bbox;
+		union {
+			void *data;
+			int index;
+		};
+		bool isValid;
+	};
+
+public:
+	QuadTree(float cx, float cy, float hw, float hh, int divisions)
+		: m_cx(cx)
+		, m_cy(cy)
+		, m_hw(hw)
+		, m_hh(hh)
+		, m_divisions(divisions)
+		, m_topRight(nullptr)
+		, m_topLeft(nullptr)
+		, m_bottomRight(nullptr)
+		, m_bottomLeft(nullptr)
+	{}
+
+	~QuadTree() {
+		if (!IsLeaf()) {
+			delete m_topRight;
+			delete m_topLeft;
+			delete m_bottomRight;
+			delete m_bottomLeft;
+		}
+	}
+
+	bool IsLeaf() const { return m_topLeft == nullptr; }
+
+	bool IsEmpty() const { return IsLeaf() && m_items.empty(); }
+
+	void Insert(Item item) {
+		if (QuadTree *child = FitInChild(item)) {
+			child->Insert(item);
+		} else {
+			m_items.push_back(item);
+			if (m_items.size() > 1) {
+				Split();
+			}
+		}
+	}
+
+	// Remove the topmost element located at target pos
+	Item PopAt(float x, float y) {
+		for (auto it = m_items.begin(); it != m_items.end();) {
+			if (it->bbox.Contains(x, y)) {
+				Item item = *it;
+				it = m_items.erase(it);
+				Prune();
+				return item;
+			}
+			else {
+				++it;
+			}
+		}
+
+		if (!IsLeaf()) {
+			if (x < m_cx) {
+				if (y < m_cy) {
+					return m_topLeft->PopAt(x, y);
+				} else {
+					return m_bottomLeft->PopAt(x, y);
+				}
+			} else {
+				if (y < m_cy) {
+					return m_topRight->PopAt(x, y);
+				} else {
+					return m_bottomRight->PopAt(x, y);
+				}
+			}
+		}
+
+		return Item();
+	}
+
+	void PaintDebug(NVGcontext *vg) const {
+		nvgBeginPath(vg);
+		nvgRect(vg, m_cx - m_hw, m_cy - m_hh, 2.f * m_hw, 2.f * m_hh);
+		nvgFillColor(vg, nvgRGBA(0, 255, 0, 32));
+		nvgFill(vg);
+
+		nvgBeginPath(vg);
+		nvgRect(vg, m_cx - m_hw + .5f, m_cy - m_hh + .5f, 2.f * m_hw - 1.f, 2.f * m_hh - 1.f);
+		nvgStrokeColor(vg, nvgRGBA(0, 255, 0, 32));
+		nvgStroke(vg);
+
+		if (!IsLeaf()) {
+			m_topRight->PaintDebug(vg);
+			m_topLeft->PaintDebug(vg);
+			m_bottomRight->PaintDebug(vg);
+			m_bottomLeft->PaintDebug(vg);
+		}
+
+		for (const Item & item : m_items) {
+			nvgBeginPath(vg);
+			nvgRect(vg, item.bbox.x, item.bbox.y, item.bbox.w, item.bbox.h);
+			nvgFillColor(vg, IsLeaf() ? nvgRGBA(0, 0, 255, 32) : nvgRGBA(255, 0, 0, 32));
+			nvgFill(vg);
+
+			nvgBeginPath(vg);
+			nvgRect(vg, item.bbox.x + .5f, item.bbox.y + .5f, item.bbox.w - 1.f, item.bbox.h - 1.f);
+			nvgStrokeColor(vg, IsLeaf() ? nvgRGBA(0, 0, 255, 32) : nvgRGBA(255, 0, 0, 32));
+			nvgStroke(vg);
+		}
+	}
+
+private:
+	void Split() {
+		if (!IsLeaf() || m_divisions <= 0) {
+			return;
+		}
+
+		float qw = m_hw / 2.f;
+		float qh = m_hh / 2.f;
+		m_topRight = new QuadTree(m_cx + qw, m_cy - qh, qw, qh, m_divisions - 1);
+		m_topLeft = new QuadTree(m_cx - qw, m_cy - qh, qw, qh, m_divisions - 1);
+		m_bottomRight = new QuadTree(m_cx + qw, m_cy + qh, qw, qh, m_divisions - 1);
+		m_bottomLeft = new QuadTree(m_cx - qw, m_cy + qh, qw, qh, m_divisions - 1);
+
+		for (auto it = m_items.begin(); it != m_items.end();) {
+			if (QuadTree *child = FitInChild(*it)) {
+				child->Insert(*it);
+				it = m_items.erase(it);
+			} else {
+				++it;
+			}
+		}
+	}
+
+	/// Prune unused children recursively
+	/// Return true if tree is empty
+	bool Prune() {
+		if (!IsLeaf()) {
+			if (m_topLeft->Prune() && m_topRight->Prune() && m_bottomLeft->Prune() && m_bottomRight->Prune()) {
+				delete m_topRight;
+				delete m_topLeft;
+				delete m_bottomRight;
+				delete m_bottomLeft;
+				m_topRight = nullptr;
+				m_topLeft = nullptr;
+				m_bottomRight = nullptr;
+				m_bottomLeft = nullptr;
+			}
+		}
+
+		return IsEmpty();
+	}
+
+	/// If the item fits in one of the children, return a pointer to this
+	/// child, otherwise return nullptr.
+	QuadTree * FitInChild(Item item) {
+		if (IsLeaf()) {
+			return nullptr;
+		}
+
+		bool fullLeft = item.bbox.x + item.bbox.w <= m_cx;
+		bool fullRight = item.bbox.x >= m_cx;
+		bool fullTop = item.bbox.y + item.bbox.h <= m_cy;
+		bool fullBottom = item.bbox.y >= m_cy;
+
+		if (fullLeft && fullTop) {
+			return m_topLeft;
+		} else if (fullLeft && fullBottom) {
+			return m_bottomLeft;
+		} else if (fullRight && fullTop) {
+			return m_topRight;
+		} else if (fullRight && fullBottom) {
+			return m_bottomRight;
+		} else {
+			return nullptr;
+		}
+	}
+
+private:
+	/// Center
+	float m_cx, m_cy;
+	/// Half width and height
+	float m_hw, m_hh;
+	/// The maximum number of potential subdivisions, decreasing for children
+	int m_divisions;
+
+	/// Children, always all null or all non null
+	QuadTree *m_topRight, *m_topLeft, *m_bottomRight, *m_bottomLeft;
+	/// Items that cannot fit in children, whether it is because there is no
+	/// child tree or because the item's bbox is too large.
+	std::vector<Item> m_items;
+};
+
 class NodeArea : public UiTrackMouseElement {
 public:
 	NodeArea()
 		: m_nodeRect({
 			{ 0, 0, 200, 100 },
 			{ 300, 150, 200, 100 },
+			{ 400, 200, 200, 100 },
 		})
 		, m_movingNode(-1)
-	{}
+		, m_tree(nullptr)
+	{
+		m_tree = new QuadTree(250, 300, 500, 500, 5);
+		for (int i = 0; i < m_nodeRect.size(); ++i) {
+			m_tree->Insert(QuadTree::Item(m_nodeRect[i], i));
+		}
+	}
 
 	~NodeArea() {
 		if (m_contextMenu) {
 			delete m_contextMenu;
+		}
+		if (m_tree) {
+			delete m_tree;
 		}
 	}
 
@@ -92,6 +300,9 @@ public: // protected:
 			nvgStrokeColor(vg, nvgRGB(56, 57, 58));
 			nvgStroke(vg);
 		}
+
+		// DEBUG TREE
+		m_tree->PaintDebug(vg);
 	}
 	
 	void OnMouseOver(int x, int y) override {
@@ -109,6 +320,7 @@ public: // protected:
 			const ::Rect & r = InnerRect();
 
 			// TODO: use tree
+			/*
 			for (int i = m_nodeRect.size() - 1; i >= 0; --i) {
 				const ::Rect & nr = m_nodeRect[i];
 				if (nr.Contains(MouseX(), MouseY())) {
@@ -120,9 +332,23 @@ public: // protected:
 					break;
 				}
 			}
+			*/
+
+			QuadTree::Item item = m_tree->PopAt(MouseX(), MouseY());
+			if (item.isValid) {
+				const ::Rect & nr = m_nodeRect[item.index];
+				m_moveStartNodeX = nr.x;
+				m_moveStartNodeY = nr.y;
+				m_moveStartMouseX = MouseX();
+				m_moveStartMouseY = MouseY();
+				m_movingNode = item.index;
+			}
 		}
 
 		if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
+			if (m_movingNode > -1 && m_movingNode < m_nodeRect.size()) {
+				m_tree->Insert(QuadTree::Item(m_nodeRect[m_movingNode], m_movingNode));
+			}
 			m_movingNode = -1;
 		}
 
@@ -138,14 +364,13 @@ private:
 
 	std::vector<::Rect> m_nodeRect;
 
-	float m_nodeX;
-	float m_nodeY;
-
 	int m_moveStartMouseX;
 	int m_moveStartMouseY;
 	int m_moveStartNodeX;
 	int m_moveStartNodeY;
 	int m_movingNode;
+
+	QuadTree *m_tree;
 };
 
 int mainGui(const ArgParse & args)
