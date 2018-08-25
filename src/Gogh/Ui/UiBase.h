@@ -13,6 +13,8 @@
 #include <vector>
 #include <algorithm>
 
+#include <GLFW/glfw3.h>
+
 struct Rect {
 	int x, y, w, h;
 
@@ -231,6 +233,8 @@ private:
  * There are two notions of focus: the over focus, tracking over which the
  * mouse moved, which is reset at each frame, and the click focus, which is not
  * cleared and keeps track of the lastly clicked item to forward it key events.
+ * An extra "press focus" is used to ensure that mouse release is dispatched to
+ * elements where mouse press was sent.
  */ 
 class UiLayout : public UiElement {
 public:
@@ -238,6 +242,7 @@ public:
 		: UiElement()
 		, m_mouseOverFocusIdx(-1)
 		, m_mouseClickFocusIdx(-1)
+		, m_mousePressFocusIdx(-1)
 	{}
 
 	~UiLayout() {
@@ -324,6 +329,13 @@ public: // protected:
 		if (m_mouseOverFocusIdx > -1 && m_mouseOverFocusIdx < Items().size()) {
 			Items()[m_mouseOverFocusIdx]->OnMouseClick(button, action, mods);
 			SetClickFocus(m_mouseOverFocusIdx);
+		}
+
+		if (action == GLFW_PRESS) {
+			m_mousePressFocusIdx = m_mouseOverFocusIdx;
+		} else if (action == GLFW_RELEASE && m_mousePressFocusIdx > -1 && m_mousePressFocusIdx < Items().size()) {
+			Items()[m_mousePressFocusIdx]->OnMouseClick(button, action, mods);
+			m_mousePressFocusIdx = -1;
 		}
 	}
 
@@ -413,6 +425,7 @@ private:
 	std::vector<UiElement*> m_items;
 	int m_mouseOverFocusIdx;
 	int m_mouseClickFocusIdx;
+	int m_mousePressFocusIdx;
 };
 
 // Item 0 is the background, other items are stacked popups

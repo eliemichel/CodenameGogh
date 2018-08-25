@@ -7,6 +7,8 @@
 class Parameter;
 class UiTextInput;
 class UiIntInput;
+class UiEnumInput;
+class UiButton;
 
 /**
  * A parameter widget is a widget designed to display and edit any parameter.
@@ -16,7 +18,7 @@ class UiIntInput;
 class ParameterWidget : public UiHBoxLayout
 {
 public:
-	ParameterWidget();
+	ParameterWidget(UiLayout *popupLayout = nullptr);
 
 	/**
 	 * Set the parameter controlled by this widget.
@@ -56,13 +58,16 @@ private:
 	/// Label with the parameter name
 	UiLabel *m_label;
 
+	/// Layout used to pop up enum menu
+	UiLayout *m_popupLayout;
+
 	union
 	{
 		UiElement *widget;
 		UiTextInput* lineEdit;
 		UiIntInput* spinBox;
-		UiLabel* comboBox;
-		UiLabel* pushButton;
+		UiEnumInput* comboBox;
+		UiButton* pushButton;
 	} m_input;
 };
 

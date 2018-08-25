@@ -13,11 +13,54 @@
 #include "Ui/UiIntInput.h"
 #include "Ui/UiEnumInput.h"
 #include "Ui/UiButton.h"
+#include "Ui/UiMenu.h"
 
 #include <GLFW/glfw3.h>
 #include <nanovg.h>
 
+class UiContextMenu : public UiVBoxLayout {
+public:
+	UiContextMenu(UiLayout *popupLayout) : m_popupLayout(popupLayout) {}
+
+	void SetItemLabels(const std::vector<std::string> & itemLabels) { m_itemLabels = itemLabels; }
+
+	void Popup(int x, int y) {
+		if (!m_popupLayout) {
+			return;
+		}
+
+		UiMenu *menu = new UiMenu();
+
+		for (int i = 0; i < m_itemLabels.size(); ++i) {
+			UiMenuButtonItem *button = new UiMenuButtonItem();
+			button->SetText(m_itemLabels[i]);
+			button->SetInnerSizeHint(0, 0, 0, 30);
+			menu->AddItem(button);
+		}
+
+		menu->AutoSizeHint();
+		const ::Rect & rect = menu->SizeHint();
+		menu->SetRect(x, y, 150, rect.h);
+
+		m_popupLayout->AddItem(menu);
+		m_popupLayout->Update();
+	}
+
+private:
+	UiLayout *m_popupLayout;
+	std::vector<std::string> m_itemLabels;
+};
+
 class NodeArea : public UiTrackMouseElement {
+public:
+	void SetContextMenu(UiContextMenu * contextMenu) { m_contextMenu = contextMenu; }
+
+	~NodeArea() {
+		if (m_contextMenu) {
+			delete m_contextMenu;
+		}
+	}
+
 public: // protected:
 	void Paint(NVGcontext *vg) const override {
 		UiTrackMouseElement::Paint(vg);
@@ -53,6 +96,8 @@ public: // protected:
 			if (nodeRect.Contains(MouseX(), MouseY())) {
 				m_moveStartMouseX = MouseX();
 				m_moveStartMouseY = MouseY();
+				m_moveStartNodeX = m_nodeX;
+				m_moveStartNodeY = m_nodeY;
 				m_isMovingNode = true;
 			}
 		}
@@ -60,9 +105,17 @@ public: // protected:
 		if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
 			m_isMovingNode = false;
 		}
+
+		if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
+			if (m_contextMenu) {
+				m_contextMenu->Popup(MouseX(), MouseY());
+			}
+		}
 	}
 
 private:
+	UiContextMenu * m_contextMenu;
+
 	float m_nodeX;
 	float m_nodeY;
 
@@ -86,17 +139,59 @@ int mainGui(const ArgParse & args)
 	NodeArea *nodeArea = new NodeArea();
 	mainLayout->AddItem(nodeArea);
 
+	UiContextMenu *contextMenu = new UiContextMenu(popupLayout);
+	contextMenu->SetItemLabels({ "Lorem", "Ipsum", "Dolor", "Sit", "Amet" });
+	nodeArea->SetContextMenu(contextMenu);
+
 	// Sidebar
 	UiVBoxLayout *layout = new UiVBoxLayout();
 
-	Parameter *param = new Parameter();
-	param->setType(StringType);
-	param->setName("Yo");
-	param->set(QString::fromStdString("bloum"));
-	ParameterWidget *paramWidget = new ParameterWidget();
-	paramWidget->SetParameter(param);
-	paramWidget->SetInnerSizeHint(0, 0, 0, 30);
-	layout->AddItem(paramWidget);
+	{
+		Parameter *param = new Parameter();
+		param->setType(StringType);
+		param->setName("Yo");
+		param->set(QString::fromStdString("bloum"));
+		ParameterWidget *paramWidget = new ParameterWidget(popupLayout);
+		paramWidget->SetParameter(param);
+		paramWidget->SetInnerSizeHint(0, 0, 0, 30);
+		layout->AddItem(paramWidget);
+	}
+
+	{
+		Parameter *param = new Parameter();
+		param->setType(IntType);
+		param->setName("An int param");
+		param->set(28);
+		ParameterWidget *paramWidget = new ParameterWidget(popupLayout);
+		paramWidget->SetParameter(param);
+		paramWidget->SetInnerSizeHint(0, 0, 0, 30);
+		layout->AddItem(paramWidget);
+	}
+
+	{
+		Parameter *param = new Parameter();
+		param->setType(EnumType);
+		param->setName("Enum");
+		param->insertMenuItems(0, 2);
+		param->setMenuLabel(0, "Choice A");
+		param->setMenuLabel(1, "Choice B");
+		param->setMenuLabel(2, "Choice C");
+		param->set(1);
+		ParameterWidget *paramWidget = new ParameterWidget(popupLayout);
+		paramWidget->SetParameter(param);
+		paramWidget->SetInnerSizeHint(0, 0, 0, 30);
+		layout->AddItem(paramWidget);
+	}
+
+	{
+		Parameter *param = new Parameter();
+		param->setType(ButtonType);
+		param->setName("Push me!");
+		ParameterWidget *paramWidget = new ParameterWidget(popupLayout);
+		paramWidget->SetParameter(param);
+		paramWidget->SetInnerSizeHint(0, 0, 0, 30);
+		layout->AddItem(paramWidget);
+	}
 
 	UiButton *button = new UiButton();
 	button->SetText("Test 1");

@@ -1,28 +1,13 @@
 #include "UiEnumInput.h"
 #include "UiButton.h"
+#include "UiMenu.h"
 #include "Logger.h"
 
 #include <GLFW/glfw3.h>
 
-class EnumMenu : public UiVBoxLayout {
-public: // protected:
-	void Paint(NVGcontext *vg) const override {
-		UiElement::Paint(vg);
-		const ::Rect & r = InnerRect();
-
-		// Background
-		nvgBeginPath(vg);
-		nvgRect(vg, r.x, r.y, r.w, r.h);
-		nvgFillColor(vg, nvgRGB(56, 57, 58));
-		nvgFill(vg);
-
-		UiVBoxLayout::Paint(vg);
-	}
-};
-
-class EnumMenuItemButton : public UiButton {
+class UiEnumMenuButtonItem : public UiButton {
 public:
-	EnumMenuItemButton(UiEnumInput * enumInput, int itemIndex)
+	UiEnumMenuButtonItem(UiEnumInput * enumInput, int itemIndex)
 		: m_enumInput(enumInput)
 		, m_itemIndex(itemIndex)
 	{}
@@ -73,10 +58,10 @@ void UiEnumInput::OnMouseClick(int button, int action, int mods) {
 			m_popupElement = nullptr;
 		}
 		else {
-			EnumMenu *enumMenu = new EnumMenu();
+			UiMenu *enumMenu = new UiMenu();
 
 			for (int i = 0; i < m_itemLabels.size(); ++i) {
-				EnumMenuItemButton *button = new EnumMenuItemButton(this, i);
+				UiEnumMenuButtonItem *button = new UiEnumMenuButtonItem(this, i);
 				button->SetText(m_itemLabels[i]);
 				button->SetInnerSizeHint(0, 0, 0, 30);
 				enumMenu->AddItem(button);

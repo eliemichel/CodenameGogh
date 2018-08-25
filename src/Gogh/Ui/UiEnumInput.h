@@ -9,7 +9,7 @@
 class UiEnumInput : public UiTrackMouseElement {
 public:
 	/// The popupLayout is the layout to which the popup menu is spawned
-	UiEnumInput(UiLayout *popupLayout);
+	UiEnumInput(UiLayout *popupLayout = nullptr);
 
 	int CurrentItemIndex() const { return m_currentItemIndex; }
 	void SetCurrentItemIndex(int index);
