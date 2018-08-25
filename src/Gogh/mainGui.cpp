@@ -53,13 +53,21 @@ private:
 
 class NodeArea : public UiTrackMouseElement {
 public:
-	void SetContextMenu(UiContextMenu * contextMenu) { m_contextMenu = contextMenu; }
+	NodeArea()
+		: m_nodeRect({
+			{ 0, 0, 200, 100 },
+			{ 300, 150, 200, 100 },
+		})
+		, m_movingNode(-1)
+	{}
 
 	~NodeArea() {
 		if (m_contextMenu) {
 			delete m_contextMenu;
 		}
 	}
+
+	void SetContextMenu(UiContextMenu * contextMenu) { m_contextMenu = contextMenu; }
 
 public: // protected:
 	void Paint(NVGcontext *vg) const override {
@@ -72,38 +80,50 @@ public: // protected:
 		nvgFillColor(vg, nvgRGB(30, 57, 91));
 		nvgFill(vg);
 		
-		// Node
-		nvgBeginPath(vg);
-		nvgRect(vg, r.x + m_nodeX, r.y + m_nodeY, 200, 100);
-		nvgFillColor(vg, nvgRGB(128, 57, 91));
-		nvgFill(vg);
+		// Nodes
+		for (const ::Rect & nr : m_nodeRect) {
+			nvgBeginPath(vg);
+			nvgRect(vg, nr.x, nr.y, nr.w, nr.h);
+			nvgFillColor(vg, nvgRGB(128, 57, 91));
+			nvgFill(vg);
+
+			nvgBeginPath(vg);
+			nvgRect(vg, nr.x + .5f, nr.y + .5f, nr.w - 1, nr.h - 1);
+			nvgStrokeColor(vg, nvgRGB(56, 57, 58));
+			nvgStroke(vg);
+		}
 	}
 	
 	void OnMouseOver(int x, int y) override {
 		UiTrackMouseElement::OnMouseOver(x, y);
 
-		if (m_isMovingNode) {
-			m_nodeX = m_moveStartNodeX + MouseX() - m_moveStartMouseX;
-			m_nodeY = m_moveStartNodeY + MouseY() - m_moveStartMouseY;
+		if (m_movingNode > -1 && m_movingNode < m_nodeRect.size()) {
+			::Rect & nr = m_nodeRect[m_movingNode];
+			nr.x = m_moveStartNodeX + MouseX() - m_moveStartMouseX;
+			nr.y = m_moveStartNodeY + MouseY() - m_moveStartMouseY;
 		}
 	}
 
 	void OnMouseClick(int button, int action, int mods) override {
 		if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
 			const ::Rect & r = InnerRect();
-			const ::Rect & nodeRect = ::Rect(r.x + m_nodeX, r.y + m_nodeY, 200, 100);
 
-			if (nodeRect.Contains(MouseX(), MouseY())) {
-				m_moveStartMouseX = MouseX();
-				m_moveStartMouseY = MouseY();
-				m_moveStartNodeX = m_nodeX;
-				m_moveStartNodeY = m_nodeY;
-				m_isMovingNode = true;
+			// TODO: use tree
+			for (int i = m_nodeRect.size() - 1; i >= 0; --i) {
+				const ::Rect & nr = m_nodeRect[i];
+				if (nr.Contains(MouseX(), MouseY())) {
+					m_moveStartNodeX = nr.x;
+					m_moveStartNodeY = nr.y;
+					m_moveStartMouseX = MouseX();
+					m_moveStartMouseY = MouseY();
+					m_movingNode = i;
+					break;
+				}
 			}
 		}
 
 		if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
-			m_isMovingNode = false;
+			m_movingNode = -1;
 		}
 
 		if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
@@ -116,6 +136,8 @@ public: // protected:
 private:
 	UiContextMenu * m_contextMenu;
 
+	std::vector<::Rect> m_nodeRect;
+
 	float m_nodeX;
 	float m_nodeY;
 
@@ -123,7 +145,7 @@ private:
 	int m_moveStartMouseY;
 	int m_moveStartNodeX;
 	int m_moveStartNodeY;
-	bool m_isMovingNode = false;
+	int m_movingNode;
 };
 
 int mainGui(const ArgParse & args)
