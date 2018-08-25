@@ -7,18 +7,29 @@
 #define NANOVG_GLES3_IMPLEMENTATION
 #include <nanovg_gl.h>
 
-UiWindow::UiWindow(UiApp *app)
+UiWindow::UiWindow(int width, int height, std::string title, UiWindowType type)
 	: m_isValid(false)
 	, m_content(nullptr)
 {
-	if (!app)
-	{
-		ERR_LOG << "A window requires to be launched in an initialized app";
-		return;
+	switch (type) {
+	case MainWindow:
+		glfwWindowHint(GLFW_DECORATED, GLFW_TRUE);
+		glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
+		glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
+		glfwWindowHint(GLFW_FLOATING, GLFW_FALSE);
+		glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
+		break;
+	case MenuWindow:
+		glfwWindowHint(GLFW_DECORATED, GLFW_FALSE);
+		glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+		glfwWindowHint(GLFW_FOCUSED, GLFW_TRUE);
+		glfwWindowHint(GLFW_FLOATING, GLFW_TRUE);
+		glfwWindowHint(GLFW_VISIBLE, GLFW_TRUE);
+		break;
 	}
 
 	// Create a GLFWwindow object that we can use for GLFW's functions
-	m_window = glfwCreateWindow(WIDTH, HEIGHT, "Gogh", nullptr, nullptr);
+	m_window = glfwCreateWindow(width, height, title.c_str(), nullptr, nullptr);
 	glfwMakeContextCurrent(m_window);
 	if (!m_window)
 	{
@@ -76,6 +87,8 @@ UiWindow::~UiWindow() {
 	if (m_content) {
 		delete m_content;
 	}
+
+	glfwDestroyWindow(m_window);
 
 	// Destroy NanoVG ctxw
 	nvgDeleteGLES3(m_vg);

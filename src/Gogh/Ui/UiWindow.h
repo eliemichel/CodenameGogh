@@ -2,21 +2,17 @@
 #define H_UIWINDOW
 
 #include "UiBase.h"
-#include "UiApp.h"
 
 #include <GLFW/glfw3.h>
 
-// Window dimensions
-const GLuint WIDTH = 1200, HEIGHT = 600;
+enum UiWindowType {
+	MainWindow,
+	MenuWindow,
+};
 
-/**
- * This must be unique.
- * TODO: separate into an App class and this class, and put every init/free
- * that must run only once in it, so that several windows can be opened
- */
 class UiWindow : public UiElement {
 public:
-	UiWindow(UiApp *app);
+	UiWindow(int width, int height, std::string title, UiWindowType type = MainWindow);
 	~UiWindow();
 
 	struct NVGcontext* DrawingContext() { return m_vg; }

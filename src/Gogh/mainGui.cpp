@@ -10,6 +10,7 @@
 #include "Ui/ParameterWidget.h"
 #include "Ui/UiTextInput.h"
 #include "Ui/UiIntInput.h"
+#include "Ui/UiFloatting.h"
 
 #include <GLFW/glfw3.h>
 #include <nanovg.h>
@@ -73,7 +74,7 @@ private:
 int mainGui(const ArgParse & args)
 {
 	UiApp app;
-	UiWindow window(&app);
+	UiWindow window(1200, 600, "Gogh");
 
 	//MainLayout *popupLayout = new MainLayout();
 	//window.SetContent(popupLayout);
@@ -118,12 +119,15 @@ int mainGui(const ArgParse & args)
 
 	layout->SetInnerSizeHint(0, 0, 300, 0);
 	mainLayout->AddItem(layout);
-
+	
 	//popupLayout->AddItem(mainLayout);
 	//popupLayout->SetRect(0, 0, window.Width(), window.Height());
 
 	window.SetContent(mainLayout);
-	mainLayout->SetRect(0, 0, WIDTH, HEIGHT);
+	mainLayout->SetRect(0, 0, 1200, 600);
+
+	UiFloatting *floatting = new UiFloatting();
+	floatting->Exec();
 
 	while (!window.ShouldClose())
 	{
