@@ -195,6 +195,34 @@ private:
 };
 
 /**
+ * Add MouseX() and MouseY() to UiMouseAwareElement
+ * TODO: avoid storing this information in every single uielement that need it
+ * since it is the same for everybody.
+ */
+class UiTrackMouseElement : public UiMouseAwareElement {
+public:
+	UiTrackMouseElement()
+		: UiMouseAwareElement()
+		, m_mouseX(0)
+		, m_mouseY(0)
+	{}
+
+public: // protected:
+	void OnMouseOver(int x, int y) override {
+		UiMouseAwareElement::OnMouseOver(x, y);
+		m_mouseX = x;
+		m_mouseY = y;
+	}
+
+protected:
+	int MouseX() const { return m_mouseX; }
+	int MouseY() const { return m_mouseY; }
+
+private:
+	int m_mouseX, m_mouseY;
+};
+
+/**
  * Generic layout, that must be an ancestor of any element containing others,
  * because it handles the dispatching of events.
  * When inheriting, override at least Update() and GetIndexAt().
@@ -256,7 +284,7 @@ public:
 			if (*it == item) {
 				// Clear focus before removing the element, or shift focusIdx
 				// if it was targetting an element placed after the removed one
-				int index = it - m_items.begin();
+				int index = static_cast<int>(it - m_items.begin());
 				if (m_mouseClickFocusIdx == index) {
 					SetClickFocus(-1);
 				} else if (m_mouseClickFocusIdx > index) {
@@ -511,7 +539,7 @@ public: // protected:
 		const ::Rect & r = InnerRect();
 		nvgTextAlign(vg, NVG_ALIGN_CENTER);
 		nvgFillColor(vg, Color());
-		nvgText(vg, r.x + r.w / 2.0, r.y + r.h - 6, Text().c_str(), NULL);
+		nvgText(vg, r.x + r.w / 2.f, r.y + r.h - 6.f, Text().c_str(), NULL);
 	}
 
 private:

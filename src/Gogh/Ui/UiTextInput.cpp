@@ -122,7 +122,7 @@ void UiTextInput::OnKey(int key, int scancode, int action, int mods) {
 			break;
 
 		case GLFW_KEY_END:
-			m_cursorTextIndex = m_editText.size();
+			m_cursorTextIndex = static_cast<int>(m_editText.size());
 			break;
 
 		case GLFW_KEY_HOME:
@@ -150,7 +150,7 @@ void UiTextInput::OnChar(unsigned int codepoint) {
 	
 	if (m_cursorTextIndex != -1) {
 		m_editText.insert(m_cursorTextIndex, utf8);
-		m_cursorTextIndex += utf8.size();
+		m_cursorTextIndex += static_cast<int>(utf8.size());
 	}
 	else {
 		m_editText += utf8;

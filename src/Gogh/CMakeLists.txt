@@ -90,8 +90,10 @@ set(SRC
 	Ui/UiTextInput.cpp
 	Ui/UiIntInput.h
 	Ui/UiIntInput.cpp
-	Ui/UiFloatting.h
-	Ui/UiFloatting.cpp
+	Ui/UiEnumInput.h
+	Ui/UiEnumInput.cpp
+	Ui/UiButton.h
+	Ui/UiButton.cpp
 	Ui/UiApp.h
 	Ui/UiApp.cpp
 	Ui/UiWindow.h
