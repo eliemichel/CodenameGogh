@@ -21,26 +21,77 @@
 
 #include <cassert>
 
-class NodeAreaTreeItem : public QuadTree::Item {
+enum NodeAreaItemType {
+	_BeginNodeAreaItems,
+	NodeItemType,
+	SlotItemType,
+	_EndNodeAreaItems,
+};
+
+/**
+ * Add parent/child mechanism to QuadTree::Item
+ */
+class AbstractNodeAreaItem : public QuadTree::Item {
 public:
-	enum Type {
-		DefaultType,
-	};
+	static AbstractNodeAreaItem * fromRawItem(QuadTree::Item *rawItem) {
+		if (rawItem
+			&& rawItem->Type() > _BeginNodeAreaItems
+			&& rawItem->Type() < _EndNodeAreaItems) {
+			return static_cast<AbstractNodeAreaItem*>(rawItem);
+		}
+		else {
+			return nullptr;
+		}
+	}
 
 public:
-	NodeAreaTreeItem(Rect bbox, int index)
-		: QuadTree::Item(bbox, DefaultType)
-		, m_index(index)
+	AbstractNodeAreaItem(Rect bbox, int type)
+		: QuadTree::Item(bbox, type)
 	{}
 
-	int Index() const { return m_index; }
-
-	void AddChild(NodeAreaTreeItem *child) { m_children.push_back(child); }
-	const std::vector<NodeAreaTreeItem*> & Children() const { return m_children; }
+	void AddChild(AbstractNodeAreaItem *child) { m_children.push_back(child); }
+	const std::vector<AbstractNodeAreaItem*> & Children() const { return m_children; }
 
 private:
-	int m_index;
-	std::vector<NodeAreaTreeItem*> m_children;
+	std::vector<AbstractNodeAreaItem*> m_children;
+};
+
+class NodeItem : public AbstractNodeAreaItem {
+	/*
+public:
+	static NodeItem * fromRawItem(QuadTree::Item *rawItem) {
+		if (rawItem && rawItem->Type() == NodeItemType) {
+			return static_cast<NodeItem*>(rawItem);
+		}
+		else {
+			return nullptr;
+		}
+	}
+	*/
+
+public:
+	NodeItem(Rect bbox)
+		: AbstractNodeAreaItem(bbox, NodeItemType)
+	{}
+};
+
+class SlotItem : public AbstractNodeAreaItem {
+public:
+	SlotItem(Rect bbox)
+		: AbstractNodeAreaItem(bbox, SlotItemType)
+	{}
+
+	virtual bool Hit(float x, float y) override {
+		// treated as an ellipse
+		const Rect & r = BBox();
+		float hw = r.wf() / 2.f;
+		float hh = r.hf() / 2.f;
+		float cx = r.xf() + hw;
+		float cy = r.yf() + hh;
+		float dx = (x - cx) / hw;
+		float dy = (y - cy) / hh;
+		return (dx * dx + dy * dy) < 1.f;
+	}
 };
 
 class NodeArea : public UiTrackMouseElement {
@@ -54,34 +105,30 @@ private:
 
 public:
 	NodeArea()
-		: m_nodeRect({
-			{ 0, 0, 200, 100 },
-			{ 300, 150, 200, 100 },
-			{ 400, 200, 200, 100 },
-			{ 190, 100, 20, 20 },
+		: m_treeItems({
+			new NodeItem({ 0, 0, 200, 100 }),
+			new NodeItem({ 300, 150, 200, 100 }),
+			new NodeItem({ 400, 200, 200, 100 }),
+			new SlotItem({ 190, 30, 20, 20 }),
+			new SlotItem({ 190, 60, 20, 20 }),
 		})
-		, m_tree(nullptr)
+		, m_tree(new QuadTree(250, 300, 500, 500, 5))
 	{
-		m_tree = new QuadTree(250, 300, 500, 500, 5);
-
-		NodeAreaTreeItem *a, *b; // DEBUG
-		for (int i = 0; i < m_nodeRect.size(); ++i) {
-			NodeAreaTreeItem *item = new NodeAreaTreeItem(m_nodeRect[i], i);
-			if (i == 0) a = item; // DEBUG
-			if (i == 3) b = item; // DEBUG
+		
+		for (AbstractNodeAreaItem *item : m_treeItems) {
 			m_tree->Insert(item);
 		}
 
-		a->AddChild(b); // DEBUG
+		m_treeItems[0]->AddChild(m_treeItems[3]); // DEBUG
+		m_treeItems[0]->AddChild(m_treeItems[4]); // DEBUG
 	}
 
 	~NodeArea() {
 		if (m_contextMenu) {
 			delete m_contextMenu;
 		}
-		if (m_tree) {
-			delete m_tree;
-		}
+		assert(m_tree);
+		delete m_tree;
 	}
 
 	void SetContextMenu(UiContextMenu * contextMenu) { m_contextMenu = contextMenu; }
@@ -98,7 +145,10 @@ public: // protected:
 		nvgFill(vg);
 		
 		// Nodes
-		for (const ::Rect & nr : m_nodeRect) {
+		for (AbstractNodeAreaItem *item : m_treeItems) {
+			assert(item);
+			const ::Rect & nr = item->BBox();
+
 			nvgBeginPath(vg);
 			nvgRect(vg, nr.x, nr.y, nr.w, nr.h);
 			nvgFillColor(vg, nvgRGB(128, 57, 91));
@@ -119,14 +169,17 @@ public: // protected:
 
 		int deltaX = MouseX() - m_moveStartMouseX;
 		int deltaY = MouseY() - m_moveStartMouseY;
-		for (MovingItem & item : m_movingItems) {
-			assert(item.acc.item->Type() == NodeAreaTreeItem::DefaultType);
-			int i = static_cast<NodeAreaTreeItem*>(item.acc.item)->Index();
-			if (i > -1 && i < m_nodeRect.size()) {
-				::Rect & bbox = m_nodeRect[i];
-				bbox.x = item.startX + deltaX;
-				bbox.y = item.startY + deltaY;
-				item.acc = m_tree->UpdateItemBBox(item.acc, bbox);
+
+		for (MovingItem & movingNode : m_movingNodes) {
+			AbstractNodeAreaItem *nodeItem = AbstractNodeAreaItem::fromRawItem(movingNode.acc.item);
+			assert(nodeItem);
+			::Rect & bbox = nodeItem->BBox();
+			bbox.x = movingNode.startX + deltaX;
+			bbox.y = movingNode.startY + deltaY;
+			movingNode.acc = m_tree->UpdateItemBBox(movingNode.acc, bbox);
+			// TODO: handle this better
+			if (!movingNode.acc.IsValid()) {
+				WARN_LOG << "Lost item; out of quadtree bounds";
 			}
 		}
 	}
@@ -141,28 +194,15 @@ public: // protected:
 
 			QuadTree::Accessor acc = m_tree->ItemAt(MouseX(), MouseY());
 			if (acc.isValid) {
-				m_selectedItems.push_back(acc);
-			}
-			
-			for (const QuadTree::Accessor & acc : m_selectedItems) {
-				assert(acc.item->Type() == NodeAreaTreeItem::DefaultType);
-				NodeAreaTreeItem *treeItem = static_cast<NodeAreaTreeItem*>(acc.item);
-				int i = treeItem->Index();
+				switch (acc.item->Type()) {
+				case NodeItemType:
+					m_selectedNodes.push_back(acc);
+					StartMovingNodes();
+					break;
 
-				const ::Rect & nr = m_nodeRect[i];
-				m_movingItems.push_back(MovingItem(acc, nr.x, nr.y));
-
-				for (NodeAreaTreeItem *child : treeItem->Children()) {
-					const ::Rect & bbox = child->BBox();
-					m_movingItems.push_back(MovingItem(m_tree->Find(child), bbox.x, bbox.y));
+				case SlotItemType:
+					DEBUG_LOG << "Start dragging link";
 				}
-			}
-			m_moveStartMouseX = MouseX();
-			m_moveStartMouseY = MouseY();
-
-			// DEBUG
-			if (mods & GLFW_MOD_CONTROL) {
-				m_tree->RemoveItems(m_selectedItems);
 			}
 		}
 
@@ -177,27 +217,49 @@ public: // protected:
 		}
 	}
 
-	private:
-		void ClearSelection() {
-			m_selectedItems.clear();
-		}
+private:
+	void StartMovingNodes() {
+		for (const QuadTree::Accessor & acc : m_selectedNodes) {
+			AbstractNodeAreaItem *nodeItem = AbstractNodeAreaItem::fromRawItem(acc.item);
+			if (!nodeItem) {
+				continue;
+			}
 
-		void ClearMovingItems() {
-			m_movingItems.clear();
+			const ::Rect & nr = nodeItem->BBox();
+			m_movingNodes.push_back(MovingItem(acc, nr.x, nr.y));
+
+			for (AbstractNodeAreaItem *child : nodeItem->Children()) {
+				QuadTree::Accessor acc = m_tree->Find(child);
+				if (acc.isValid) {
+					const ::Rect & bbox = child->BBox();
+					m_movingNodes.push_back(MovingItem(acc, bbox.x, bbox.y));
+				}
+			}
 		}
+		m_moveStartMouseX = MouseX();
+		m_moveStartMouseY = MouseY();
+	}
+
+	void ClearSelection() {
+		m_selectedNodes.clear();
+	}
+
+	void ClearMovingItems() {
+		m_movingNodes.clear();
+	}
 
 private:
 	UiContextMenu * m_contextMenu;
 
-	std::vector<::Rect> m_nodeRect;
+	// TODO: keep only references to nodeItems
+	QuadTree *m_tree;
+	std::vector<AbstractNodeAreaItem*> m_treeItems;
 
 	int m_moveStartMouseX;
 	int m_moveStartMouseY;
-	std::vector<MovingItem> m_movingItems;
+	std::vector<MovingItem> m_movingNodes;
 
-	std::vector<QuadTree::Accessor> m_selectedItems;
-
-	QuadTree *m_tree;
+	std::vector<QuadTree::Accessor> m_selectedNodes;
 };
 
 int mainGui(const ArgParse & args)

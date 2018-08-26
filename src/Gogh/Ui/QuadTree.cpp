@@ -48,12 +48,11 @@ QuadTree::Accessor QuadTree::Find(Item *item) {
 	}
 
 	Branch branchIndex = FitInBranch(item);
-	if (branchIndex != NoBranch) {
+	if (branchIndex != NoBranch && !IsLeaf()) {
 		Accessor acc = m_branches[branchIndex]->Find(item);
 		acc.path.push_back(branchIndex);
 		return acc;
-	}
-	else {
+	} else {
 		for (Item *other : m_items) {
 			if (item == other) {
 				return Accessor(other);
@@ -69,7 +68,7 @@ QuadTree::Accessor QuadTree::ItemAt(float x, float y) {
 	float candidateLayer;
 
 	for (Item *item : m_items) {
-		if (item->BBox().Contains(x, y)) {
+		if (item->BBox().Contains(x, y) && item->Hit(x, y)) {
 			float itemLayer = item->Layer();
 			if (!candidate.isValid || itemLayer > candidateLayer) {
 				candidate.isValid = true;

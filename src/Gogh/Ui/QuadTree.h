@@ -38,6 +38,9 @@ public:
 		float Layer() const { return m_layer; }
 		void SetLayer(float layer) { m_layer = layer; }
 
+		/// x and y are garanteed to be within the bounding box
+		virtual bool Hit(float x, float y) { return true; }
+
 	private:
 		Rect m_bbox;
 		int m_type;
@@ -48,6 +51,9 @@ public:
 		Accessor() : isValid(false) {}
 		Accessor(Item *_item) : item(_item), isValid(true) {}
 
+		bool IsValid() const { return isValid; }
+
+		// TODO: make private
 		std::list<Branch> path;
 		Item *item;
 		bool isValid = false;
