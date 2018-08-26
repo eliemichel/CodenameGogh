@@ -18,6 +18,8 @@
 #include <GLFW/glfw3.h>
 #include <nanovg.h>
 
+#include <cassert>
+
 class UiContextMenu : public UiVBoxLayout {
 public:
 	UiContextMenu(UiLayout *popupLayout) : m_popupLayout(popupLayout) {}
@@ -109,7 +111,7 @@ public:
 			if (it->bbox.Contains(x, y)) {
 				Item item = *it;
 				it = m_items.erase(it);
-				Prune();
+				Prune(true /* recursive */);
 				return item;
 			}
 			else {
@@ -118,19 +120,22 @@ public:
 		}
 
 		if (!IsLeaf()) {
+			Item item;
 			if (x < m_cx) {
 				if (y < m_cy) {
-					return m_topLeft->PopAt(x, y);
+					item = m_topLeft->PopAt(x, y);
 				} else {
-					return m_bottomLeft->PopAt(x, y);
+					item = m_bottomLeft->PopAt(x, y);
 				}
 			} else {
 				if (y < m_cy) {
-					return m_topRight->PopAt(x, y);
+					item = m_topRight->PopAt(x, y);
 				} else {
-					return m_bottomRight->PopAt(x, y);
+					item = m_bottomRight->PopAt(x, y);
 				}
 			}
+			Prune(false /* recursive */);
+			return item;
 		}
 
 		return Item();
@@ -191,22 +196,71 @@ private:
 	}
 
 	/// Prune unused children recursively
-	/// Return true if tree is empty
-	bool Prune() {
-		if (!IsLeaf()) {
-			if (m_topLeft->Prune() && m_topRight->Prune() && m_bottomLeft->Prune() && m_bottomRight->Prune()) {
-				delete m_topRight;
-				delete m_topLeft;
-				delete m_bottomRight;
-				delete m_bottomLeft;
-				m_topRight = nullptr;
-				m_topLeft = nullptr;
-				m_bottomRight = nullptr;
-				m_bottomLeft = nullptr;
+	/// Return the number of elements in the tree
+	/// Populate item if it is the only one in the tree, and pop it before, so
+	/// you'd have to insert it back.
+	int Prune(bool recursive) {
+		if (IsLeaf()) {
+			return m_items.size();
+		} else {
+			int tln;
+			int trn;
+			int bln;
+			int brn;
+			if (recursive) {
+				tln = m_topLeft->Prune(recursive);
+				trn = m_topRight->Prune(recursive);
+				bln = m_bottomLeft->Prune(recursive);
+				brn = m_bottomRight->Prune(recursive);
+			} else {
+				tln = m_topLeft->m_items.size();
+				trn = m_topRight->m_items.size();
+				bln = m_bottomLeft->m_items.size();
+				brn = m_bottomRight->m_items.size();
+			}
+			int sum = m_items.size() + tln + trn + bln + brn;
+
+			if (sum == 1) {
+
+				assert(m_topLeft->IsLeaf());
+				assert(m_topRight->IsLeaf());
+				assert(m_bottomLeft->IsLeaf());
+				assert(m_bottomRight->IsLeaf());
+
+
+				bool prune = true;
+				if (m_topLeft->IsLeaf() && tln == 1) {
+					m_items.push_back(m_topLeft->m_items.back());
+					m_topLeft->m_items.pop_back();
+				} else if (m_topRight->IsLeaf() && trn == 1) {
+					m_items.push_back(m_topRight->m_items.back());
+					m_topRight->m_items.pop_back();
+				} else if(m_bottomLeft->IsLeaf() && bln == 1) {
+					m_items.push_back(m_bottomLeft->m_items.back());
+					m_bottomLeft->m_items.pop_back();
+				} else if (m_bottomRight->IsLeaf() && brn == 1) {
+					m_items.push_back(m_bottomRight->m_items.back());
+					m_bottomRight->m_items.pop_back();
+				} else if (m_items.size()) {
+					// noop
+				} else {
+					prune = false;
+				}
+
+				assert(prune);
+
+				if (prune) {
+					delete m_topRight;
+					delete m_topLeft;
+					delete m_bottomRight;
+					delete m_bottomLeft;
+					m_topRight = nullptr;
+					m_topLeft = nullptr;
+					m_bottomRight = nullptr;
+					m_bottomLeft = nullptr;
+				}
 			}
 		}
-
-		return IsEmpty();
 	}
 
 	/// If the item fits in one of the children, return a pointer to this
