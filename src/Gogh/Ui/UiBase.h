@@ -125,7 +125,7 @@ public: // protected:
 	virtual void PaintDebug(NVGcontext *vg) const {
 		if (m_debug && false) {
 			nvgBeginPath(vg);
-			nvgRect(vg, Rect().x, Rect().y, Rect().w, Rect().h);
+			nvgRect(vg, Rect().xf(), Rect().yf(), Rect().wf(), Rect().hf());
 			nvgFillColor(vg, nvgRGBA(255, 0, 0, 64));
 			nvgFill(vg);
 		}

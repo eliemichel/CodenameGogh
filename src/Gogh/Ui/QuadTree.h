@@ -22,26 +22,35 @@ public:
 		_BranchCount,
 	};
 
-	struct Accessor {
-		std::list<Branch> path;
-		union {
-			void *data;
-			int index;
-		};
-		bool isValid = false;
+	class Item {
+	public:
+		Item(Rect bbox, int type)
+			: m_bbox(bbox)
+			, m_type(type)
+			, m_layer(0.f)
+		{}
+
+		int Type() const { return m_type; }
+
+		Rect BBox() const { return m_bbox; }
+		void SetBBox(const Rect & bbox) { m_bbox = bbox; }
+
+		float Layer() const { return m_layer; }
+		void SetLayer(float layer) { m_layer = layer; }
+
+	private:
+		Rect m_bbox;
+		int m_type;
+		float m_layer;
 	};
 
-	struct Item {
-		Item() : isValid(false) {}
-		Item(Rect _bbox, void *_data) : bbox(_bbox), data(_data), isValid(true) {}
-		Item(Rect _bbox, int _index) : bbox(_bbox), index(_index), isValid(true) {}
+	struct Accessor {
+		Accessor() : isValid(false) {}
+		Accessor(Item *_item) : item(_item), isValid(true) {}
 
-		Rect bbox;
-		union {
-			void *data;
-			int index;
-		};
-		bool isValid;
+		std::list<Branch> path;
+		Item *item;
+		bool isValid = false;
 	};
 
 public:
@@ -52,7 +61,7 @@ public:
 	bool IsLeaf() const { return m_branches[0] == nullptr; }
 
 	/// Insert at the deepest possible node, branching while the division limit has not been reached
-	Accessor Insert(Item item);
+	Accessor Insert(Item *item);
 
 	Accessor ItemAt(float x, float y);
 
@@ -72,7 +81,7 @@ private:
 
 	/// If the item fits in one of the children, return a pointer to this
 	/// child, otherwise return nullptr.
-	Branch FitInBranch(Item item);
+	Branch FitInBranch(Item *item);
 
 private:
 	/// Center
@@ -86,7 +95,7 @@ private:
 	QuadTree *m_branches[_BranchCount];
 	/// Items that cannot fit in children, whether it is because there is no
 	/// child tree or because the item's bbox is too large.
-	std::vector<Item> m_items;
+	std::vector<Item*> m_items;
 };
 
 #endif //  H_QUADTREE

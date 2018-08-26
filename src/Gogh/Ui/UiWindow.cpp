@@ -117,7 +117,7 @@ void UiWindow::Render() const {
 	glEnable(GL_CULL_FACE);
 	glDisable(GL_DEPTH_TEST);
 
-	nvgBeginFrame(m_vg, m_width, m_height, pxRatio);
+	nvgBeginFrame(m_vg, static_cast<float>(m_width), static_cast<float>(m_height), pxRatio);
 
 	// UI Objects
 	if (m_content) {

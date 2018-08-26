@@ -21,19 +21,19 @@ void UiTextInput::Paint(NVGcontext *vg) const {
 	// the nanovg context
 	// This forces m_cursorTextIndex to be mutable
 	if (m_mustUpdateCursorPos) {
-		m_cursorTextIndex = CharacterAtPos(vg, MouseX(), MouseY());
+		m_cursorTextIndex = CharacterAtPos(vg, static_cast<float>(MouseX()), static_cast<float>(MouseY()));
 		m_mustUpdateCursorPos = false;
 	}
 
 	// Background
 	nvgBeginPath(vg);
-	nvgRect(vg, r.x, r.y, r.w, r.h);
+	nvgRect(vg, r.xf(), r.yf(), r.wf(), r.hf());
 	nvgFillColor(vg, nvgRGB(255, 255, 255));
 	nvgFill(vg);
 
 	// Border
 	nvgBeginPath(vg);
-	nvgRect(vg, r.x + 0.5, r.y + 0.5, r.w - 1.0, r.h - 1.0);
+	nvgRect(vg, r.xf() + 0.5f, r.yf() + 0.5f, r.wf() - 1.f, r.h - 1.f);
 	nvgStrokeColor(vg, m_isEditing ? nvgRGB(128, 128, 255) : nvgRGB(64, 64, 64));
 	nvgStroke(vg);
 

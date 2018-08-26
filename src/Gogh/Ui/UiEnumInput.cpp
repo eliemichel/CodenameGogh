@@ -84,13 +84,13 @@ void UiEnumInput::Paint(NVGcontext *vg) const {
 	const ::Rect & r = InnerRect();
 
 	nvgBeginPath(vg);
-	nvgRect(vg, r.x, r.y, r.w, r.h);
-	nvgFillColor(vg, nvgRGB(80, 257, 191));
+	nvgRect(vg, r.xf(), r.yf(), r.wf(), r.hf());
+	nvgFillColor(vg, nvgRGB(80, 255, 191));
 	nvgFill(vg);
 
 	const char *text = m_currentItemIndex > -1 ? m_itemLabels[m_currentItemIndex].c_str() : "--";
 	nvgTextAlign(vg, NVG_ALIGN_CENTER);
 	nvgTextLineHeight(vg, 13.0f / 15.0f);
 	nvgFillColor(vg, nvgRGB(255, 255, 255));
-	nvgTextBox(vg, r.x + 2, r.y + r.h - 6 - 11, r.w - 4, text, NULL);
+	nvgTextBox(vg, r.xf() + 2, r.yf() + r.hf() - 6 - 11, r.wf() - 4, text, NULL);
 }

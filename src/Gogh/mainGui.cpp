@@ -19,6 +19,26 @@
 #include <GLFW/glfw3.h>
 #include <nanovg.h>
 
+#include <cassert>
+
+class NodeAreaTreeItem : public QuadTree::Item {
+public:
+	enum Type {
+		DefaultType,
+	};
+
+public:
+	NodeAreaTreeItem(Rect bbox, int index)
+		: QuadTree::Item(bbox, DefaultType)
+		, m_index(index)
+	{}
+
+	int Index() const { return m_index; }
+
+private:
+	int m_index;
+};
+
 class NodeArea : public UiTrackMouseElement {
 private:
 	struct MovingItem {
@@ -40,7 +60,7 @@ public:
 	{
 		m_tree = new QuadTree(250, 300, 500, 500, 5);
 		for (int i = 0; i < m_nodeRect.size(); ++i) {
-			m_tree->Insert(QuadTree::Item(m_nodeRect[i], i));
+			m_tree->Insert(new NodeAreaTreeItem(m_nodeRect[i], i));
 		}
 	}
 
@@ -89,8 +109,10 @@ public: // protected:
 		int deltaX = MouseX() - m_moveStartMouseX;
 		int deltaY = MouseY() - m_moveStartMouseY;
 		for (MovingItem & item : m_movingItems) {
-			if (item.acc.index > -1 && item.acc.index < m_nodeRect.size()) {
-				::Rect & nr = m_nodeRect[item.acc.index];
+			assert(item.acc.item->Type() == NodeAreaTreeItem::DefaultType);
+			int i = static_cast<NodeAreaTreeItem*>(item.acc.item)->Index();
+			if (i > -1 && i < m_nodeRect.size()) {
+				::Rect & nr = m_nodeRect[i];
 				nr.x = item.startX + deltaX;
 				nr.y = item.startY + deltaY;
 				item.acc = m_tree->UpdateItemBBox(item.acc, nr);
@@ -110,9 +132,11 @@ public: // protected:
 			if (acc.isValid) {
 				m_selectedItems.push_back(acc);
 			}
-
+			
 			for (const QuadTree::Accessor & acc : m_selectedItems) {
-				const ::Rect & nr = m_nodeRect[acc.index];
+				assert(acc.item->Type() == NodeAreaTreeItem::DefaultType);
+				int i = static_cast<NodeAreaTreeItem*>(acc.item)->Index();
+				const ::Rect & nr = m_nodeRect[i];
 				m_movingItems.push_back(MovingItem(acc, nr.x, nr.y));
 			}
 			m_moveStartMouseX = MouseX();

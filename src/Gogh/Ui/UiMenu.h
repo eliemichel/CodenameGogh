@@ -12,7 +12,7 @@ public: // protected:
 
 		// Background
 		nvgBeginPath(vg);
-		nvgRect(vg, r.x, r.y, r.w, r.h);
+		nvgRect(vg, r.xf(), r.yf(), r.wf(), r.hf());
 		nvgFillColor(vg, nvgRGB(56, 57, 58));
 		nvgFill(vg);
 

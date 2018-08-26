@@ -22,7 +22,11 @@ QuadTree::~QuadTree() {
 	}
 }
 
-QuadTree::Accessor QuadTree::Insert(Item item) {
+QuadTree::Accessor QuadTree::Insert(Item *item) {
+	if (!item) {
+		return Accessor();
+	}
+
 	Branch branchIndex = FitInBranch(item);
 	if (branchIndex != NoBranch) {
 		if (IsLeaf()) {
@@ -34,23 +38,20 @@ QuadTree::Accessor QuadTree::Insert(Item item) {
 	}
 	else {
 		m_items.push_back(item);
-		Accessor acc;
-		acc.isValid = true;
-		acc.data = item.data;
-		return acc;
+		return Accessor(item);;
 	}
 }
 
 QuadTree::Accessor QuadTree::ItemAt(float x, float y) {
-	Accessor candidate;
-	int candidateLayer;
+	Accessor candidate = Accessor();
+	float candidateLayer;
 
-	for (const auto & item : m_items) {
-		if (item.bbox.Contains(x, y)) {
-			int itemLayer = 0; // TODO: manage layers
+	for (Item *item : m_items) {
+		if (item->BBox().Contains(x, y)) {
+			float itemLayer = item->Layer();
 			if (!candidate.isValid || itemLayer > candidateLayer) {
 				candidate.isValid = true;
-				candidate.data = item.data;
+				candidate.item = item;
 				candidateLayer = itemLayer;
 			}
 		}
@@ -66,10 +67,8 @@ QuadTree::Accessor QuadTree::ItemAt(float x, float y) {
 		Accessor acc = m_branches[branch]->ItemAt(x, y);
 		acc.path.push_back(branch);
 
-		int itemLayer = 0; // TODO: manage layers
-		if (acc.isValid && (!candidate.isValid || itemLayer > candidateLayer)) {
+		if (acc.isValid && (!candidate.isValid || acc.item->Layer() > candidateLayer)) {
 			candidate = acc;
-			candidateLayer = itemLayer;
 		}
 	}
 
@@ -84,7 +83,7 @@ void QuadTree::RemoveItems(const std::vector<Accessor> & accessors) {
 		if (acc.path.empty()) {
 			// search in items
 			for (auto it = m_items.begin(); it != m_items.end();) {
-				if (it->data == acc.data) {
+				if (*it == acc.item) {
 					it = m_items.erase(it);
 				}
 				else {
@@ -95,7 +94,6 @@ void QuadTree::RemoveItems(const std::vector<Accessor> & accessors) {
 		else {
 			Branch branchIndex = acc.path.back();
 			acc.path.pop_back();
-
 			subAccessors[branchIndex].push_back(acc);
 		}
 	}
@@ -135,8 +133,9 @@ QuadTree::Accessor QuadTree::UpdateItemBBox(const Accessor & acc, Rect bbox) {
 		RemoveItem(newAcc);
 
 		// re-insert if possible, potentially inserting deeper
-		if (fit) {
-			newAcc = Insert(Item(bbox, newAcc.data));
+		if (fit && newAcc.item) {
+			newAcc.item->SetBBox(bbox);
+			newAcc = Insert(newAcc.item);
 		}
 
 		// Flag invalid if new bbox does not fit for parent to re-insert the item
@@ -163,14 +162,15 @@ void QuadTree::PaintDebug(NVGcontext *vg) const {
 		}
 	}
 
-	for (const QuadTree::Item & item : m_items) {
+	for (const Item * item : m_items) {
+		const Rect & r = item->BBox();
 		nvgBeginPath(vg);
-		nvgRect(vg, item.bbox.x, item.bbox.y, item.bbox.w, item.bbox.h);
+		nvgRect(vg, r.xf(), r.yf(), r.wf(), r.hf());
 		nvgFillColor(vg, IsLeaf() ? nvgRGBA(0, 0, 255, 32) : nvgRGBA(255, 0, 0, 32));
 		nvgFill(vg);
 
 		nvgBeginPath(vg);
-		nvgRect(vg, item.bbox.x + .5f, item.bbox.y + .5f, item.bbox.w - 1.f, item.bbox.h - 1.f);
+		nvgRect(vg, r.xf() + .5f, r.yf() + .5f, r.wf() - 1.f, r.hf() - 1.f);
 		nvgStrokeColor(vg, IsLeaf() ? nvgRGBA(0, 0, 255, 32) : nvgRGBA(255, 0, 0, 32));
 		nvgStroke(vg);
 	}
@@ -207,15 +207,16 @@ void QuadTree::Prune() {
 	}
 }
 
-QuadTree::Branch QuadTree::FitInBranch(Item item) {
-	if (m_divisions <= 0) {
+QuadTree::Branch QuadTree::FitInBranch(Item *item) {
+	if (m_divisions <= 0 || !item) {
 		return NoBranch;
 	}
 
-	bool fullLeft = item.bbox.x + item.bbox.w <= m_cx;
-	bool fullRight = item.bbox.x >= m_cx;
-	bool fullTop = item.bbox.y + item.bbox.h <= m_cy;
-	bool fullBottom = item.bbox.y >= m_cy;
+	const Rect & r = item->BBox();
+	bool fullLeft = r.x + r.w <= m_cx;
+	bool fullRight = r.x >= m_cx;
+	bool fullTop = r.y + r.h <= m_cy;
+	bool fullBottom = r.y >= m_cy;
 
 	if (fullLeft && fullTop) {
 		return TopLeft;
