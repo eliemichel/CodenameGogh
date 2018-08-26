@@ -19,6 +19,8 @@
 #include <nanovg.h>
 
 #include <cassert>
+#include <list>
+#include <limits>
 
 class UiContextMenu : public UiVBoxLayout {
 public:
@@ -55,6 +57,24 @@ private:
 
 class QuadTree {
 public:
+	enum Branch {
+		NoBranch = -1,
+		TopLeft,
+		TopRight,
+		BottomLeft,
+		BottomRight,
+		_BranchCount,
+	};
+
+	struct Accessor {
+		std::list<Branch> path;
+		union {
+			void *data;
+			int index;
+		};
+		bool isValid = false;
+	};
+
 	struct Item {
 		Item() : isValid(false) {}
 		Item(Rect _bbox, void *_data) : bbox(_bbox), data(_data), isValid(true) {}
@@ -75,132 +95,147 @@ public:
 		, m_hw(hw)
 		, m_hh(hh)
 		, m_divisions(divisions)
-		, m_topRight(nullptr)
-		, m_topLeft(nullptr)
-		, m_bottomRight(nullptr)
-		, m_bottomLeft(nullptr)
-	{}
+	{
+		for (int i = 0; i < _BranchCount; ++i) {
+			m_branches[i] = nullptr;
+		}
+	}
 
 	~QuadTree() {
 		if (!IsLeaf()) {
-			delete m_topRight;
-			delete m_topLeft;
-			delete m_bottomRight;
-			delete m_bottomLeft;
+			for (int i = 0; i < _BranchCount; ++i) {
+				delete m_branches[i];
+			}
 		}
 	}
 
-	bool IsLeaf() const { return m_topLeft == nullptr; }
+	bool IsLeaf() const { return m_branches[0] == nullptr; }
 
-	bool IsEmpty() const { return IsLeaf() && m_items.empty(); }
-
-	void Insert(Item item) {
-		if (QuadTree *child = FitInChild(item)) {
-			child->Insert(item);
-		} else {
-			m_items.push_back(item);
-			if (m_items.size() > 1) {
+	/// Insert at the deepest possible node, branching while the division limit has not been reached
+	Accessor Insert(Item item) {
+		Branch branchIndex = FitInBranch(item);
+		if (branchIndex != NoBranch) {
+			if (IsLeaf()) {
 				Split();
 			}
+			Accessor acc = m_branches[branchIndex]->Insert(item);
+			acc.path.push_back(branchIndex);
+			return acc;
+		} else {
+			m_items.push_back(item);
+			Accessor acc;
+			acc.isValid = true;
+			acc.data = item.data;
+			return acc;
 		}
 	}
 
-	// Remove the topmost element located at target pos
-	Item PopAt(float x, float y) {
-		for (auto it = m_items.begin(); it != m_items.end();) {
-			if (it->bbox.Contains(x, y)) {
-				Item item = *it;
-				it = m_items.erase(it);
-				Prune(true /* recursive */);
-				return item;
-			}
-			else {
-				++it;
+	Accessor ItemAt(float x, float y) {
+		Accessor candidate;
+		int candidateLayer;
+
+		for (const auto & item : m_items) {
+			if (item.bbox.Contains(x, y)) {
+				int itemLayer = 0; // TODO: manage layers
+				if (!candidate.isValid || itemLayer > candidateLayer) {
+					candidate.isValid = true;
+					candidate.data = item.data;
+					candidateLayer = itemLayer;
+				}
 			}
 		}
 
 		if (!IsLeaf()) {
-			Item item;
-			if (x < m_cx) {
-				if (y < m_cy) {
-					item = m_topLeft->PopAt(x, y);
-				} else {
-					item = m_bottomLeft->PopAt(x, y);
-				}
-			} else {
-				if (y < m_cy) {
-					item = m_topRight->PopAt(x, y);
-				} else {
-					item = m_bottomRight->PopAt(x, y);
-				}
+			Branch branch = (
+				x < m_cx
+				? (y < m_cy ? TopLeft : BottomLeft)
+				: (y < m_cy ? TopRight : BottomRight)
+			);
+
+			Accessor acc = m_branches[branch]->ItemAt(x, y);
+			acc.path.push_back(branch);
+
+			int itemLayer = 0; // TODO: manage layers
+			if (acc.isValid && (!candidate.isValid || itemLayer > candidateLayer)) {
+				candidate = acc;
+				candidateLayer = itemLayer;
 			}
-			Prune(false /* recursive */);
-			return item;
 		}
 
-		return Item();
+		return candidate;
 	}
 
 	/// Pop items matching the provided data
-	void PopItems(const std::vector<Item> & items) {
-		if (items.empty()) {
-			return;
-		}
-
+	void RemoveItems(const std::vector<Accessor> & accessors) {
 		// split item lists
-		std::vector<Item> trItems;
-		std::vector<Item> tlItems;
-		std::vector<Item> brItems;
-		std::vector<Item> blItems;
+		std::vector<Accessor> subAccessors[_BranchCount];
 
-		for (const Item & item : items) {
-			for (auto it = m_items.begin(); it != m_items.end();) {
-				if (it->data == item.data) {
-					it = m_items.erase(it);
-				} else {
-					++it;
+		for (Accessor acc : accessors) {
+			if (acc.path.empty()) {
+				// search in items
+				for (auto it = m_items.begin(); it != m_items.end();) {
+					if (it->data == acc.data) {
+						it = m_items.erase(it);
+					} else {
+						++it;
+					}
 				}
-			}
+			} else {
+				Branch branchIndex = acc.path.back();
+				acc.path.pop_back();
 
-			QuadTree *child = FitInChild(item);
-			if (child == m_topRight) {
-				trItems.push_back(item);
-			} else if (child == m_topLeft) {
-				tlItems.push_back(item);
-			} else if (child == m_bottomRight) {
-				brItems.push_back(item);
-			} else if (child == m_bottomLeft) {
-				blItems.push_back(item);
+				subAccessors[branchIndex].push_back(acc);
 			}
 		}
 
 		if (!IsLeaf()) {
-			if (trItems.empty()) {
-				m_topRight->Prune(true /* recursive */);
-			} else {
-				m_topRight->PopItems(trItems);
+			for (int i = 0; i < _BranchCount; ++i) {
+				m_branches[i]->RemoveItems(subAccessors[i]);
 			}
-
-			if (tlItems.empty()) {
-				m_topLeft->Prune(true /* recursive */);
-			} else {
-				m_topLeft->PopItems(tlItems);
-			}
-
-			if (brItems.empty()) {
-				m_bottomRight->Prune(true /* recursive */);
-			} else {
-				m_bottomRight->PopItems(brItems);
-			}
-
-			if (blItems.empty()) {
-				m_bottomLeft->Prune(true /* recursive */);
-			} else {
-				m_bottomLeft->PopItems(blItems);
-			}
-
-			Prune(false /* recursive */);
 		}
+
+		Prune();
+	}
+
+	void RemoveItem(const Accessor & acc) {
+		RemoveItems({ acc });
+	}
+
+	Accessor UpdateItemBBox(const Accessor & acc, Rect bbox) {
+		Accessor newAcc = acc;
+		newAcc.isValid = false;
+
+		// update recursively
+		if (!newAcc.path.empty()) {
+			Branch branchIndex = newAcc.path.back();
+			newAcc.path.pop_back();
+
+			if (!IsLeaf()) {
+				newAcc = m_branches[branchIndex]->UpdateItemBBox(newAcc, bbox);
+				if (newAcc.isValid) {
+					newAcc.path.push_back(branchIndex);
+				}
+			}
+		}
+
+		if (!newAcc.isValid) {
+			bool fit = bbox.x >= m_cx - m_hw && bbox.x + bbox.w <= m_cx + m_hw
+				&& bbox.y >= m_cy - m_hh && bbox.y + bbox.h <= m_cy + m_hh;
+			
+			// remove from items
+			newAcc.isValid = true;
+			RemoveItem(newAcc);
+
+			// re-insert if possible, potentially inserting deeper
+			if (fit) {
+				newAcc = Insert(Item(bbox, newAcc.data));
+			}
+
+			// Flag invalid if new bbox does not fit for parent to re-insert the item
+			newAcc.isValid = fit;
+		}
+
+		return newAcc;
 	}
 
 	void PaintDebug(NVGcontext *vg) const {
@@ -215,10 +250,9 @@ public:
 		nvgStroke(vg);
 
 		if (!IsLeaf()) {
-			m_topRight->PaintDebug(vg);
-			m_topLeft->PaintDebug(vg);
-			m_bottomRight->PaintDebug(vg);
-			m_bottomLeft->PaintDebug(vg);
+			for (int i = 0; i < _BranchCount; ++i) {
+				m_branches[i]->PaintDebug(vg);
+			}
 		}
 
 		for (const Item & item : m_items) {
@@ -242,85 +276,36 @@ private:
 
 		float qw = m_hw / 2.f;
 		float qh = m_hh / 2.f;
-		m_topRight = new QuadTree(m_cx + qw, m_cy - qh, qw, qh, m_divisions - 1);
-		m_topLeft = new QuadTree(m_cx - qw, m_cy - qh, qw, qh, m_divisions - 1);
-		m_bottomRight = new QuadTree(m_cx + qw, m_cy + qh, qw, qh, m_divisions - 1);
-		m_bottomLeft = new QuadTree(m_cx - qw, m_cy + qh, qw, qh, m_divisions - 1);
-
-		for (auto it = m_items.begin(); it != m_items.end();) {
-			if (QuadTree *child = FitInChild(*it)) {
-				child->Insert(*it);
-				it = m_items.erase(it);
-			} else {
-				++it;
-			}
-		}
+		m_branches[TopRight] = new QuadTree(m_cx + qw, m_cy - qh, qw, qh, m_divisions - 1);
+		m_branches[TopLeft] = new QuadTree(m_cx - qw, m_cy - qh, qw, qh, m_divisions - 1);
+		m_branches[BottomRight] = new QuadTree(m_cx + qw, m_cy + qh, qw, qh, m_divisions - 1);
+		m_branches[BottomLeft] = new QuadTree(m_cx - qw, m_cy + qh, qw, qh, m_divisions - 1);
 	}
 
-	/// Prune unused children recursively
-	/// Return the number of elements in the tree
-	/// Populate item if it is the only one in the tree, and pop it before, so
-	/// you'd have to insert it back.
-	int Prune(bool recursive) {
+	/// Prune unused children
+	void Prune() {
 		if (IsLeaf()) {
-			return static_cast<int>(m_items.size());
-		} else {
-			int tln;
-			int trn;
-			int bln;
-			int brn;
-			if (recursive) {
-				tln = m_topLeft->Prune(recursive);
-				trn = m_topRight->Prune(recursive);
-				bln = m_bottomLeft->Prune(recursive);
-				brn = m_bottomRight->Prune(recursive);
-			} else {
-				tln = m_topLeft->m_items.size();
-				trn = m_topRight->m_items.size();
-				bln = m_bottomLeft->m_items.size();
-				brn = m_bottomRight->m_items.size();
+			return;
+		}
+
+		bool canPrune = true;
+		for (int i = 0; i < _BranchCount; ++i) {
+			canPrune = canPrune && m_branches[i]->IsLeaf() && m_branches[i]->m_items.empty();
+		}
+
+		if (canPrune) {
+			for (int i = 0; i < _BranchCount; ++i) {
+				delete m_branches[i];
+				m_branches[i] = nullptr;
 			}
-			int sum = static_cast<int>(m_items.size()) + tln + trn + bln + brn;
-
-			if (sum == 1 && m_topLeft->IsLeaf() && m_topRight->IsLeaf() && m_bottomLeft->IsLeaf() && m_bottomRight->IsLeaf()) {
-				bool prune = true;
-				if (tln == 1) {
-					m_items.push_back(m_topLeft->m_items.back());
-					m_topLeft->m_items.pop_back();
-				} else if (trn == 1) {
-					m_items.push_back(m_topRight->m_items.back());
-					m_topRight->m_items.pop_back();
-				} else if(bln == 1) {
-					m_items.push_back(m_bottomLeft->m_items.back());
-					m_bottomLeft->m_items.pop_back();
-				} else if (brn == 1) {
-					m_items.push_back(m_bottomRight->m_items.back());
-					m_bottomRight->m_items.pop_back();
-				} else {
-					prune = !m_items.empty();
-				}
-
-				assert(prune);
-
-				delete m_topRight;
-				delete m_topLeft;
-				delete m_bottomRight;
-				delete m_bottomLeft;
-				m_topRight = nullptr;
-				m_topLeft = nullptr;
-				m_bottomRight = nullptr;
-				m_bottomLeft = nullptr;
-			}
-
-			return sum;
 		}
 	}
 
 	/// If the item fits in one of the children, return a pointer to this
 	/// child, otherwise return nullptr.
-	QuadTree * FitInChild(Item item) {
-		if (IsLeaf()) {
-			return nullptr;
+	Branch FitInBranch(Item item) {
+		if (m_divisions <= 0) {
+			return NoBranch;
 		}
 
 		bool fullLeft = item.bbox.x + item.bbox.w <= m_cx;
@@ -329,15 +314,15 @@ private:
 		bool fullBottom = item.bbox.y >= m_cy;
 
 		if (fullLeft && fullTop) {
-			return m_topLeft;
+			return TopLeft;
 		} else if (fullLeft && fullBottom) {
-			return m_bottomLeft;
+			return BottomLeft;
 		} else if (fullRight && fullTop) {
-			return m_topRight;
+			return TopRight;
 		} else if (fullRight && fullBottom) {
-			return m_bottomRight;
+			return BottomRight;
 		} else {
-			return nullptr;
+			return NoBranch;
 		}
 	}
 
@@ -350,7 +335,7 @@ private:
 	int m_divisions;
 
 	/// Children, always all null or all non null
-	QuadTree *m_topRight, *m_topLeft, *m_bottomRight, *m_bottomLeft;
+	QuadTree *m_branches[_BranchCount];
 	/// Items that cannot fit in children, whether it is because there is no
 	/// child tree or because the item's bbox is too large.
 	std::vector<Item> m_items;
@@ -359,8 +344,8 @@ private:
 class NodeArea : public UiTrackMouseElement {
 private:
 	struct MovingItem {
-		MovingItem(int _index, int _startX, int _startY) : index(_index), startX(_startX), startY(_startY) {}
-		int index;
+		MovingItem(QuadTree::Accessor _acc, int _startX, int _startY) : acc(_acc), startX(_startX), startY(_startY) {}
+		QuadTree::Accessor acc;
 		int startX;
 		int startY;
 	};
@@ -425,11 +410,12 @@ public: // protected:
 
 		int deltaX = MouseX() - m_moveStartMouseX;
 		int deltaY = MouseY() - m_moveStartMouseY;
-		for (const MovingItem & item : m_movingItems) {
-			if (item.index > -1 && item.index < m_nodeRect.size()) {
-				::Rect & nr = m_nodeRect[item.index];
+		for (MovingItem & item : m_movingItems) {
+			if (item.acc.index > -1 && item.acc.index < m_nodeRect.size()) {
+				::Rect & nr = m_nodeRect[item.acc.index];
 				nr.x = item.startX + deltaX;
 				nr.y = item.startY + deltaY;
+				item.acc = m_tree->UpdateItemBBox(item.acc, nr);
 			}
 		}
 	}
@@ -442,21 +428,22 @@ public: // protected:
 				ClearSelection();
 			}
 
-			QuadTree::Item item = m_tree->PopAt(MouseX(), MouseY());
-			if (item.isValid) {
-				m_selectedItems.push_back(item.index);
-				m_tree->Insert(item); // TODO: avoid reinserting
+			QuadTree::Accessor acc = m_tree->ItemAt(MouseX(), MouseY());
+			if (acc.isValid) {
+				m_selectedItems.push_back(acc);
 			}
 
-			std::vector<QuadTree::Item> itemsToPop;
-			for (int index : m_selectedItems) {
-				const ::Rect & nr = m_nodeRect[index];
-				m_movingItems.push_back(MovingItem(index, nr.x, nr.y));
-				itemsToPop.push_back(QuadTree::Item(m_nodeRect[item.index], item.index));
+			for (const QuadTree::Accessor & acc : m_selectedItems) {
+				const ::Rect & nr = m_nodeRect[acc.index];
+				m_movingItems.push_back(MovingItem(acc, nr.x, nr.y));
 			}
-			m_tree->PopItems(itemsToPop);
 			m_moveStartMouseX = MouseX();
 			m_moveStartMouseY = MouseY();
+
+			// DEBUG
+			if (mods & GLFW_MOD_CONTROL) {
+				m_tree->RemoveItems(m_selectedItems);
+			}
 		}
 
 		if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
@@ -472,20 +459,10 @@ public: // protected:
 
 	private:
 		void ClearSelection() {
-			for (int index : m_selectedItems) {
-				if (index > -1 && index < m_nodeRect.size()) {
-					m_tree->Insert(QuadTree::Item(m_nodeRect[index], index));
-				}
-			}
 			m_selectedItems.clear();
 		}
 
 		void ClearMovingItems() {
-			for (const MovingItem & item : m_movingItems) {
-				if (item.index > -1 && item.index < m_nodeRect.size()) {
-					m_tree->Insert(QuadTree::Item(m_nodeRect[item.index], item.index));
-				}
-			}
 			m_movingItems.clear();
 		}
 
@@ -498,7 +475,7 @@ private:
 	int m_moveStartMouseY;
 	std::vector<MovingItem> m_movingItems;
 
-	std::vector<int> m_selectedItems;
+	std::vector<QuadTree::Accessor> m_selectedItems;
 
 	QuadTree *m_tree;
 };
