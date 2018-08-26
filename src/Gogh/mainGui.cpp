@@ -19,6 +19,7 @@
 #include <GLFW/glfw3.h>
 #include <nanovg.h>
 
+#include <algorithm>
 #include <cassert>
 
 enum NodeAreaItemType {
@@ -52,7 +53,11 @@ public:
 	void AddChild(AbstractNodeAreaItem *child) { m_children.push_back(child); }
 	const std::vector<AbstractNodeAreaItem*> & Children() const { return m_children; }
 
-	virtual void Paint(NVGcontext *vg) const {}
+	virtual void Paint(NVGcontext *vg) const {
+		for (const AbstractNodeAreaItem* child : Children()) {
+			child->Paint(vg);
+		}
+	}
 
 private:
 	std::vector<AbstractNodeAreaItem*> m_children;
@@ -88,6 +93,8 @@ public:
 		nvgRect(vg, r.xf() + .5f, r.yf() + .5f, r.wf() - 1.f, r.hf() - 1.f);
 		nvgStrokeColor(vg, nvgRGB(56, 57, 58));
 		nvgStroke(vg);
+
+		AbstractNodeAreaItem::Paint(vg);
 	}
 };
 
@@ -120,6 +127,8 @@ public:
 		nvgEllipse(vg, cx, cy, hw, hh);
 		nvgFillColor(vg, nvgRGB(255, 255, 255));
 		nvgFill(vg);
+
+		AbstractNodeAreaItem::Paint(vg);
 	}
 };
 
@@ -134,22 +143,29 @@ private:
 
 public:
 	NodeArea()
-		: m_treeItems({
+		: m_nodeItems({
 			new NodeItem({ 0, 0, 200, 100 }),
 			new NodeItem({ 300, 150, 200, 100 }),
 			new NodeItem({ 400, 200, 200, 100 }),
-			new SlotItem({ 192, 30, 16, 16 }),
-			new SlotItem({ 192, 60, 16, 16 }),
 		})
 		, m_tree(new QuadTree(250, 300, 500, 500, 5))
 	{
 		
-		for (AbstractNodeAreaItem *item : m_treeItems) {
+		for (NodeItem *item : m_nodeItems) {
 			m_tree->Insert(item);
 		}
 
-		m_treeItems[0]->AddChild(m_treeItems[3]); // DEBUG
-		m_treeItems[0]->AddChild(m_treeItems[4]); // DEBUG
+		SlotItem *slot;
+
+		slot = new SlotItem({ 192, 30, 16, 16 });
+		m_tree->Insert(slot);
+		m_nodeItems[0]->AddChild(slot); // DEBUG
+
+		slot = new SlotItem({ 192, 60, 16, 16 });
+		m_tree->Insert(slot);
+		m_nodeItems[0]->AddChild(slot); // DEBUG
+
+		SortItems();
 	}
 
 	~NodeArea() {
@@ -174,7 +190,7 @@ public: // protected:
 		nvgFill(vg);
 		
 		// Items
-		for (AbstractNodeAreaItem *item : m_treeItems) {
+		for (AbstractNodeAreaItem *item : m_nodeItems) {
 			assert(item);
 			item->Paint(vg);
 		}
@@ -195,12 +211,14 @@ public: // protected:
 			AbstractNodeAreaItem *nodeItem = AbstractNodeAreaItem::fromRawItem(movingNode.acc.item);
 			assert(nodeItem);
 			::Rect & bbox = nodeItem->BBox();
+			::Rect oldBbox = bbox;
 			bbox.x = movingNode.startX + deltaX;
 			bbox.y = movingNode.startY + deltaY;
 			movingNode.acc = m_tree->UpdateItemBBox(movingNode.acc, bbox);
 			// TODO: handle this better
 			if (!movingNode.acc.IsValid()) {
 				WARN_LOG << "Lost item; out of quadtree bounds";
+				m_tree->UpdateItemBBox(movingNode.acc, oldBbox);
 			}
 		}
 	}
@@ -218,6 +236,7 @@ public: // protected:
 				switch (acc.item->Type()) {
 				case NodeItemType:
 					m_selectedNodes.push_back(acc);
+					BringToTop(AbstractNodeAreaItem::fromRawItem(acc.item));
 					StartMovingNodes();
 					break;
 
@@ -236,7 +255,6 @@ public: // protected:
 				m_contextMenu->Popup(MouseX(), MouseY());
 			}
 		}
-
 
 		// DEBUG
 		if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_RELEASE) {
@@ -267,6 +285,41 @@ private:
 		m_moveStartMouseY = MouseY();
 	}
 
+	// Update items layer (a.k.a. depth) to avoid overflows and keep slots
+	// in front of their parent nodes while still being close enough to it
+	// TODO: avoid the complexity of O(n)
+	void SortItems() {
+		// sort nodes by their current layer
+		std::sort(m_nodeItems.begin(), m_nodeItems.end(), [](NodeItem *left, NodeItem *right) { return left->Layer() < right->Layer(); });
+
+		// normalize layer
+		float layer = 0.f;
+		for (NodeItem * nodeItem : m_nodeItems) {
+			nodeItem->SetLayer(layer);
+			// Place children on top
+			for (AbstractNodeAreaItem *child : nodeItem->Children()) {
+				child->SetLayer(layer + .5f);
+			}
+			layer += 1.f;
+		}
+	}
+
+	// target can be null
+	void BringToTop(AbstractNodeAreaItem *item) {
+		float topMost = static_cast<float>(m_nodeItems.size() + 1);
+		for (auto it = m_nodeItems.rbegin(); it != m_nodeItems.rend(); ++it) {
+			// TODO: need IsSelected()
+			/*
+			if (!it->IsSelected()) {
+				topMost = it->Layer() + .5f;
+				break;
+			}
+			*/
+		}
+		item->SetLayer(topMost);
+		SortItems();
+	}
+
 	void ClearSelection() {
 		m_selectedNodes.clear();
 	}
@@ -280,9 +333,8 @@ private:
 
 	bool m_debug;
 
-	// TODO: keep only references to nodeItems
 	QuadTree *m_tree;
-	std::vector<AbstractNodeAreaItem*> m_treeItems;
+	std::vector<NodeItem*> m_nodeItems;
 
 	int m_moveStartMouseX;
 	int m_moveStartMouseY;

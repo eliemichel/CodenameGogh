@@ -42,6 +42,7 @@ public:
 		virtual bool Hit(float x, float y) { return true; }
 
 	private:
+		QuadTree *m_tree;
 		Rect m_bbox;
 		int m_type;
 		float m_layer;
@@ -66,10 +67,12 @@ public:
 
 	bool IsLeaf() const { return m_branches[0] == nullptr; }
 
-	/// Insert at the deepest possible node, branching while the division limit has not been reached
+	/// Insert at the deepest possible node, branching while the division limit
+	/// has not been reached
 	Accessor Insert(Item *item);
 
-	/// Try to build an accessor to the item, or return an invalid accessor if not found
+	/// Try to build an accessor to the item, or return an invalid accessor if
+	/// not found
 	Accessor Find(Item *item);
 
 	Accessor ItemAt(float x, float y);
