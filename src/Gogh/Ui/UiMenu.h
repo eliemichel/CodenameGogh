@@ -1,6 +1,9 @@
 #ifndef H_UIMENU
 #define H_UIMENU
 
+#include "UiBase.h"
+#include "UiButton.h"
+
 class UiMenu : public UiVBoxLayout {
 public: // protected:
 	void Paint(NVGcontext *vg) const override {

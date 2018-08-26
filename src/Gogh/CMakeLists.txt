@@ -84,6 +84,7 @@ set(SRC
 	Dialogs/RenderDialog.h
 	Dialogs/RenderDialog.cpp
 
+	Ui/UiRect.h
 	Ui/UiBase.h
 	Ui/UiBoxLayout.inc.h
 	Ui/UiTextInput.h
@@ -95,12 +96,16 @@ set(SRC
 	Ui/UiButton.h
 	Ui/UiButton.cpp
 	Ui/UiMenu.h
+	Ui/UiContextMenu.h
+	Ui/UiContextMenu.cpp
 	Ui/UiApp.h
 	Ui/UiApp.cpp
 	Ui/UiWindow.h
 	Ui/UiWindow.cpp
 	Ui/ParameterWidget.h
 	Ui/ParameterWidget.cpp
+	Ui/QuadTree.h
+	Ui/QuadTree.cpp
 
 	main.cpp
 )
