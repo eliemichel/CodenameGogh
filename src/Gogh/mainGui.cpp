@@ -141,6 +141,68 @@ public:
 		return Item();
 	}
 
+	/// Pop items matching the provided data
+	void PopItems(const std::vector<Item> & items) {
+		if (items.empty()) {
+			return;
+		}
+
+		// split item lists
+		std::vector<Item> trItems;
+		std::vector<Item> tlItems;
+		std::vector<Item> brItems;
+		std::vector<Item> blItems;
+
+		for (const Item & item : items) {
+			for (auto it = m_items.begin(); it != m_items.end();) {
+				if (it->data == item.data) {
+					it = m_items.erase(it);
+				} else {
+					++it;
+				}
+			}
+
+			QuadTree *child = FitInChild(item);
+			if (child == m_topRight) {
+				trItems.push_back(item);
+			} else if (child == m_topLeft) {
+				tlItems.push_back(item);
+			} else if (child == m_bottomRight) {
+				brItems.push_back(item);
+			} else if (child == m_bottomLeft) {
+				blItems.push_back(item);
+			}
+		}
+
+		if (!IsLeaf()) {
+			if (trItems.empty()) {
+				m_topRight->Prune(true /* recursive */);
+			} else {
+				m_topRight->PopItems(trItems);
+			}
+
+			if (tlItems.empty()) {
+				m_topLeft->Prune(true /* recursive */);
+			} else {
+				m_topLeft->PopItems(tlItems);
+			}
+
+			if (brItems.empty()) {
+				m_bottomRight->Prune(true /* recursive */);
+			} else {
+				m_bottomRight->PopItems(brItems);
+			}
+
+			if (blItems.empty()) {
+				m_bottomLeft->Prune(true /* recursive */);
+			} else {
+				m_bottomLeft->PopItems(blItems);
+			}
+
+			Prune(false /* recursive */);
+		}
+	}
+
 	void PaintDebug(NVGcontext *vg) const {
 		nvgBeginPath(vg);
 		nvgRect(vg, m_cx - m_hw, m_cy - m_hh, 2.f * m_hw, 2.f * m_hh);
@@ -201,7 +263,7 @@ private:
 	/// you'd have to insert it back.
 	int Prune(bool recursive) {
 		if (IsLeaf()) {
-			return m_items.size();
+			return static_cast<int>(m_items.size());
 		} else {
 			int tln;
 			int trn;
@@ -218,48 +280,39 @@ private:
 				bln = m_bottomLeft->m_items.size();
 				brn = m_bottomRight->m_items.size();
 			}
-			int sum = m_items.size() + tln + trn + bln + brn;
+			int sum = static_cast<int>(m_items.size()) + tln + trn + bln + brn;
 
-			if (sum == 1) {
-
-				assert(m_topLeft->IsLeaf());
-				assert(m_topRight->IsLeaf());
-				assert(m_bottomLeft->IsLeaf());
-				assert(m_bottomRight->IsLeaf());
-
-
+			if (sum == 1 && m_topLeft->IsLeaf() && m_topRight->IsLeaf() && m_bottomLeft->IsLeaf() && m_bottomRight->IsLeaf()) {
 				bool prune = true;
-				if (m_topLeft->IsLeaf() && tln == 1) {
+				if (tln == 1) {
 					m_items.push_back(m_topLeft->m_items.back());
 					m_topLeft->m_items.pop_back();
-				} else if (m_topRight->IsLeaf() && trn == 1) {
+				} else if (trn == 1) {
 					m_items.push_back(m_topRight->m_items.back());
 					m_topRight->m_items.pop_back();
-				} else if(m_bottomLeft->IsLeaf() && bln == 1) {
+				} else if(bln == 1) {
 					m_items.push_back(m_bottomLeft->m_items.back());
 					m_bottomLeft->m_items.pop_back();
-				} else if (m_bottomRight->IsLeaf() && brn == 1) {
+				} else if (brn == 1) {
 					m_items.push_back(m_bottomRight->m_items.back());
 					m_bottomRight->m_items.pop_back();
-				} else if (m_items.size()) {
-					// noop
 				} else {
-					prune = false;
+					prune = !m_items.empty();
 				}
 
 				assert(prune);
 
-				if (prune) {
-					delete m_topRight;
-					delete m_topLeft;
-					delete m_bottomRight;
-					delete m_bottomLeft;
-					m_topRight = nullptr;
-					m_topLeft = nullptr;
-					m_bottomRight = nullptr;
-					m_bottomLeft = nullptr;
-				}
+				delete m_topRight;
+				delete m_topLeft;
+				delete m_bottomRight;
+				delete m_bottomLeft;
+				m_topRight = nullptr;
+				m_topLeft = nullptr;
+				m_bottomRight = nullptr;
+				m_bottomLeft = nullptr;
 			}
+
+			return sum;
 		}
 	}
 
@@ -304,14 +357,22 @@ private:
 };
 
 class NodeArea : public UiTrackMouseElement {
+private:
+	struct MovingItem {
+		MovingItem(int _index, int _startX, int _startY) : index(_index), startX(_startX), startY(_startY) {}
+		int index;
+		int startX;
+		int startY;
+	};
+
 public:
 	NodeArea()
 		: m_nodeRect({
 			{ 0, 0, 200, 100 },
 			{ 300, 150, 200, 100 },
 			{ 400, 200, 200, 100 },
+			{ 190, 100, 20, 20 },
 		})
-		, m_movingNode(-1)
 		, m_tree(nullptr)
 	{
 		m_tree = new QuadTree(250, 300, 500, 500, 5);
@@ -362,10 +423,14 @@ public: // protected:
 	void OnMouseOver(int x, int y) override {
 		UiTrackMouseElement::OnMouseOver(x, y);
 
-		if (m_movingNode > -1 && m_movingNode < m_nodeRect.size()) {
-			::Rect & nr = m_nodeRect[m_movingNode];
-			nr.x = m_moveStartNodeX + MouseX() - m_moveStartMouseX;
-			nr.y = m_moveStartNodeY + MouseY() - m_moveStartMouseY;
+		int deltaX = MouseX() - m_moveStartMouseX;
+		int deltaY = MouseY() - m_moveStartMouseY;
+		for (const MovingItem & item : m_movingItems) {
+			if (item.index > -1 && item.index < m_nodeRect.size()) {
+				::Rect & nr = m_nodeRect[item.index];
+				nr.x = item.startX + deltaX;
+				nr.y = item.startY + deltaY;
+			}
 		}
 	}
 
@@ -373,37 +438,29 @@ public: // protected:
 		if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
 			const ::Rect & r = InnerRect();
 
-			// TODO: use tree
-			/*
-			for (int i = m_nodeRect.size() - 1; i >= 0; --i) {
-				const ::Rect & nr = m_nodeRect[i];
-				if (nr.Contains(MouseX(), MouseY())) {
-					m_moveStartNodeX = nr.x;
-					m_moveStartNodeY = nr.y;
-					m_moveStartMouseX = MouseX();
-					m_moveStartMouseY = MouseY();
-					m_movingNode = i;
-					break;
-				}
+			if (!(mods & GLFW_MOD_SHIFT)) {
+				ClearSelection();
 			}
-			*/
 
 			QuadTree::Item item = m_tree->PopAt(MouseX(), MouseY());
 			if (item.isValid) {
-				const ::Rect & nr = m_nodeRect[item.index];
-				m_moveStartNodeX = nr.x;
-				m_moveStartNodeY = nr.y;
-				m_moveStartMouseX = MouseX();
-				m_moveStartMouseY = MouseY();
-				m_movingNode = item.index;
+				m_selectedItems.push_back(item.index);
+				m_tree->Insert(item); // TODO: avoid reinserting
 			}
+
+			std::vector<QuadTree::Item> itemsToPop;
+			for (int index : m_selectedItems) {
+				const ::Rect & nr = m_nodeRect[index];
+				m_movingItems.push_back(MovingItem(index, nr.x, nr.y));
+				itemsToPop.push_back(QuadTree::Item(m_nodeRect[item.index], item.index));
+			}
+			m_tree->PopItems(itemsToPop);
+			m_moveStartMouseX = MouseX();
+			m_moveStartMouseY = MouseY();
 		}
 
 		if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
-			if (m_movingNode > -1 && m_movingNode < m_nodeRect.size()) {
-				m_tree->Insert(QuadTree::Item(m_nodeRect[m_movingNode], m_movingNode));
-			}
-			m_movingNode = -1;
+			ClearMovingItems();
 		}
 
 		if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {
@@ -413,6 +470,25 @@ public: // protected:
 		}
 	}
 
+	private:
+		void ClearSelection() {
+			for (int index : m_selectedItems) {
+				if (index > -1 && index < m_nodeRect.size()) {
+					m_tree->Insert(QuadTree::Item(m_nodeRect[index], index));
+				}
+			}
+			m_selectedItems.clear();
+		}
+
+		void ClearMovingItems() {
+			for (const MovingItem & item : m_movingItems) {
+				if (item.index > -1 && item.index < m_nodeRect.size()) {
+					m_tree->Insert(QuadTree::Item(m_nodeRect[item.index], item.index));
+				}
+			}
+			m_movingItems.clear();
+		}
+
 private:
 	UiContextMenu * m_contextMenu;
 
@@ -420,9 +496,9 @@ private:
 
 	int m_moveStartMouseX;
 	int m_moveStartMouseY;
-	int m_moveStartNodeX;
-	int m_moveStartNodeY;
-	int m_movingNode;
+	std::vector<MovingItem> m_movingItems;
+
+	std::vector<int> m_selectedItems;
 
 	QuadTree *m_tree;
 };
