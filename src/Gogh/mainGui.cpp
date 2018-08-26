@@ -132,6 +132,10 @@ public:
 	}
 };
 
+struct LinkItem {
+	SlotItem *origin, *destination;
+};
+
 class NodeArea : public UiTrackMouseElement {
 private:
 	struct MovingItem {
@@ -164,8 +168,15 @@ public:
 		slot = new SlotItem({ 192, 60, 16, 16 });
 		m_tree->Insert(slot);
 		m_nodeItems[0]->AddChild(slot); // DEBUG
+		SlotItem *slot1 = slot;
+
+		slot = new SlotItem({ 292, 210, 16, 16 });
+		m_tree->Insert(slot);
+		m_nodeItems[1]->AddChild(slot); // DEBUG
 
 		SortItems();
+
+		m_linkItems.push_back({ slot1, slot });
 	}
 
 	~NodeArea() {
@@ -189,10 +200,24 @@ public: // protected:
 		nvgFillColor(vg, nvgRGB(30, 57, 91));
 		nvgFill(vg);
 		
-		// Items
-		for (AbstractNodeAreaItem *item : m_nodeItems) {
-			assert(item);
+		// Nodes
+		for (const AbstractNodeAreaItem *item : m_nodeItems) {
 			item->Paint(vg);
+		}
+
+		// Links
+		for (const LinkItem & link : m_linkItems) {
+			const ::Rect & or = link.origin->BBox();
+			const ::Rect & dr = link.destination->BBox();
+			float ox = or.xf() + or.wf() / 2.f;
+			float oy = or.yf() + or.hf() / 2.f;
+			float dx = dr.xf() + dr.wf() / 2.f;
+			float dy = dr.yf() + dr.hf() / 2.f;
+			nvgBeginPath(vg);
+			nvgMoveTo(vg, ox, oy);
+			nvgLineTo(vg, dx, dy);
+			nvgStrokeColor(vg, nvgRGB(255, 255, 255));
+			nvgStroke(vg);
 		}
 
 		// DEBUG TREE
@@ -341,6 +366,8 @@ private:
 	std::vector<MovingItem> m_movingNodes;
 
 	std::vector<QuadTree::Accessor> m_selectedNodes;
+
+	std::vector<LinkItem> m_linkItems;
 };
 
 int mainGui(const ArgParse & args)
