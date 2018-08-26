@@ -52,6 +52,8 @@ public:
 	void AddChild(AbstractNodeAreaItem *child) { m_children.push_back(child); }
 	const std::vector<AbstractNodeAreaItem*> & Children() const { return m_children; }
 
+	virtual void Paint(NVGcontext *vg) const {}
+
 private:
 	std::vector<AbstractNodeAreaItem*> m_children;
 };
@@ -73,6 +75,20 @@ public:
 	NodeItem(Rect bbox)
 		: AbstractNodeAreaItem(bbox, NodeItemType)
 	{}
+
+	void Paint(NVGcontext *vg) const override {
+		const Rect & r = BBox();
+
+		nvgBeginPath(vg);
+		nvgRect(vg, r.xf(), r.yf(), r.wf(), r.hf());
+		nvgFillColor(vg, nvgRGB(128, 57, 91));
+		nvgFill(vg);
+
+		nvgBeginPath(vg);
+		nvgRect(vg, r.xf() + .5f, r.yf() + .5f, r.wf() - 1.f, r.hf() - 1.f);
+		nvgStrokeColor(vg, nvgRGB(56, 57, 58));
+		nvgStroke(vg);
+	}
 };
 
 class SlotItem : public AbstractNodeAreaItem {
@@ -81,7 +97,7 @@ public:
 		: AbstractNodeAreaItem(bbox, SlotItemType)
 	{}
 
-	virtual bool Hit(float x, float y) override {
+	bool Hit(float x, float y) override {
 		// treated as an ellipse
 		const Rect & r = BBox();
 		float hw = r.wf() / 2.f;
@@ -91,6 +107,19 @@ public:
 		float dx = (x - cx) / hw;
 		float dy = (y - cy) / hh;
 		return (dx * dx + dy * dy) < 1.f;
+	}
+
+	void Paint(NVGcontext *vg) const override {
+		const Rect & r = BBox();
+		float hw = r.wf() / 2.f;
+		float hh = r.hf() / 2.f;
+		float cx = r.xf() + hw;
+		float cy = r.yf() + hh;
+
+		nvgBeginPath(vg);
+		nvgEllipse(vg, cx, cy, hw, hh);
+		nvgFillColor(vg, nvgRGB(255, 255, 255));
+		nvgFill(vg);
 	}
 };
 
@@ -109,8 +138,8 @@ public:
 			new NodeItem({ 0, 0, 200, 100 }),
 			new NodeItem({ 300, 150, 200, 100 }),
 			new NodeItem({ 400, 200, 200, 100 }),
-			new SlotItem({ 190, 30, 20, 20 }),
-			new SlotItem({ 190, 60, 20, 20 }),
+			new SlotItem({ 192, 30, 16, 16 }),
+			new SlotItem({ 192, 60, 16, 16 }),
 		})
 		, m_tree(new QuadTree(250, 300, 500, 500, 5))
 	{
@@ -144,24 +173,16 @@ public: // protected:
 		nvgFillColor(vg, nvgRGB(30, 57, 91));
 		nvgFill(vg);
 		
-		// Nodes
+		// Items
 		for (AbstractNodeAreaItem *item : m_treeItems) {
 			assert(item);
-			const ::Rect & nr = item->BBox();
-
-			nvgBeginPath(vg);
-			nvgRect(vg, nr.x, nr.y, nr.w, nr.h);
-			nvgFillColor(vg, nvgRGB(128, 57, 91));
-			nvgFill(vg);
-
-			nvgBeginPath(vg);
-			nvgRect(vg, nr.x + .5f, nr.y + .5f, nr.w - 1, nr.h - 1);
-			nvgStrokeColor(vg, nvgRGB(56, 57, 58));
-			nvgStroke(vg);
+			item->Paint(vg);
 		}
 
 		// DEBUG TREE
-		m_tree->PaintDebug(vg);
+		if (m_debug) {
+			m_tree->PaintDebug(vg);
+		}
 	}
 	
 	void OnMouseOver(int x, int y) override {
@@ -215,6 +236,12 @@ public: // protected:
 				m_contextMenu->Popup(MouseX(), MouseY());
 			}
 		}
+
+
+		// DEBUG
+		if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_RELEASE) {
+			m_debug = !m_debug;
+		}
 	}
 
 private:
@@ -250,6 +277,8 @@ private:
 
 private:
 	UiContextMenu * m_contextMenu;
+
+	bool m_debug;
 
 	// TODO: keep only references to nodeItems
 	QuadTree *m_tree;
