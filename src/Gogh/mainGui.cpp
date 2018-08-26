@@ -35,8 +35,12 @@ public:
 
 	int Index() const { return m_index; }
 
+	void AddChild(NodeAreaTreeItem *child) { m_children.push_back(child); }
+	const std::vector<NodeAreaTreeItem*> & Children() const { return m_children; }
+
 private:
 	int m_index;
+	std::vector<NodeAreaTreeItem*> m_children;
 };
 
 class NodeArea : public UiTrackMouseElement {
@@ -59,9 +63,16 @@ public:
 		, m_tree(nullptr)
 	{
 		m_tree = new QuadTree(250, 300, 500, 500, 5);
+
+		NodeAreaTreeItem *a, *b; // DEBUG
 		for (int i = 0; i < m_nodeRect.size(); ++i) {
-			m_tree->Insert(new NodeAreaTreeItem(m_nodeRect[i], i));
+			NodeAreaTreeItem *item = new NodeAreaTreeItem(m_nodeRect[i], i);
+			if (i == 0) a = item; // DEBUG
+			if (i == 3) b = item; // DEBUG
+			m_tree->Insert(item);
 		}
+
+		a->AddChild(b); // DEBUG
 	}
 
 	~NodeArea() {
@@ -112,10 +123,10 @@ public: // protected:
 			assert(item.acc.item->Type() == NodeAreaTreeItem::DefaultType);
 			int i = static_cast<NodeAreaTreeItem*>(item.acc.item)->Index();
 			if (i > -1 && i < m_nodeRect.size()) {
-				::Rect & nr = m_nodeRect[i];
-				nr.x = item.startX + deltaX;
-				nr.y = item.startY + deltaY;
-				item.acc = m_tree->UpdateItemBBox(item.acc, nr);
+				::Rect & bbox = m_nodeRect[i];
+				bbox.x = item.startX + deltaX;
+				bbox.y = item.startY + deltaY;
+				item.acc = m_tree->UpdateItemBBox(item.acc, bbox);
 			}
 		}
 	}
@@ -135,9 +146,16 @@ public: // protected:
 			
 			for (const QuadTree::Accessor & acc : m_selectedItems) {
 				assert(acc.item->Type() == NodeAreaTreeItem::DefaultType);
-				int i = static_cast<NodeAreaTreeItem*>(acc.item)->Index();
+				NodeAreaTreeItem *treeItem = static_cast<NodeAreaTreeItem*>(acc.item);
+				int i = treeItem->Index();
+
 				const ::Rect & nr = m_nodeRect[i];
 				m_movingItems.push_back(MovingItem(acc, nr.x, nr.y));
+
+				for (NodeAreaTreeItem *child : treeItem->Children()) {
+					const ::Rect & bbox = child->BBox();
+					m_movingItems.push_back(MovingItem(m_tree->Find(child), bbox.x, bbox.y));
+				}
 			}
 			m_moveStartMouseX = MouseX();
 			m_moveStartMouseY = MouseY();

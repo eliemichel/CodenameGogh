@@ -42,6 +42,28 @@ QuadTree::Accessor QuadTree::Insert(Item *item) {
 	}
 }
 
+QuadTree::Accessor QuadTree::Find(Item *item) {
+	if (!item) {
+		return Accessor();
+	}
+
+	Branch branchIndex = FitInBranch(item);
+	if (branchIndex != NoBranch) {
+		Accessor acc = m_branches[branchIndex]->Find(item);
+		acc.path.push_back(branchIndex);
+		return acc;
+	}
+	else {
+		for (Item *other : m_items) {
+			if (item == other) {
+				return Accessor(other);
+			}
+		}
+	}
+
+	return Accessor();
+}
+
 QuadTree::Accessor QuadTree::ItemAt(float x, float y) {
 	Accessor candidate = Accessor();
 	float candidateLayer;

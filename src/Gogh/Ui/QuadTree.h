@@ -63,6 +63,9 @@ public:
 	/// Insert at the deepest possible node, branching while the division limit has not been reached
 	Accessor Insert(Item *item);
 
+	/// Try to build an accessor to the item, or return an invalid accessor if not found
+	Accessor Find(Item *item);
+
 	Accessor ItemAt(float x, float y);
 
 	/// Pop items matching the provided data
