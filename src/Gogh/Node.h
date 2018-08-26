@@ -32,6 +32,12 @@ struct RenderCommand {
 	// OutputNode's smart renaming : keys (like : "codec", "scale") associated to current nodes values (like : "h264", "1920x1080")
 	std::map<std::string, std::string> env;
 
+	// Map informations for MixNode :
+	int map;
+
+	// StreamType
+	char stream;
+
 	// error message that may be filled when returning false in buildRenderCommand
 	std::string err;
 };
@@ -100,6 +106,7 @@ public:
 
 	QString parmEvalAsString(int parm) const;
 	int parmEvalAsInt(int parm) const;
+	bool parmEvalAsBool(int parm) const;
 
 	// slot structure read
 	int inputSlotCount() const { return static_cast<int>(inputLinks.size()); }
@@ -115,6 +122,9 @@ protected:
 	void newOutputSlot();
 
 	void removeOutputSlots();
+
+	Connection inputConnection(int inputSlotIndex);
+	std::set<Connection> outputConnection(int outputSlotIndex);
 
 	EnvModel * envModel() const { return m_envModel; }
 	NodeGraphModel *graphModel() const { return m_graphModel; }

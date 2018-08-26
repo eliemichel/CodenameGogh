@@ -28,6 +28,8 @@ public:
 	void cancel();
 
 	const std::vector<StreamType> & streams() const { return m_streams; }
+	std::string streamsAsString(int i) const;
+	char streamsAsChar(int i) const;
 
 signals:
 	void probed();

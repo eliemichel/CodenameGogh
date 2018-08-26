@@ -8,6 +8,7 @@ enum ParmType
 	IntType,
 	EnumType,
 	ButtonType,
+	CheckboxType,
 };
 
 #endif // H_PARAMETERTYPE

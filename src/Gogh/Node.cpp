@@ -120,6 +120,22 @@ int Node::parmEvalAsInt(int parm) const
 	}
 }
 
+bool Node::parmEvalAsBool(int parm) const
+{
+	QString value;
+	switch (parmType(parm))
+	{
+	case EnumType:
+	{
+		int menu = parmRawValue(parm).toBool();
+		return parmMenuValue(parm, menu).toBool();
+		break;
+	}
+	default:
+		return parmRawValue(parm).toBool();
+	}
+}
+
 void Node::newInputSlot()
 {
 	inputLinks.resize(inputLinks.size() + 1);
@@ -159,4 +175,45 @@ void Node::removeOutputSlots()
 	outputLinks.clear();
 
 	graphModel()->broadcastNodeChange(nodeIndex());
+}
+
+Connection Node::inputConnection(int inputSlotIndex)
+{
+	if (inputSlotIndex < 0 || inputSlotIndex > inputSlotCount())
+	{
+		ERR_LOG << "Invalid input slot index: #" << inputSlotIndex;
+		return Connection();
+	}
+	const SlotIndex & sid = inputLinks[inputSlotIndex];
+	if (graphModel() && sid.isValid())
+	{
+		return Connection(graphModel()->node(sid.node), sid.slot);
+	}
+	else
+	{
+		return Connection();
+	}
+}
+
+std::set<Connection> Node::outputConnection(int outputSlotIndex)
+{
+	if (outputSlotIndex < 0 || outputSlotIndex > outputSlotCount())
+	{
+		ERR_LOG << "Invalid output slot index: #" << outputSlotIndex;
+		return std::set<Connection>();
+	}
+	const std::set<SlotIndex> & slotSet = outputLinks[outputSlotIndex];
+	if (graphModel())
+	{
+		std::set<Connection> connectionSet;
+		for (auto sid : slotSet)
+		{
+			connectionSet.insert(sid.isValid() ? Connection(graphModel()->node(sid.node), sid.slot) : Connection());
+		}
+		return connectionSet;
+	}
+	else
+	{
+		return std::set<Connection>();
+	}
 }

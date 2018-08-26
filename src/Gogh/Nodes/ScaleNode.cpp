@@ -23,10 +23,12 @@ bool ScaleNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		return false;
 	}
 
+	//Output smart-renaming
 	std::ostringstream ss;
 	ss << parmEvalAsInt(0) << "x" << parmEvalAsInt(1);
 	cmd.env["scale"] = ss.str();
 
+	//RenderCommand
 	cmd.cmd.push_back("-vf");
 	std::ostringstream().swap(ss);
 	ss << "scale=" << parmEvalAsInt(0) << ":" << parmEvalAsInt(1);

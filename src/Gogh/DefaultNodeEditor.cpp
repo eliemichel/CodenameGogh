@@ -9,6 +9,7 @@
 #include <QSpinBox>
 #include <QComboBox>
 #include <QPushButton>
+#include <QCheckBox>
 
 DefaultNodeEditor::DefaultNodeEditor(Node *_node, QWidget *parent)
 	: QWidget(parent)
@@ -71,6 +72,12 @@ void DefaultNodeEditor::updateParm(int parm)
 		w->setCurrentIndex(node()->parmRawValue(parm).toInt());
 		break;
 	}
+	case CheckboxType:
+	{
+		QCheckBox *w = static_cast<QCheckBox*>(input);
+		w->setChecked(node()->parmRawValue(parm).toBool());
+		break;
+	}
 	case ButtonType:
 	{
 		QComboBox *w = static_cast<QComboBox*>(input);
@@ -131,6 +138,14 @@ void DefaultNodeEditor::addParmInput(int parm)
 			}
 			w->setCurrentIndex(node()->parmRawValue(parm).toInt());
 			connect(w, QOverload<int>::of(&QComboBox::currentIndexChanged), [=](int index) { node()->setParm(parm, index); });
+			input = w;
+			break;
+		}
+		case CheckboxType:
+		{
+			QCheckBox *w = new QCheckBox();
+			w->setChecked(node()->parmRawValue(parm).toBool());
+			connect(w, QOverload<bool>::of(&QCheckBox::clicked), [=](int value) { node()->setParm(parm, value); });
 			input = w;
 			break;
 		}
