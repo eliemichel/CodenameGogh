@@ -2,6 +2,8 @@
 #include "EnvModel.h"
 #include "NodeGraphModel.h"
 #include "DefaultNodeEditor.h"
+#include "Parameter.h"
+#include "Slot.h"
 #include "Logger.h"
 
 #include <cassert>
@@ -125,7 +127,7 @@ void Node::insertInputSlots(int first, int last)
 	}
 
 	emit aboutToInsertInputSlots(first, last);
-	m_inputSlots.insert(m_inputSlots.begin() + first, last - first + 1, new InputSlot());
+	m_inputSlots.insert(m_inputSlots.begin() + first, last - first + 1, new InputSlot(this));
 }
 
 void Node::removeInputSlots(int first, int last)
@@ -152,7 +154,7 @@ void Node::insertOutputSlots(int first, int last)
 	}
 
 	emit aboutToInsertOutputSlots(first, last);
-	m_outputSlots.insert(m_outputSlots.begin() + first, last - first + 1, new OutputSlot());
+	m_outputSlots.insert(m_outputSlots.begin() + first, last - first + 1, new OutputSlot(this));
 }
 
 void Node::removeOutputSlots(int first, int last)

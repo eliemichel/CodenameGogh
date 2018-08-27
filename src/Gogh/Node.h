@@ -2,7 +2,7 @@
 #define H_NODE
 
 #include "SlotIndex.h"
-#include "Parameter.h"
+#include "ParameterType.h"
 
 #include <QObject>
 #include <QString>
@@ -20,13 +20,9 @@ class EnvModel;
 class NodeGraphModel;
 class QWidget;
 
-class InputSlot {
-
-};
-
-class OutputSlot {
-
-};
+class Parameter;
+class InputSlot;
+class OutputSlot;
 
 /**
  * This structure is transmitted among the graph nodes while building the
@@ -173,6 +169,8 @@ public:
 
 	void setEnvModel(EnvModel *envModel) { m_envModel = envModel; }
 	void setGraphModel(NodeGraphModel *model) { m_graphModel = model; }
+
+	// // Setters // //
 
 	int nodeIndex() const { return m_nodeIndex; }
 	void setNodeIndex(int index) { m_nodeIndex = index; }

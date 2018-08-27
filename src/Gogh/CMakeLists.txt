@@ -23,6 +23,8 @@ set(SRC
 	ArgParse.cpp
 	mainGui.h
 	mainGui.cpp
+	Slot.h
+	Slot.cpp
 	Node.h
 	Node.cpp
 	NodeType.h

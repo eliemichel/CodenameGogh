@@ -1,5 +1,6 @@
 #include "DefaultNodeEditor.h"
 #include "Node.h"
+#include "ParameterType.h"
 #include "Logger.h"
 
 #include <QWidget>
