@@ -87,7 +87,7 @@ void NodeGraphicsItem::setSelected(bool selected)
 void NodeGraphicsItem::updateInputSlots()
 {
 	// remove extra slots
-	while (!m_inputSlotItems.empty() && m_inputSlotItems.size() > node()->inputSlotCount())
+	while (!m_inputSlotItems.empty() && m_inputSlotItems.size() > node()->inputSlotCount_legacy())
 	{
 		SlotGraphicsItem *inputItem = m_inputSlotItems.back();
 		m_inputSlotItems.pop_back();
@@ -97,7 +97,7 @@ void NodeGraphicsItem::updateInputSlots()
 		delete inputItem;
 	}
 
-	for (int i = 0 ; i < node()->inputSlotCount() ; ++i)
+	for (int i = 0 ; i < node()->inputSlotCount_legacy() ; ++i)
 	{
 		SlotGraphicsItem *slotItem;
 		if (i >= m_inputSlotItems.size())
@@ -121,7 +121,7 @@ void NodeGraphicsItem::updateInputSlots()
 void NodeGraphicsItem::updateOutputSlots()
 {
 	// remove extra slots
-	while (!m_outputSlotItems.empty() && m_outputSlotItems.size() > node()->outputSlotCount())
+	while (!m_outputSlotItems.empty() && m_outputSlotItems.size() > node()->outputSlotCount_legacy())
 	{
 		SlotGraphicsItem *outputItem = m_outputSlotItems.back();
 		m_outputSlotItems.pop_back();
@@ -130,7 +130,7 @@ void NodeGraphicsItem::updateOutputSlots()
 		delete outputItem;
 	}
 
-	for (int i = 0 ; i < node()->outputSlotCount(); ++i)
+	for (int i = 0 ; i < node()->outputSlotCount_legacy(); ++i)
 	{
 		SlotGraphicsItem *slotItem;
 		// add missing slot

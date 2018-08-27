@@ -15,6 +15,8 @@ Node::Node(QObject *parent)
 
 Node::~Node() {
 	removeParams(0, paramCount());
+	removeInputSlots(0, inputSlotCount());
+	removeOutputSlots(0, outputSlotCount());
 }
 
 // // Getters // //
@@ -27,15 +29,62 @@ const Parameter & Node::param(int i) const {
 	if (i < 0 || i >= paramCount()) {
 		ERR_LOG << "Trying to access an invalid parameter index: #" << i << " (not in range [0," << paramCount() << "])";
 		assert(false);
+		i = std::min(std::max(0, i), paramCount());
 	}
 	return *m_params.at(i);
 }
+
 Parameter & Node::param(int i) {
 	if (i < 0 || i >= paramCount()) {
 		ERR_LOG << "Trying to access an invalid parameter index: #" << i << " (not in range [0," << paramCount() << "])";
 		assert(false);
+		i = std::min(std::max(0, i), paramCount());
 	}
 	return *m_params.at(i);
+}
+
+int Node::inputSlotCount() const {
+	return static_cast<int>(m_inputSlots.size());
+}
+
+const InputSlot & Node::inputSlot(int i) const {
+	if (i < 0 || i >= inputSlotCount()) {
+		ERR_LOG << "Trying to access an invalid input slot index: #" << i << " (not in range [0," << inputSlotCount() << "])";
+		assert(false);
+		i = std::min(std::max(0, i), inputSlotCount());
+	}
+	return *m_inputSlots.at(i);
+}
+
+InputSlot & Node::inputSlot(int i) {
+	if (i < 0 || i >= inputSlotCount()) {
+		ERR_LOG << "Trying to access an invalid input slot index: #" << i << " (not in range [0," << inputSlotCount() << "])";
+		assert(false);
+		i = std::min(std::max(0, i), inputSlotCount());
+	}
+	return *m_inputSlots.at(i);
+}
+
+int Node::outputSlotCount() const {
+	return static_cast<int>(m_outputSlots.size());
+}
+
+const OutputSlot & Node::outputSlot(int i) const {
+	if (i < 0 || i >= outputSlotCount()) {
+		ERR_LOG << "Trying to access an invalid output slot index: #" << i << " (not in range [0," << outputSlotCount() << "])";
+		assert(false);
+		i = std::min(std::max(0, i), outputSlotCount());
+	}
+	return *m_outputSlots.at(i);
+}
+
+OutputSlot & Node::outputSlot(int i) {
+	if (i < 0 || i >= outputSlotCount()) {
+		ERR_LOG << "Trying to access an invalid output slot index: #" << i << " (not in range [0," << outputSlotCount() << "])";
+		assert(false);
+		i = std::min(std::max(0, i), outputSlotCount());
+	}
+	return *m_outputSlots.at(i);
 }
 
 // // Setters // //
@@ -65,6 +114,60 @@ void Node::removeParams(int first, int last)
 		delete *it;
 	}
 	m_params.erase(m_params.begin() + first, m_params.begin() + last + 1);
+}
+
+void Node::insertInputSlots(int first, int last)
+{
+	if (first < 0 || first > inputSlotCount() || last < first)
+	{
+		WARN_LOG << "Invalid input slot insert: " << first << " to " << last << " (current size is " << inputSlotCount() << ")";
+		return;
+	}
+
+	emit aboutToInsertInputSlots(first, last);
+	m_inputSlots.insert(m_inputSlots.begin() + first, last - first + 1, new InputSlot());
+}
+
+void Node::removeInputSlots(int first, int last)
+{
+	if (first < 0 || last >= inputSlotCount() || last < first)
+	{
+		WARN_LOG << "Invalid input slot remove: " << first << " to " << last << " (size is " << inputSlotCount() << ")";
+		return;
+	}
+
+	emit aboutToRemoveInputSlots(first, last);
+	for (auto it = m_inputSlots.begin() + first; it != m_inputSlots.begin() + last + 1; ++it) {
+		delete *it;
+	}
+	m_inputSlots.erase(m_inputSlots.begin() + first, m_inputSlots.begin() + last + 1);
+}
+
+void Node::insertOutputSlots(int first, int last)
+{
+	if (first < 0 || first > outputSlotCount() || last < first)
+	{
+		WARN_LOG << "Invalid output slot insert: " << first << " to " << last << " (current size is " << outputSlotCount() << ")";
+		return;
+	}
+
+	emit aboutToInsertOutputSlots(first, last);
+	m_outputSlots.insert(m_outputSlots.begin() + first, last - first + 1, new OutputSlot());
+}
+
+void Node::removeOutputSlots(int first, int last)
+{
+	if (first < 0 || last >= outputSlotCount() || last < first)
+	{
+		WARN_LOG << "Invalid output slot remove: " << first << " to " << last << " (size is " << outputSlotCount() << ")";
+		return;
+	}
+
+	emit aboutToRemoveOutputSlots(first, last);
+	for (auto it = m_outputSlots.begin() + first; it != m_outputSlots.begin() + last + 1; ++it) {
+		delete *it;
+	}
+	m_outputSlots.erase(m_outputSlots.begin() + first, m_outputSlots.begin() + last + 1);
 }
 
 // // Legacy // //
@@ -237,7 +340,7 @@ void Node::removeOutputSlots()
 
 Connection Node::inputConnection(int inputSlotIndex)
 {
-	if (inputSlotIndex < 0 || inputSlotIndex > inputSlotCount())
+	if (inputSlotIndex < 0 || inputSlotIndex > inputSlotCount_legacy())
 	{
 		ERR_LOG << "Invalid input slot index: #" << inputSlotIndex;
 		return Connection();
@@ -255,7 +358,7 @@ Connection Node::inputConnection(int inputSlotIndex)
 
 std::set<Connection> Node::outputConnection(int outputSlotIndex)
 {
-	if (outputSlotIndex < 0 || outputSlotIndex > outputSlotCount())
+	if (outputSlotIndex < 0 || outputSlotIndex > outputSlotCount_legacy())
 	{
 		ERR_LOG << "Invalid output slot index: #" << outputSlotIndex;
 		return std::set<Connection>();

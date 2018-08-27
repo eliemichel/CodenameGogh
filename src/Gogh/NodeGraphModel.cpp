@@ -722,7 +722,7 @@ bool NodeGraphModel::LoadGraph(QString filename)
 	// Links
 	for (int i = 0; i < n; ++i)
 	{
-		int maxM = static_cast<int>(node(i)->inputSlotCount());
+		int maxM = static_cast<int>(node(i)->inputSlotCount_legacy());
 		int m;
 		in >> m;
 		if (m > maxM)
@@ -768,7 +768,7 @@ bool NodeGraphModel::SaveGraph(QString filename)
 	for (NodeEntry *entry : m_nodeEntries)
 	{
 		Node *node = entry->node;
-		out << node->inputSlotCount();
+		out << node->inputSlotCount_legacy();
 		for (const SlotIndex & origin : node->inputLinks)
 		{
 			out << origin.node << origin.slot;

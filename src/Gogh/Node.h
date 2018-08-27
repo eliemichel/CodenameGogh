@@ -20,6 +20,14 @@ class EnvModel;
 class NodeGraphModel;
 class QWidget;
 
+class InputSlot {
+
+};
+
+class OutputSlot {
+
+};
+
 /**
  * This structure is transmitted among the graph nodes while building the
  * render command. Feel free to add any field required to properly build
@@ -92,20 +100,68 @@ public:
 	const Parameter & param(int i) const;
 	Parameter & param(int i);
 
+	/**
+	 * Return the number of input slots in the node
+	 */
+	int inputSlotCount() const;
+
+	/**
+	 * Get input slot at index i.
+	 */
+	const InputSlot & inputSlot(int i) const;
+	InputSlot & inputSlot(int i);
+
+	/**
+	 * Return the number of output slots in the node
+	 */
+	int outputSlotCount() const;
+
+	/**
+	 * Get output slot at index i.
+	 */
+	const OutputSlot & outputSlot(int i) const;
+	OutputSlot & outputSlot(int i);
+
 	// // Setters // //
 
 	/**
-	* Insert new parameters. The inserted params will have indexes from <first>
-	* to <last> and the next params will be shifted by last - first + 1.
-	* The emits the signal aboutToInsertParams before changing the underlying data
-	*/
+	 * Insert new parameters. The inserted params will have indexes from <first>
+	 * to <last> and the next params will be shifted by last - first + 1.
+	 * The emits the signal aboutToInsertParams before changing the underlying data
+	 */
 	void insertParams(int first, int last);
 
 	/**
-	* Remove parameters from <first> to <last> included.
-	* The emits the signal aboutToRemoveParams before changing the underlying data
-	*/
+	 * Remove parameters from <first> to <last> included.
+	 * The emits the signal aboutToRemoveParams before changing the underlying data
+	 */
 	void removeParams(int first, int last);
+
+	/**
+	 * Insert new input slots. The inserted slots will have indexes from <first>
+	 * to <last> and the next slots will be shifted by last - first + 1.
+	 * The emits the signal aboutToInsertInputSlots before changing the underlying data
+	 */
+	void insertInputSlots(int first, int last);
+
+	/**
+	 * Remove input slots from <first> to <last> included.
+	 * The emits the signal aboutToRemoveInputSlots before changing the underlying data
+	 */
+	void removeInputSlots(int first, int last);
+
+	/**
+	* Insert new output slots. The inserted slots will have indexes from <first>
+	* to <last> and the next slots will be shifted by last - first + 1.
+	* The emits the signal aboutToInsertOutputSlots before changing the underlying data
+	*/
+	void insertOutputSlots(int first, int last);
+
+	/**
+	* Remove output slots from <first> to <last> included.
+	* The emits the signal aboutToRemoveOutputSlots before changing the underlying data
+	*/
+	void removeOutputSlots(int first, int last);
 
 
 public:
@@ -141,8 +197,8 @@ public:
 	bool parmEvalAsBool(int parm) const;
 
 	// slot structure read
-	int inputSlotCount() const { return static_cast<int>(inputLinks.size()); }
-	int outputSlotCount() const { return static_cast<int>(outputLinks.size()); }
+	int inputSlotCount_legacy() const { return static_cast<int>(inputLinks.size()); }
+	int outputSlotCount_legacy() const { return static_cast<int>(outputLinks.size()); }
 
 signals:
 	void parmChanged(int parm);
@@ -152,6 +208,18 @@ signals:
 
 	/// emitted before removing parameters from position <first> to <last> included
 	void aboutToRemoveParams(int first, int last);
+
+	/// emitted before inserting new input slots from position <first> to <last> included
+	void aboutToInsertInputSlots(int first, int last);
+
+	/// emitted before removing input slots from position <first> to <last> included
+	void aboutToRemoveInputSlots(int first, int last);
+
+	/// emitted before inserting new output slots from position <first> to <last> included
+	void aboutToInsertOutputSlots(int first, int last);
+
+	/// emitted before removing output slots from position <first> to <last> included
+	void aboutToRemoveOutputSlots(int first, int last);
 
 protected:
 	// slot structure write
@@ -198,6 +266,8 @@ protected:
 private:
 	// TODO change Parameter* to Parameter when it will no longer be a qt object
 	std::vector<Parameter*> m_params;
+	std::vector<InputSlot*> m_inputSlots;
+	std::vector<OutputSlot*> m_outputSlots;
 
 	EnvModel *m_envModel;
 	NodeGraphModel *m_graphModel;
