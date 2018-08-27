@@ -4,12 +4,70 @@
 #include "DefaultNodeEditor.h"
 #include "Logger.h"
 
+#include <cassert>
+
 Node::Node(QObject *parent)
 	: QObject(parent)
 	, m_envModel(nullptr)
 	, m_graphModel(nullptr)
 {
 }
+
+Node::~Node() {
+	removeParams(0, paramCount());
+}
+
+// // Getters // //
+
+int Node::paramCount() const {
+	return static_cast<int>(m_params.size());
+}
+
+const Parameter & Node::param(int i) const {
+	if (i < 0 || i >= paramCount()) {
+		ERR_LOG << "Trying to access an invalid parameter index: #" << i << " (not in range [0," << paramCount() << "])";
+		assert(false);
+	}
+	return *m_params.at(i);
+}
+Parameter & Node::param(int i) {
+	if (i < 0 || i >= paramCount()) {
+		ERR_LOG << "Trying to access an invalid parameter index: #" << i << " (not in range [0," << paramCount() << "])";
+		assert(false);
+	}
+	return *m_params.at(i);
+}
+
+// // Setters // //
+
+void Node::insertParams(int first, int last)
+{
+	if (first < 0 || first > paramCount() || last < first)
+	{
+		WARN_LOG << "Invalid parameter insert: " << first << " to " << last << " (current size is " << paramCount() << ")";
+		return;
+	}
+
+	emit aboutToInsertParams(first, last);
+	m_params.insert(m_params.begin() + first, last - first + 1, new Parameter());
+}
+
+void Node::removeParams(int first, int last)
+{
+	if (first < 0 || last >= paramCount() || last < first)
+	{
+		WARN_LOG << "Invalid parameter remove: " << first << " to " << last << " (size is " << paramCount() << ")";
+		return;
+	}
+
+	emit aboutToRemoveParams(first, last);
+	for (auto it = m_params.begin() + first; it != m_params.begin() + last + 1; ++it) {
+		delete *it;
+	}
+	m_params.erase(m_params.begin() + first, m_params.begin() + last + 1);
+}
+
+// // Legacy // //
 
 QWidget *Node::createEditor(QWidget *parent)
 {

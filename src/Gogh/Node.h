@@ -76,8 +76,36 @@ public:
 
 public:
 	explicit Node(QObject *parent = nullptr);
+	~Node();
 
 	// // Getters // //
+
+	/**
+	 * Return the number of parameters in the node
+	 */
+	int paramCount() const;
+
+	/** 
+	 * Get parameter at index i. Use the implementation returning a non const
+	 * reference to update the parameter.
+	 */
+	const Parameter & param(int i) const;
+	Parameter & param(int i);
+
+	// // Setters // //
+
+	/**
+	* Insert new parameters. The inserted params will have indexes from <first>
+	* to <last> and the next params will be shifted by last - first + 1.
+	* The emits the signal aboutToInsertParams before changing the underlying data
+	*/
+	void insertParams(int first, int last);
+
+	/**
+	* Remove parameters from <first> to <last> included.
+	* The emits the signal aboutToRemoveParams before changing the underlying data
+	*/
+	void removeParams(int first, int last);
 
 
 public:
@@ -119,6 +147,11 @@ public:
 signals:
 	void parmChanged(int parm);
 
+	/// emitted before inserting new parameters from position <first> to <last> included
+	void aboutToInsertParams(int first, int last);
+
+	/// emitted before removing parameters from position <first> to <last> included
+	void aboutToRemoveParams(int first, int last);
 
 protected:
 	// slot structure write
@@ -163,6 +196,9 @@ protected:
 	virtual void slotDisconnectEvent(SlotEvent *event) {}
 
 private:
+	// TODO change Parameter* to Parameter when it will no longer be a qt object
+	std::vector<Parameter*> m_params;
+
 	EnvModel *m_envModel;
 	NodeGraphModel *m_graphModel;
 	int m_nodeIndex;

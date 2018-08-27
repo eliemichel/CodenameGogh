@@ -25,7 +25,7 @@ private:
 
 public:
 	Parameter(QObject *parent = nullptr);
-
+	
 	// // Getters // //
 
 	/// Name of the parameter, used for display
@@ -91,7 +91,7 @@ public:
 
 	/**
 	* Remove menu items from <first> to <last> included.
-	* The emits the signal aboutToDeleteMenuItems before changing the underlying data
+	* The emits the signal aboutToRemoveMenuItems before changing the underlying data
 	*/
 	void removeMenuItems(int first, int last);
 
