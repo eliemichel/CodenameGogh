@@ -15,6 +15,8 @@
 #include "Ui/UiButton.h"
 #include "Ui/UiContextMenu.h"
 
+#include "Variant.h"
+
 #include <GLFW/glfw3.h>
 #include <nanovg.h>
 
@@ -23,6 +25,11 @@
 
 int mainGui(const ArgParse & args)
 {
+	// TEST
+	Variant var;
+	var = "42";
+	DEBUG_LOG << var.toInt();
+
 	UiApp app;
 	UiWindow window(1200, 600, "Gogh");
 

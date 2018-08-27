@@ -86,6 +86,8 @@ set(SRC
 	Dialogs/RenderDialog.h
 	Dialogs/RenderDialog.cpp
 
+	Variant.h
+
 	Ui/UiRect.h
 	Ui/UiBase.h
 	Ui/UiBoxLayout.inc.h

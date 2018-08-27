@@ -77,6 +77,10 @@ public:
 public:
 	explicit Node(QObject *parent = nullptr);
 
+	// // Getters // //
+
+
+public:
 	/**
 	 * Create an editor widget to operate on this node's parms.
 	 * This is the only method that handle graphical objects.

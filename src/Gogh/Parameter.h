@@ -11,8 +11,6 @@
  * A parameter is a user editable property of a node. They represent properties
  * that are specific to a given node, and not generic properties like node
  * position or name. The latter are rather provided node attributes @see Node.
- *
- * TODO: add setType() and typeChanged()
  */
 class Parameter : public QObject
 {
