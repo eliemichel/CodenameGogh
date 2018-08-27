@@ -100,6 +100,9 @@ set(SRC
 	Ui/UiMenu.h
 	Ui/UiContextMenu.h
 	Ui/UiContextMenu.cpp
+	Ui/NodeArea.h
+	Ui/NodeArea.cpp
+	Ui/NodeAreaItems.h
 	Ui/UiApp.h
 	Ui/UiApp.cpp
 	Ui/UiWindow.h

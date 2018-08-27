@@ -48,7 +48,8 @@ public:
 		float m_layer;
 	};
 
-	struct Accessor {
+	class Accessor {
+	public:
 		Accessor() : isValid(false) {}
 		Accessor(Item *_item) : item(_item), isValid(true) {}
 
@@ -107,6 +108,7 @@ private:
 	QuadTree *m_branches[_BranchCount];
 	/// Items that cannot fit in children, whether it is because there is no
 	/// child tree or because the item's bbox is too large.
+	/// TODO: replace with a set
 	std::vector<Item*> m_items;
 };
 
