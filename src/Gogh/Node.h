@@ -84,6 +84,8 @@ public:
 
 	// // Getters // //
 
+	// TODO: make some protected
+
 	/**
 	 * Return the number of parameters in the node
 	 */

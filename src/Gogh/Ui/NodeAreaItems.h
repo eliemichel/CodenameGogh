@@ -1,7 +1,8 @@
 #ifndef H_NODEAREAITEMS
 #define  H_NODEAREAITEMS
 
-#include "Ui/QuadTree.h"
+#include "QuadTree.h"
+#include "UiBase.h"
 
 enum NodeAreaItemType {
 	_BeginNodeAreaItems,
@@ -60,7 +61,18 @@ class NodeItem : public AbstractNodeAreaItem {
 public:
 	NodeItem(Rect bbox)
 		: AbstractNodeAreaItem(bbox, NodeItemType)
+		, m_content(nullptr)
 	{}
+	~NodeItem() {
+		if (m_content) {
+			delete m_content;
+		}
+	}
+
+	void SetContent(UiElement *element) {
+		m_content = element;
+		UpdateGeometry();
+	}
 
 	void Paint(NVGcontext *vg) const override {
 		const Rect & r = BBox();
@@ -75,8 +87,22 @@ public:
 		nvgStrokeColor(vg, nvgRGB(56, 57, 58));
 		nvgStroke(vg);
 
+		if (m_content) {
+			m_content->Paint(vg);
+		}
+
 		AbstractNodeAreaItem::Paint(vg);
 	}
+
+protected:
+	void UpdateGeometry() override {
+		if (m_content) {
+			m_content->SetRect(BBox());
+		}
+	}
+
+private:
+	UiElement *m_content;
 };
 
 class SlotItem : public AbstractNodeAreaItem {

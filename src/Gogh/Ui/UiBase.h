@@ -26,7 +26,7 @@ public:
 
 	// Getters / Setters
 
-	void SetRect(Rect rect) {
+	void SetRect(const Rect & rect) {
 		m_rect = rect;
 		m_innerRect.x = m_rect.x + m_margin.x;
 		m_innerRect.y = m_rect.y + m_margin.y;

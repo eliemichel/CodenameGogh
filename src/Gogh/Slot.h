@@ -25,7 +25,7 @@ public:
 	bool isConnected() const { return m_origin != nullptr; }
 
 	OutputSlot *origin() const { return m_origin; }
-	void connectTo(OutputSlot *origin) { m_origin = origin; }
+	void connectTo(OutputSlot *origin) { m_origin = origin; } // check if it was connected
 
 	Node * originNode() const;
 

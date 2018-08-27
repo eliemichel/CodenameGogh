@@ -3,6 +3,9 @@
 #include "NodeAreaItems.h"
 #include "UiContextMenu.h"
 #include "Logger.h"
+#include "Node.h"
+#include "Slot.h"
+#include "UiButton.h"
 
 #include <cassert>
 
@@ -14,7 +17,6 @@ NodeArea::NodeArea()
 		})
 		, m_tree(new QuadTree(250, 300, 500, 500, 5))
 {
-
 	for (NodeItem *item : m_nodeItems) {
 		m_tree->Insert(item);
 	}
@@ -37,6 +39,29 @@ NodeArea::NodeArea()
 	SortItems();
 
 	m_linkItems.push_back({ slot1, slot });
+
+	Node *node = new Node();
+	node->insertInputSlots(0, 1);
+	node->insertOutputSlots(0, 2);
+
+	NodeItem *nodeItem = new NodeItem({ 0, 0, 200, 100 });
+	UiButton *button = new UiButton();
+	button->SetText("NODE");
+	nodeItem->SetContent(button);
+	m_tree->Insert(nodeItem);
+	m_nodeItems.push_back(nodeItem);
+	for (int i = 0; i < node->inputSlotCount(); ++i) {
+		InputSlot & slot = node->inputSlot(i);
+		SlotItem *slotItem = new SlotItem({ -8, 20 + 30 * i, 16, 16 });
+		m_tree->Insert(slotItem);
+		nodeItem->AddChild(slotItem);
+	}
+	for (int i = 0; i < node->outputSlotCount(); ++i) {
+		OutputSlot & slot = node->outputSlot(i);
+		SlotItem *slotItem = new SlotItem({ 192, 20 + 30 * i, 16, 16 });
+		m_tree->Insert(slotItem);
+		nodeItem->AddChild(slotItem);
+	}
 }
 
 NodeArea::~NodeArea() {
@@ -137,9 +162,15 @@ void NodeArea::OnMouseClick(int button, int action, int mods) {
 			m_contextMenu->Popup(MouseX(), MouseY());
 		}
 	}
+}
+
+void NodeArea::OnKey(int key, int scancode, int action, int mods) {
+	if (key == GLFW_KEY_DELETE && action == GLFW_PRESS) {
+		m_tree->RemoveItems(m_selectedNodes);
+	}
 
 	// DEBUG
-	if (button == GLFW_MOUSE_BUTTON_MIDDLE && action == GLFW_RELEASE) {
+	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
 		m_debug = !m_debug;
 	}
 }

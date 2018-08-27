@@ -33,13 +33,20 @@ public:
 		int Type() const { return m_type; }
 
 		Rect BBox() const { return m_bbox; }
-		void SetBBox(const Rect & bbox) { m_bbox = bbox; }
+		void SetBBox(const Rect & bbox) {
+			m_bbox = bbox;
+			UpdateGeometry();
+		}
 
 		float Layer() const { return m_layer; }
 		void SetLayer(float layer) { m_layer = layer; }
 
 		/// x and y are garanteed to be within the bounding box
 		virtual bool Hit(float x, float y) { return true; }
+
+	protected:
+		/// Called to update item geometry after bbox changed
+		virtual void UpdateGeometry() {}
 
 	private:
 		QuadTree *m_tree;

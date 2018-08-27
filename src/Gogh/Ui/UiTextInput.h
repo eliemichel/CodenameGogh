@@ -2,7 +2,6 @@
 #define H_UITEXTINPUT
 
 #include "UiBase.h"
-#include "ExtraUi.hpp"
 #include <string>
 
 class UiTextInput : public UiTrackMouseElement {

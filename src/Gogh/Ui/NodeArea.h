@@ -32,6 +32,7 @@ public: // protected:
 	void Paint(NVGcontext *vg) const override;
 	void OnMouseOver(int x, int y) override;
 	void OnMouseClick(int button, int action, int mods) override;
+	void OnKey(int key, int scancode, int action, int mods) override;
 
 private:
 	void StartMovingNodes();
