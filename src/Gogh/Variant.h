@@ -15,34 +15,89 @@ namespace std {
 
 #include <string>
 
-class Variant
+class Variant : public std::variant<int, float, bool, std::string>
 {
 private:
 	enum TypeIndex {
-		IntIndex
+		IntIndex,
+		FloatIndex,
+		BoolIndex,
+		StringIndex,
 	};
 public:
-	// TODO
-	//variant & operator=(const variant&);
-	//variant& operator=(variant&&) noexcept(see below);
-	//template <class T> variant& operator=(T&&) noexcept(see below);
+	Variant() {}
 
-	template <typename T>
-	Variant operator=(const T & value) {
-		content = value;
+	// TODO: avoid this duplication
+	Variant(int i)
+		: std::variant<int, float, bool, std::string>(i)
+	{}
+	Variant(float f)
+		: std::variant<int, float, bool, std::string>(f)
+	{}
+	Variant(const std::string & str)
+		: std::variant<int, float, bool, std::string>(str)
+	{}
+	Variant(const char *cstr)
+		: std::variant<int, float, bool, std::string>(std::string(cstr))
+	{}
+	Variant(bool b)
+		: std::variant<int, float, bool, std::string>(b)
+	{}
+
+	Variant operator=(const char *cstr) {
+		(*this) = Variant(cstr);
 		return *this;
 	}
 
 	int toInt() const {
-		if (std::holds_alternative<IntIndex>(content)) {
-			return std::get<IntIndex>(content);
+		if (std::holds_alternative<IntIndex>(*this)) {
+			return std::get<IntIndex>(*this);
+		} else if (std::holds_alternative<FloatIndex>(*this)) {
+			return static_cast<int>(std::get<FloatIndex>(*this));
+		} else if (std::holds_alternative<BoolIndex>(*this)) {
+			return std::get<BoolIndex>(*this) ? 1 : 0;
 		} else {
 			return 0;
 		}
 	}
 
-private:
-	std::variant<int, float, bool, std::string> content;
+	float toFloat() const {
+		if (std::holds_alternative<FloatIndex>(*this)) {
+			return std::get<FloatIndex>(*this);
+		} else if (std::holds_alternative<IntIndex>(*this)) {
+			return static_cast<float>(std::get<IntIndex>(*this));
+		} else if (std::holds_alternative<BoolIndex>(*this)) {
+			return std::get<BoolIndex>(*this) ? 1.f : 0.f;
+		} else {
+			return 0.f;
+		}
+	}
+
+	bool toBool() const {
+		if (std::holds_alternative<BoolIndex>(*this)) {
+			return std::get<BoolIndex>(*this);
+		} else if (std::holds_alternative<IntIndex>(*this)) {
+			return std::get<IntIndex>(*this) != 0;
+		} else if (std::holds_alternative<FloatIndex>(*this)) {
+			return std::get<FloatIndex>(*this) != 0.f;
+		} else {
+			return false;
+		}
+	}
+
+	std::string toString() const {
+		if (std::holds_alternative<StringIndex>(*this)) {
+			return std::get<StringIndex>(*this);
+		} else if (std::holds_alternative<IntIndex>(*this)) {
+			return std::to_string(std::get<IntIndex>(*this));
+		} else if (std::holds_alternative<FloatIndex>(*this)) {
+			return std::to_string(std::get<FloatIndex>(*this));
+		} else if (std::holds_alternative<BoolIndex>(*this)) {
+			return std::get<BoolIndex>(*this) ? "True" : "False";
+		} else {
+			return std::string();
+		}
+	}
 };
 
 

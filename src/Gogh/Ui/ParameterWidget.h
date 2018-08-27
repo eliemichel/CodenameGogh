@@ -61,6 +61,7 @@ private:
 	/// Layout used to pop up enum menu
 	UiLayout *m_popupLayout;
 
+	// TODO: use a variant
 	union
 	{
 		UiElement *widget;

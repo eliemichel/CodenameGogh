@@ -11,17 +11,17 @@ int Parameter::menuCount() const
 	return static_cast<int>(m_menu.size());
 }
 
-QString Parameter::menuLabel(int item) const
+std::string Parameter::menuLabel(int item) const
 {
-	return item < 0 || item >= menuCount() ? QString() : m_menu[item].label;
+	return item < 0 || item >= menuCount() ? std::string() : m_menu[item].label;
 }
 
-QVariant Parameter::menuValue(int item) const
+Variant Parameter::menuValue(int item) const
 {
-	return item < 0 || item >= menuCount() ? QVariant() : m_menu[item].value;
+	return item < 0 || item >= menuCount() ? Variant() : m_menu[item].value;
 }
 
-bool Parameter::set(const QVariant & value)
+bool Parameter::set(const Variant & value)
 {
 	if (m_rawValue != value) {
 		m_rawValue = value;
@@ -30,7 +30,7 @@ bool Parameter::set(const QVariant & value)
 	return true;
 }
 
-void Parameter::setName(const QString & name)
+void Parameter::setName(const std::string & name)
 {
 	if (m_name != name) {
 		m_name = name;
@@ -46,7 +46,7 @@ void Parameter::setType(ParmType type)
 	}
 }
 
-void Parameter::setMenuLabel(int item, const QString & label)
+void Parameter::setMenuLabel(int item, const std::string & label)
 {
 	if (item < 0 || item >= menuCount())
 	{
@@ -58,7 +58,7 @@ void Parameter::setMenuLabel(int item, const QString & label)
 	emit menuLabelChanged(item);
 }
 
-void Parameter::setMenuValue(int item, const QVariant & value)
+void Parameter::setMenuValue(int item, const Variant & value)
 {
 	if (item < 0 || item >= menuCount())
 	{

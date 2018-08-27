@@ -2,9 +2,9 @@
 #define H_PARAMETER
 
 #include <QObject>
-#include <QString>
-#include <QVariant>
 #include <vector>
+#include <string>
+#include "Variant.h"
 #include "ParameterType.h"
 
 /**
@@ -19,8 +19,8 @@ class Parameter : public QObject
 private:
 	struct MenuItem
 	{
-		QString label;
-		QVariant value;
+		std::string label;
+		Variant value;
 	};
 
 public:
@@ -29,13 +29,13 @@ public:
 	// // Getters // //
 
 	/// Name of the parameter, used for display
-	inline QString name() const { return m_name; }
+	inline std::string name() const { return m_name; }
 
 	/// Type of parameter @see ParmType
 	inline ParmType type() const { return m_type; }
 
 	/// Raw value of the parameter. It is often prefered to use one of the eval functions
-	inline QVariant rawValue() const { return m_rawValue; }
+	inline Variant rawValue() const { return m_rawValue; }
 
 	/**
 	 * Number of menu items in this parameter.
@@ -46,10 +46,10 @@ public:
 	int menuCount() const;
 
 	/// Label of the menu item at index <item>, used for display
-	QString menuLabel(int item) const;
+	std::string menuLabel(int item) const;
 
 	/// Value of the menu item at index <item>, used parameter for evaluation
-	QVariant menuValue(int item) const;
+	Variant menuValue(int item) const;
 
 	// // Setters // //
 
@@ -57,12 +57,12 @@ public:
 	 * Set the raw value of the parameter. This fires a valueChanged() signal
 	 * and returns true if the value is valid for this parameter.
 	 */
-	bool set(const QVariant & value);
+	bool set(const Variant & value);
 
 	/**
 	 * Set the display name the parameter. This fires a nameChanged() signal.
 	 */
-	void setName(const QString & name);
+	void setName(const std::string & name);
 
 	/**
 	 * Set the type of the parameter. This tries to cast the raw value to the
@@ -74,13 +74,13 @@ public:
 	 * Set the label of a menu entry if <item> refers to a valid menu item, and
 	 * emit a menuLabelChanged signal.
 	 */
-	void setMenuLabel(int item, const QString & label);
+	void setMenuLabel(int item, const std::string & label);
 
 	/**
 	* Set the label of a menu entry if <item> refers to a valid menu item, and
 	* emit a menuLabelChanged signal.
 	*/
-	void setMenuValue(int item, const QVariant & value);
+	void setMenuValue(int item, const Variant & value);
 
 	/**
 	 * Insert new menu items. The inserted items will have indexes from <first>
@@ -124,9 +124,9 @@ signals:
 	void aboutToRemoveMenuItems(int first, int last);
 
 private:
-	QString m_name;
+	std::string m_name;
 	ParmType m_type;
-	QVariant m_rawValue;
+	Variant m_rawValue;
 	std::vector<MenuItem> m_menu;
 };
 

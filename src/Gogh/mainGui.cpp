@@ -52,7 +52,7 @@ int mainGui(const ArgParse & args)
 		Parameter *param = new Parameter();
 		param->setType(StringType);
 		param->setName("Yo");
-		param->set(QString::fromStdString("bloum"));
+		param->set("bloum");
 		ParameterWidget *paramWidget = new ParameterWidget(popupLayout);
 		paramWidget->SetParameter(param);
 		paramWidget->SetInnerSizeHint(0, 0, 0, 30);

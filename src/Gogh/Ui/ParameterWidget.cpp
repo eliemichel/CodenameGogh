@@ -61,7 +61,7 @@ void ParameterWidget::UpdateStructure()
 	// Exception: no label when the param is a button
 	if (m_currentType == ButtonType) {
 		m_input.pushButton = new UiButton();
-		m_input.pushButton->SetText(m_param->name().toStdString());
+		m_input.pushButton->SetText(m_param->name());
 		// TODO
 		//connect(m_input.lineEdit, &QLineEdit::textEdited, [=](const QString &text) { parameter()->set(text); });
 		AddItem(m_input.pushButton);
@@ -69,7 +69,7 @@ void ParameterWidget::UpdateStructure()
 	}
 
 	m_label = new UiLabel();
-	m_label->SetText(m_param->name().toStdString());
+	m_label->SetText(m_param->name());
 	AddItem(m_label);
 
 	switch (m_currentType)
@@ -98,7 +98,7 @@ void ParameterWidget::UpdateStructure()
 	{
 		std::vector<std::string> labels;
 		for (int j = 0; j < Parameter()->menuCount(); ++j) {
-			labels.push_back(Parameter()->menuLabel(j).toStdString());
+			labels.push_back(Parameter()->menuLabel(j));
 		}
 		m_input.comboBox = new UiEnumInput(m_popupLayout);
 		m_input.comboBox->SetItemLabels(labels);
@@ -156,7 +156,7 @@ void ParameterWidget::UpdateValue()
 		break;
 	case StringType:
 	{
-		m_input.lineEdit->SetText(m_param->rawValue().toString().toStdString());
+		m_input.lineEdit->SetText(m_param->rawValue().toString());
 		break;
 	}
 	case IntType:
@@ -181,7 +181,7 @@ void ParameterWidget::UpdateValue()
 
 void ParameterWidget::UpdateName() {
 	if (m_label && m_param) {
-		m_label->SetText(m_param->name().toStdString());
+		m_label->SetText(m_param->name());
 	}
 }
 
@@ -193,7 +193,7 @@ void ParameterWidget::UpdateMenuLabel(int item) {
 	// TODO: avoid updating all the items? or do we really care?
 	std::vector<std::string> labels;
 	for (int j = 0; j < Parameter()->menuCount(); ++j) {
-		labels.push_back(Parameter()->menuLabel(j).toStdString());
+		labels.push_back(Parameter()->menuLabel(j));
 	}
 	m_input.comboBox->SetItemLabels(labels);
 }
