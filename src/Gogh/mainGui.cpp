@@ -58,7 +58,7 @@ int mainGui(const ArgParse & args)
 		paramDelegate->SetInnerSizeHint(0, 0, 0, 30);
 		layout->AddItem(paramDelegate);
 	}
-
+	
 	{
 		Parameter *param = new Parameter();
 		param->setType(IntType);

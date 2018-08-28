@@ -4,6 +4,7 @@
 NodeItem::NodeItem(Node *node, QuadTree *tree, UiLayout *popupLayout)
 	: AbstractNodeAreaItem({ 0, 0, 200, 100 }, NodeItemType)
 	, m_content(nullptr)
+	, m_selected(false)
 {
 	// Content
 	SetContent(node->createDelegate(popupLayout));
@@ -35,6 +36,7 @@ NodeItem::NodeItem(Node *node, QuadTree *tree, UiLayout *popupLayout)
 NodeItem::NodeItem(Rect bbox)
 	: AbstractNodeAreaItem(bbox, NodeItemType)
 	, m_content(nullptr)
+	, m_selected(false)
 {}
 
 NodeItem::~NodeItem() {
@@ -58,7 +60,7 @@ void NodeItem::Paint(NVGcontext *vg) const {
 
 	nvgBeginPath(vg);
 	nvgRect(vg, r.xf() + .5f, r.yf() + .5f, r.wf() - 1.f, r.hf() - 1.f);
-	nvgStrokeColor(vg, nvgRGB(56, 57, 58));
+	nvgStrokeColor(vg, IsSelected() ? nvgRGB(156, 157, 158) : nvgRGB(56, 57, 58));
 	nvgStroke(vg);
 
 	if (m_content) {

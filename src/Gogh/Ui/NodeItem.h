@@ -5,17 +5,14 @@
 class Node;
 
 class NodeItem : public AbstractNodeAreaItem {
-	/*
-	public:
+public:
 	static NodeItem * fromRawItem(QuadTree::Item *rawItem) {
-	if (rawItem && rawItem->Type() == NodeItemType) {
-	return static_cast<NodeItem*>(rawItem);
+		if (rawItem && rawItem->Type() == NodeItemType) {
+			return static_cast<NodeItem*>(rawItem);
+		} else {
+			return nullptr;
+		}
 	}
-	else {
-	return nullptr;
-	}
-	}
-	*/
 
 public:
 	NodeItem(Node *node, QuadTree *tree = nullptr, UiLayout *popupLayout = nullptr);
@@ -24,6 +21,9 @@ public:
 
 	void SetContent(UiElement *element);
 
+	bool IsSelected() const { return m_selected; }
+	void SetSelected(bool selected = true) { m_selected = selected; }
+
 	void Paint(NVGcontext *vg) const override;
 
 protected:
@@ -31,6 +31,7 @@ protected:
 
 private:
 	UiElement * m_content;
+	bool m_selected;
 };
 
 

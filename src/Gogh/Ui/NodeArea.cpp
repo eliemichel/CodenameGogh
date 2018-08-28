@@ -11,6 +11,16 @@
 
 #include <cassert>
 
+NodeArea::MovingItem::MovingItem(QuadTree::Accessor _acc)
+	: acc(_acc)
+{
+	if (_acc.item) {
+		const ::Rect & bbox = acc.item->BBox();
+		startX = bbox.x;
+		startY = bbox.y;
+	}
+}
+
 NodeArea::NodeArea(UiLayout *popupLayout)
 	: m_nodeItems({
 	new NodeItem({ 0, 0, 200, 100 }),
@@ -135,13 +145,19 @@ void NodeArea::OnMouseClick(int button, int action, int mods) {
 		if (acc.isValid) {
 			switch (acc.item->Type()) {
 			case NodeItemType:
-				m_selectedNodes.push_back(acc);
-				BringToTop(AbstractNodeAreaItem::fromRawItem(acc.item));
+			{
+				NodeItem *nodeItem = NodeItem::fromRawItem(acc.item);
+				if (!nodeItem->IsSelected()) {
+					SelectNode(nodeItem, acc);
+					BringToTop(nodeItem);
+				}
 				StartMovingNodes();
 				break;
+			}
 
 			case SlotItemType:
 				DEBUG_LOG << "Start dragging link";
+				break;
 			}
 		}
 	}
@@ -159,7 +175,12 @@ void NodeArea::OnMouseClick(int button, int action, int mods) {
 
 void NodeArea::OnKey(int key, int scancode, int action, int mods) {
 	if (key == GLFW_KEY_DELETE && action == GLFW_PRESS) {
-		m_tree->RemoveItems(m_selectedNodes);
+		std::vector<QuadTree::Accessor> accs;
+		accs.reserve(m_selectedNodes.size());
+		for (const SelectionEntry & entry : m_selectedNodes) {
+			accs.push_back(entry.acc);
+		}
+		m_tree->RemoveItems(accs);
 	}
 
 	// DEBUG
@@ -168,21 +189,25 @@ void NodeArea::OnKey(int key, int scancode, int action, int mods) {
 	}
 }
 
+void NodeArea::SelectNode(NodeItem *nodeItem, const QuadTree::Accessor & acc) {
+	nodeItem->SetSelected();
+	m_selectedNodes.push_back({ nodeItem, acc });
+}
+
 void NodeArea::StartMovingNodes() {
-	for (const QuadTree::Accessor & acc : m_selectedNodes) {
-		AbstractNodeAreaItem *nodeItem = AbstractNodeAreaItem::fromRawItem(acc.item);
-		if (!nodeItem) {
+	for (const SelectionEntry & entry : m_selectedNodes) {
+		AbstractNodeAreaItem *nodeItem = AbstractNodeAreaItem::fromRawItem(entry.acc.item);
+		if (!entry.nodeItem) {
 			continue;
 		}
 
-		const ::Rect & nr = nodeItem->BBox();
-		m_movingNodes.push_back(MovingItem(acc, nr.x, nr.y));
+		m_movingNodes.push_back(MovingItem(entry.acc));
 
-		for (AbstractNodeAreaItem *child : nodeItem->Children()) {
+		// Add children to moving nodes
+		for (AbstractNodeAreaItem *child : entry.nodeItem->Children()) {
 			QuadTree::Accessor acc = m_tree->Find(child);
 			if (acc.isValid) {
-				const ::Rect & bbox = child->BBox();
-				m_movingNodes.push_back(MovingItem(acc, bbox.x, bbox.y));
+				m_movingNodes.push_back(MovingItem(acc));
 			}
 		}
 	}
@@ -208,20 +233,20 @@ void NodeArea::SortItems() {
 
 void NodeArea::BringToTop(AbstractNodeAreaItem *item) {
 	float topMost = static_cast<float>(m_nodeItems.size() + 1);
-	for (auto it = m_nodeItems.rbegin(); it != m_nodeItems.rend(); ++it) {
-		// TODO: need IsSelected()
-		/*
-		if (!it->IsSelected()) {
-		topMost = it->Layer() + .5f;
-		break;
+	for (std::vector<NodeItem*>::reverse_iterator it = m_nodeItems.rbegin(); it != m_nodeItems.rend(); ++it) {
+		if (!(*it)->IsSelected()) {
+			topMost = (*it)->Layer() + .5f;
+			break;
 		}
-		*/
 	}
 	item->SetLayer(topMost);
 	SortItems();
 }
 
 void NodeArea::ClearSelection() {
+	for (const SelectionEntry & entry : m_selectedNodes) {
+		entry.nodeItem->SetSelected(false);
+	}
 	m_selectedNodes.clear();
 }
 

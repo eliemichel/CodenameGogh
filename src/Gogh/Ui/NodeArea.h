@@ -16,10 +16,16 @@ struct LinkItem {
 class NodeArea : public UiTrackMouseElement {
 private:
 	struct MovingItem {
-		MovingItem(QuadTree::Accessor _acc, int _startX, int _startY) : acc(_acc), startX(_startX), startY(_startY) {}
+		MovingItem(QuadTree::Accessor _acc);
 		QuadTree::Accessor acc;
 		int startX;
 		int startY;
+	};
+
+	// Node item and its accessor for quicker tree access
+	struct SelectionEntry {
+		NodeItem *nodeItem;
+		QuadTree::Accessor acc;
 	};
 
 public:
@@ -35,6 +41,7 @@ public: // protected:
 	void OnKey(int key, int scancode, int action, int mods) override;
 
 private:
+	void SelectNode(NodeItem *nodeItem, const QuadTree::Accessor & acc);
 	void StartMovingNodes();
 
 	// Update items layer (a.k.a. depth) to avoid overflows and keep slots
@@ -61,7 +68,7 @@ private:
 	int m_moveStartMouseY;
 	std::vector<MovingItem> m_movingNodes;
 
-	std::vector<QuadTree::Accessor> m_selectedNodes;
+	std::vector<SelectionEntry> m_selectedNodes;
 
 	std::vector<LinkItem> m_linkItems;
 };
