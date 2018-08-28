@@ -2,6 +2,8 @@
 #include "EnvModel.h"
 #include "NodeGraphModel.h"
 #include "DefaultNodeEditor.h"
+#include "Ui/UiBase.h"
+#include "Ui/NodeDelegate.h"
 #include "Parameter.h"
 #include "Slot.h"
 #include "Logger.h"
@@ -170,6 +172,11 @@ void Node::removeOutputSlots(int first, int last)
 		delete *it;
 	}
 	m_outputSlots.erase(m_outputSlots.begin() + first, m_outputSlots.begin() + last + 1);
+}
+
+UiElement * Node::createDelegate(UiLayout *popupLayout)
+{
+	return new NodeDelegate(this, popupLayout);
 }
 
 // // Legacy // //

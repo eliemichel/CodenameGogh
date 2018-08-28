@@ -15,10 +15,10 @@ class UiButton;
  * It monitors the parameter changes and automatically updates when the
  * parameter data is edited somewhere else.
  */
-class ParameterWidget : public UiHBoxLayout
+class ParameterDelegate : public UiHBoxLayout
 {
 public:
-	ParameterWidget(UiLayout *popupLayout = nullptr);
+	ParameterDelegate(UiLayout *popupLayout = nullptr);
 
 	/**
 	 * Set the parameter controlled by this widget.

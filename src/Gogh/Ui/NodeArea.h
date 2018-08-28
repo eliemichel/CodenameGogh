@@ -23,7 +23,7 @@ private:
 	};
 
 public:
-	NodeArea();
+	NodeArea(UiLayout *popupLayout = nullptr);
 	~NodeArea();
 
 	void SetContextMenu(UiContextMenu * contextMenu) { m_contextMenu = contextMenu; }

@@ -1,15 +1,17 @@
 #include "NodeArea.h"
 #include "QuadTree.h"
 #include "NodeAreaItems.h"
+#include "NodeItem.h"
 #include "UiContextMenu.h"
 #include "Logger.h"
 #include "Node.h"
+#include "Parameter.h"
 #include "Slot.h"
 #include "UiButton.h"
 
 #include <cassert>
 
-NodeArea::NodeArea()
+NodeArea::NodeArea(UiLayout *popupLayout)
 	: m_nodeItems({
 	new NodeItem({ 0, 0, 200, 100 }),
 	new NodeItem({ 300, 150, 200, 100 }),
@@ -43,25 +45,16 @@ NodeArea::NodeArea()
 	Node *node = new Node();
 	node->insertInputSlots(0, 1);
 	node->insertOutputSlots(0, 2);
-
-	NodeItem *nodeItem = new NodeItem({ 0, 0, 200, 100 });
-	UiButton *button = new UiButton();
-	button->SetText("NODE");
-	nodeItem->SetContent(button);
-	m_tree->Insert(nodeItem);
-	m_nodeItems.push_back(nodeItem);
-	for (int i = 0; i < node->inputSlotCount(); ++i) {
-		InputSlot & slot = node->inputSlot(i);
-		SlotItem *slotItem = new SlotItem({ -8, 20 + 30 * i, 16, 16 });
-		m_tree->Insert(slotItem);
-		nodeItem->AddChild(slotItem);
-	}
-	for (int i = 0; i < node->outputSlotCount(); ++i) {
-		OutputSlot & slot = node->outputSlot(i);
-		SlotItem *slotItem = new SlotItem({ 192, 20 + 30 * i, 16, 16 });
-		m_tree->Insert(slotItem);
-		nodeItem->AddChild(slotItem);
-	}
+	node->insertParams(0, 0);
+	Parameter & param = node->param(0);
+	param.setType(EnumType);
+	param.setName("Enum");
+	param.insertMenuItems(0, 2);
+	param.setMenuLabel(0, "Choice A");
+	param.setMenuLabel(1, "Choice B");
+	param.setMenuLabel(2, "Choice C");
+	param.set(1);
+	m_nodeItems.push_back(new NodeItem(node, m_tree, popupLayout));
 }
 
 NodeArea::~NodeArea() {

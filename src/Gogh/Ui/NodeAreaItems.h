@@ -45,66 +45,6 @@ private:
 	std::vector<AbstractNodeAreaItem*> m_children;
 };
 
-class NodeItem : public AbstractNodeAreaItem {
-	/*
-	public:
-	static NodeItem * fromRawItem(QuadTree::Item *rawItem) {
-	if (rawItem && rawItem->Type() == NodeItemType) {
-	return static_cast<NodeItem*>(rawItem);
-	}
-	else {
-	return nullptr;
-	}
-	}
-	*/
-
-public:
-	NodeItem(Rect bbox)
-		: AbstractNodeAreaItem(bbox, NodeItemType)
-		, m_content(nullptr)
-	{}
-	~NodeItem() {
-		if (m_content) {
-			delete m_content;
-		}
-	}
-
-	void SetContent(UiElement *element) {
-		m_content = element;
-		UpdateGeometry();
-	}
-
-	void Paint(NVGcontext *vg) const override {
-		const Rect & r = BBox();
-
-		nvgBeginPath(vg);
-		nvgRect(vg, r.xf(), r.yf(), r.wf(), r.hf());
-		nvgFillColor(vg, nvgRGB(128, 57, 91));
-		nvgFill(vg);
-
-		nvgBeginPath(vg);
-		nvgRect(vg, r.xf() + .5f, r.yf() + .5f, r.wf() - 1.f, r.hf() - 1.f);
-		nvgStrokeColor(vg, nvgRGB(56, 57, 58));
-		nvgStroke(vg);
-
-		if (m_content) {
-			m_content->Paint(vg);
-		}
-
-		AbstractNodeAreaItem::Paint(vg);
-	}
-
-protected:
-	void UpdateGeometry() override {
-		if (m_content) {
-			m_content->SetRect(BBox());
-		}
-	}
-
-private:
-	UiElement *m_content;
-};
-
 class SlotItem : public AbstractNodeAreaItem {
 public:
 	SlotItem(Rect bbox)

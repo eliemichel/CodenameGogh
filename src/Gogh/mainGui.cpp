@@ -8,7 +8,7 @@
 
 #include "Logger.h"
 #include "Ui/NodeArea.h"
-#include "Ui/ParameterWidget.h"
+#include "Ui/ParameterDelegate.h"
 #include "Ui/UiTextInput.h"
 #include "Ui/UiIntInput.h"
 #include "Ui/UiEnumInput.h"
@@ -38,7 +38,7 @@ int mainGui(const ArgParse & args)
 	UiHBoxLayout *mainLayout = new UiHBoxLayout();
 
 	// Node Area
-	NodeArea *nodeArea = new NodeArea();
+	NodeArea *nodeArea = new NodeArea(popupLayout);
 	mainLayout->AddItem(nodeArea);
 
 	UiContextMenu *contextMenu = new UiContextMenu(popupLayout);
@@ -53,10 +53,10 @@ int mainGui(const ArgParse & args)
 		param->setType(StringType);
 		param->setName("Yo");
 		param->set("bloum");
-		ParameterWidget *paramWidget = new ParameterWidget(popupLayout);
-		paramWidget->SetParameter(param);
-		paramWidget->SetInnerSizeHint(0, 0, 0, 30);
-		layout->AddItem(paramWidget);
+		ParameterDelegate *paramDelegate = new ParameterDelegate(popupLayout);
+		paramDelegate->SetParameter(param);
+		paramDelegate->SetInnerSizeHint(0, 0, 0, 30);
+		layout->AddItem(paramDelegate);
 	}
 
 	{
@@ -64,10 +64,10 @@ int mainGui(const ArgParse & args)
 		param->setType(IntType);
 		param->setName("An int param");
 		param->set(28);
-		ParameterWidget *paramWidget = new ParameterWidget(popupLayout);
-		paramWidget->SetParameter(param);
-		paramWidget->SetInnerSizeHint(0, 0, 0, 30);
-		layout->AddItem(paramWidget);
+		ParameterDelegate *paramDelegate = new ParameterDelegate(popupLayout);
+		paramDelegate->SetParameter(param);
+		paramDelegate->SetInnerSizeHint(0, 0, 0, 30);
+		layout->AddItem(paramDelegate);
 	}
 
 	{
@@ -79,20 +79,20 @@ int mainGui(const ArgParse & args)
 		param->setMenuLabel(1, "Choice B");
 		param->setMenuLabel(2, "Choice C");
 		param->set(1);
-		ParameterWidget *paramWidget = new ParameterWidget(popupLayout);
-		paramWidget->SetParameter(param);
-		paramWidget->SetInnerSizeHint(0, 0, 0, 30);
-		layout->AddItem(paramWidget);
+		ParameterDelegate *paramDelegate = new ParameterDelegate(popupLayout);
+		paramDelegate->SetParameter(param);
+		paramDelegate->SetInnerSizeHint(0, 0, 0, 30);
+		layout->AddItem(paramDelegate);
 	}
 
 	{
 		Parameter *param = new Parameter();
 		param->setType(ButtonType);
 		param->setName("Push me!");
-		ParameterWidget *paramWidget = new ParameterWidget(popupLayout);
-		paramWidget->SetParameter(param);
-		paramWidget->SetInnerSizeHint(0, 0, 0, 30);
-		layout->AddItem(paramWidget);
+		ParameterDelegate *paramDelegate = new ParameterDelegate(popupLayout);
+		paramDelegate->SetParameter(param);
+		paramDelegate->SetInnerSizeHint(0, 0, 0, 30);
+		layout->AddItem(paramDelegate);
 	}
 
 	UiButton *button = new UiButton();

@@ -1,4 +1,4 @@
-#include "ParameterWidget.h"
+#include "ParameterDelegate.h"
 #include "Logger.h"
 #include "Parameter.h"
 #include "Ui/UiTextInput.h"
@@ -6,7 +6,7 @@
 #include "Ui/UiEnumInput.h"
 #include "Ui/UiButton.h"
 
-ParameterWidget::ParameterWidget(UiLayout *popupLayout)
+ParameterDelegate::ParameterDelegate(UiLayout *popupLayout)
 	: m_param(nullptr)
 	, m_currentType(NoneType)
 	, m_label(nullptr)
@@ -14,7 +14,7 @@ ParameterWidget::ParameterWidget(UiLayout *popupLayout)
 {
 }
 
-void ParameterWidget::SetParameter(::Parameter *param)
+void ParameterDelegate::SetParameter(::Parameter *param)
 {
 	// Disconnect slots from previous parameter
 	if (m_param) {
@@ -29,12 +29,12 @@ void ParameterWidget::SetParameter(::Parameter *param)
 	if (m_param) {
 		// TODO
 		/*
-		connect(m_param, &Parameter::valueChanged, this, &ParameterWidget::UpdateValue);
-		connect(m_param, &Parameter::nameChanged, this, &ParameterWidget::UpdateName);
-		connect(m_param, &Parameter::typeChanged, this, &ParameterWidget::UpdateStructure);
-		connect(m_param, &Parameter::menuLabelChanged, this, &ParameterWidget::UpdateMenuLabel);
-		connect(m_param, &Parameter::aboutToInsertMenuItems, this, &ParameterWidget::InsertMenuItems);
-		connect(m_param, &Parameter::aboutToRemoveMenuItems, this, &ParameterWidget::RemoveMenuItems);
+		connect(m_param, &Parameter::valueChanged, this, &ParameterDelegate::UpdateValue);
+		connect(m_param, &Parameter::nameChanged, this, &ParameterDelegate::UpdateName);
+		connect(m_param, &Parameter::typeChanged, this, &ParameterDelegate::UpdateStructure);
+		connect(m_param, &Parameter::menuLabelChanged, this, &ParameterDelegate::UpdateMenuLabel);
+		connect(m_param, &Parameter::aboutToInsertMenuItems, this, &ParameterDelegate::InsertMenuItems);
+		connect(m_param, &Parameter::aboutToRemoveMenuItems, this, &ParameterDelegate::RemoveMenuItems);
 		*/
 	}
 
@@ -42,7 +42,7 @@ void ParameterWidget::SetParameter(::Parameter *param)
 	UpdateStructure();
 }
 
-void ParameterWidget::UpdateStructure()
+void ParameterDelegate::UpdateStructure()
 {
 	if (m_currentType == m_param->type() || (!m_param && m_currentType == NoneType)) {
 		// Nothing to change
@@ -116,7 +116,7 @@ void ParameterWidget::UpdateStructure()
 	UpdateValue();
 }
 
-void ParameterWidget::DestroyStructure()
+void ParameterDelegate::DestroyStructure()
 {
 	if (m_label) {
 		RemoveItem(m_label);
@@ -148,7 +148,7 @@ void ParameterWidget::DestroyStructure()
 	}
 }
 
-void ParameterWidget::UpdateValue()
+void ParameterDelegate::UpdateValue()
 {
 	switch (m_currentType)
 	{
@@ -179,13 +179,13 @@ void ParameterWidget::UpdateValue()
 	}
 }
 
-void ParameterWidget::UpdateName() {
+void ParameterDelegate::UpdateName() {
 	if (m_label && m_param) {
 		m_label->SetText(m_param->name());
 	}
 }
 
-void ParameterWidget::UpdateMenuLabel(int item) {
+void ParameterDelegate::UpdateMenuLabel(int item) {
 	if (m_currentType != EnumType) {
 		return;
 	}
@@ -198,10 +198,10 @@ void ParameterWidget::UpdateMenuLabel(int item) {
 	m_input.comboBox->SetItemLabels(labels);
 }
 
-void ParameterWidget::InsertMenuItems(int first, int last) {
+void ParameterDelegate::InsertMenuItems(int first, int last) {
 	UpdateMenuLabel(-1);
 }
 
-void ParameterWidget::RemoveMenuItems(int first, int last) {
+void ParameterDelegate::RemoveMenuItems(int first, int last) {
 	UpdateMenuLabel(-1);
 }

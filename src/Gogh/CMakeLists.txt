@@ -111,10 +111,14 @@ set(SRC
 	Ui/UiApp.cpp
 	Ui/UiWindow.h
 	Ui/UiWindow.cpp
-	Ui/ParameterWidget.h
-	Ui/ParameterWidget.cpp
+	Ui/ParameterDelegate.h
+	Ui/ParameterDelegate.cpp
 	Ui/QuadTree.h
 	Ui/QuadTree.cpp
+	Ui/NodeItem.h
+	Ui/NodeItem.cpp
+	Ui/NodeDelegate.h
+	Ui/NodeDelegate.cpp
 
 	main.cpp
 )

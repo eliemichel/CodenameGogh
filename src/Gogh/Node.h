@@ -20,6 +20,8 @@ class EnvModel;
 class NodeGraphModel;
 class QWidget;
 
+class UiElement;
+class UiLayout;
 class Parameter;
 class InputSlot;
 class OutputSlot;
@@ -163,6 +165,12 @@ public:
 
 
 public:
+	/**
+	 * Create an editor widget to operate on this node's parms.
+	 * This is the only method that handle graphical objects.
+	 */
+	virtual UiElement * createDelegate(UiLayout *popupLayout = nullptr);
+
 	/**
 	 * Create an editor widget to operate on this node's parms.
 	 * This is the only method that handle graphical objects.
