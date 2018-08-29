@@ -47,6 +47,15 @@ private:
 
 class SlotItem : public AbstractNodeAreaItem {
 public:
+	static SlotItem * fromRawItem(QuadTree::Item *rawItem) {
+		if (rawItem && rawItem->Type() == SlotItemType) {
+			return static_cast<SlotItem*>(rawItem);
+		} else {
+			return nullptr;
+		}
+	}
+
+public:
 	SlotItem(Rect bbox)
 		: AbstractNodeAreaItem(bbox, SlotItemType)
 	{}

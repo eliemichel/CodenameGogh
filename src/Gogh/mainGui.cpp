@@ -7,6 +7,8 @@
 #include "Parameter.h"
 
 #include "Logger.h"
+#include "Node.h"
+#include "Graph.h"
 #include "Ui/NodeArea.h"
 #include "Ui/ParameterDelegate.h"
 #include "Ui/UiTextInput.h"
@@ -25,10 +27,26 @@
 
 int mainGui(const ArgParse & args)
 {
-	// TEST
-	Variant var;
-	var = "42";
-	DEBUG_LOG << var.toInt();
+	Graph *graph = new Graph();
+	{
+		Node *node = new Node();
+		node->insertInputSlots(0, 1);
+		node->insertOutputSlots(0, 2);
+		node->insertParams(0, 1);
+		Parameter & param = node->param(0);
+		param.setType(EnumType);
+		param.setName("Enum");
+		param.insertMenuItems(0, 2);
+		param.setMenuLabel(0, "Choice A");
+		param.setMenuLabel(1, "Choice B");
+		param.setMenuLabel(2, "Choice C");
+		param.set(1);
+		Parameter & param2 = node->param(1);
+		param2.setType(StringType);
+		param2.setName("Yo");
+		param2.set("bloum");
+		graph->addNode(node);
+	}
 
 	UiApp app;
 	UiWindow window(1200, 600, "Gogh");
@@ -38,7 +56,7 @@ int mainGui(const ArgParse & args)
 	UiHBoxLayout *mainLayout = new UiHBoxLayout();
 
 	// Node Area
-	NodeArea *nodeArea = new NodeArea(popupLayout);
+	NodeArea *nodeArea = new NodeArea(graph, popupLayout);
 	mainLayout->AddItem(nodeArea);
 
 	UiContextMenu *contextMenu = new UiContextMenu(popupLayout);

@@ -7,6 +7,7 @@
 #include "Node.h"
 #include "Parameter.h"
 #include "Slot.h"
+#include "Graph.h"
 #include "UiButton.h"
 
 #include <cassert>
@@ -21,14 +22,15 @@ NodeArea::MovingItem::MovingItem(QuadTree::Accessor _acc)
 	}
 }
 
-NodeArea::NodeArea(UiLayout *popupLayout)
+NodeArea::NodeArea(Graph *graph, UiLayout *popupLayout)
 	: m_contextMenu(nullptr)
 	, m_nodeItems({
 	new NodeItem({ 0, 0, 200, 100 }),
 	new NodeItem({ 300, 150, 200, 100 }),
 	new NodeItem({ 400, 200, 200, 100 }),
-		})
-		, m_tree(new QuadTree(250, 300, 500, 500, 5))
+	})
+	, m_tree(new QuadTree(250, 300, 500, 500, 5))
+	, m_pendingLink({ nullptr, nullptr })
 {
 	for (NodeItem *item : m_nodeItems) {
 		m_tree->Insert(item);
@@ -49,27 +51,13 @@ NodeArea::NodeArea(UiLayout *popupLayout)
 	m_tree->Insert(slot);
 	m_nodeItems[1]->AddChild(slot); // DEBUG
 
-	SortItems();
-
 	m_linkItems.push_back({ slot1, slot });
 
-	Node *node = new Node();
-	node->insertInputSlots(0, 1);
-	node->insertOutputSlots(0, 2);
-	node->insertParams(0, 1);
-	Parameter & param = node->param(0);
-	param.setType(EnumType);
-	param.setName("Enum");
-	param.insertMenuItems(0, 2);
-	param.setMenuLabel(0, "Choice A");
-	param.setMenuLabel(1, "Choice B");
-	param.setMenuLabel(2, "Choice C");
-	param.set(1);
-	Parameter & param2 = node->param(1);
-	param2.setType(StringType);
-	param2.setName("Yo");
-	param2.set("bloum");
-	m_nodeItems.push_back(new NodeItem(node, m_tree, popupLayout));
+	for (Node *node : graph->nodes()) {
+		m_nodeItems.push_back(new NodeItem(node, m_tree, popupLayout));
+	}
+
+	SortItems();
 }
 
 NodeArea::~NodeArea() {
@@ -102,8 +90,22 @@ void NodeArea::Paint(NVGcontext *vg) const {
 	for (const LinkItem & link : m_linkItems) {
 		const ::Rect & or = link.origin->BBox();
 		const ::Rect & dr = link.destination->BBox();
-		float ox = or .xf() + or .wf() / 2.f;
-		float oy = or .yf() + or .hf() / 2.f;
+		float ox = or.xf() + or.wf() / 2.f;
+		float oy = or.yf() + or.hf() / 2.f;
+		float dx = dr.xf() + dr.wf() / 2.f;
+		float dy = dr.yf() + dr.hf() / 2.f;
+		nvgBeginPath(vg);
+		nvgMoveTo(vg, ox, oy);
+		nvgLineTo(vg, dx, dy);
+		nvgStrokeColor(vg, nvgRGB(255, 255, 255));
+		nvgStroke(vg);
+	}
+
+	if (m_pendingLink.origin || m_pendingLink.destination) {
+		const ::Rect & or = m_pendingLink.origin ? m_pendingLink.origin->BBox() : ::Rect(MouseX(), MouseY(), 0, 0);
+		const ::Rect & dr = m_pendingLink.destination ? m_pendingLink.destination->BBox() : ::Rect(MouseX(), MouseY(), 0, 0);
+		float ox = or.xf() + or.wf() / 2.f;
+		float oy = or.yf() + or.hf() / 2.f;
 		float dx = dr.xf() + dr.wf() / 2.f;
 		float dy = dr.yf() + dr.hf() / 2.f;
 		nvgBeginPath(vg);
@@ -166,14 +168,21 @@ void NodeArea::OnMouseClick(int button, int action, int mods) {
 			}
 
 			case SlotItemType:
+			{
+				SlotItem *slotItem = SlotItem::fromRawItem(acc.item);
+				m_pendingLink.origin = slotItem;
+				m_pendingLink.destination = nullptr;
 				DEBUG_LOG << "Start dragging link";
 				break;
+			}
 			}
 		}
 	}
 
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
 		ClearMovingItems();
+
+		m_pendingLink.origin = m_pendingLink.destination = nullptr;
 	}
 
 	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {

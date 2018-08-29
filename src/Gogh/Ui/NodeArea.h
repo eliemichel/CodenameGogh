@@ -4,6 +4,7 @@
 #include "UiBase.h"
 #include "QuadTree.h"
 
+class Graph;
 class AbstractNodeAreaItem;
 class NodeItem;
 class SlotItem;
@@ -29,7 +30,7 @@ private:
 	};
 
 public:
-	NodeArea(UiLayout *popupLayout = nullptr);
+	NodeArea(Graph *graph, UiLayout *popupLayout = nullptr);
 	~NodeArea();
 
 	void SetContextMenu(UiContextMenu * contextMenu) { m_contextMenu = contextMenu; }
@@ -75,6 +76,8 @@ private:
 	std::vector<SelectionEntry> m_selectedNodes;
 
 	std::vector<LinkItem> m_linkItems;
+
+	LinkItem m_pendingLink;
 };
 
 
