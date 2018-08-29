@@ -33,7 +33,7 @@ const Parameter & Node::param(int i) const {
 	if (i < 0 || i >= paramCount()) {
 		ERR_LOG << "Trying to access an invalid parameter index: #" << i << " (not in range [0," << paramCount() << "])";
 		assert(false);
-		i = std::min(std::max(0, i), paramCount());
+		i = std::min(std::max(0, i), paramCount() - 1);
 	}
 	return *m_params.at(i);
 }
@@ -42,7 +42,7 @@ Parameter & Node::param(int i) {
 	if (i < 0 || i >= paramCount()) {
 		ERR_LOG << "Trying to access an invalid parameter index: #" << i << " (not in range [0," << paramCount() << "])";
 		assert(false);
-		i = std::min(std::max(0, i), paramCount());
+		i = std::min(std::max(0, i), paramCount() - 1);
 	}
 	return *m_params.at(i);
 }
@@ -55,7 +55,7 @@ const InputSlot & Node::inputSlot(int i) const {
 	if (i < 0 || i >= inputSlotCount()) {
 		ERR_LOG << "Trying to access an invalid input slot index: #" << i << " (not in range [0," << inputSlotCount() << "])";
 		assert(false);
-		i = std::min(std::max(0, i), inputSlotCount());
+		i = std::min(std::max(0, i), inputSlotCount() - 1);
 	}
 	return *m_inputSlots.at(i);
 }
@@ -64,7 +64,7 @@ InputSlot & Node::inputSlot(int i) {
 	if (i < 0 || i >= inputSlotCount()) {
 		ERR_LOG << "Trying to access an invalid input slot index: #" << i << " (not in range [0," << inputSlotCount() << "])";
 		assert(false);
-		i = std::min(std::max(0, i), inputSlotCount());
+		i = std::min(std::max(0, i), inputSlotCount() - 1);
 	}
 	return *m_inputSlots.at(i);
 }
@@ -77,7 +77,7 @@ const OutputSlot & Node::outputSlot(int i) const {
 	if (i < 0 || i >= outputSlotCount()) {
 		ERR_LOG << "Trying to access an invalid output slot index: #" << i << " (not in range [0," << outputSlotCount() << "])";
 		assert(false);
-		i = std::min(std::max(0, i), outputSlotCount());
+		i = std::min(std::max(0, i), outputSlotCount() - 1);
 	}
 	return *m_outputSlots.at(i);
 }
@@ -86,7 +86,7 @@ OutputSlot & Node::outputSlot(int i) {
 	if (i < 0 || i >= outputSlotCount()) {
 		ERR_LOG << "Trying to access an invalid output slot index: #" << i << " (not in range [0," << outputSlotCount() << "])";
 		assert(false);
-		i = std::min(std::max(0, i), outputSlotCount());
+		i = std::min(std::max(0, i), outputSlotCount() - 1);
 	}
 	return *m_outputSlots.at(i);
 }
@@ -102,7 +102,10 @@ void Node::insertParams(int first, int last)
 	}
 
 	emit aboutToInsertParams(first, last);
-	m_params.insert(m_params.begin() + first, last - first + 1, new Parameter());
+	m_params.insert(m_params.begin() + first, last - first + 1, nullptr);
+	for (auto it = m_params.begin() + first; it != m_params.begin() + last + 1; ++it) {
+		*it = new Parameter();
+	}
 }
 
 void Node::removeParams(int first, int last)
@@ -129,7 +132,10 @@ void Node::insertInputSlots(int first, int last)
 	}
 
 	emit aboutToInsertInputSlots(first, last);
-	m_inputSlots.insert(m_inputSlots.begin() + first, last - first + 1, new InputSlot(this));
+	m_inputSlots.insert(m_inputSlots.begin() + first, last - first + 1, nullptr);
+	for (auto it = m_inputSlots.begin() + first; it != m_inputSlots.begin() + last + 1; ++it) {
+		*it = new InputSlot(this);
+	}
 }
 
 void Node::removeInputSlots(int first, int last)
@@ -156,7 +162,10 @@ void Node::insertOutputSlots(int first, int last)
 	}
 
 	emit aboutToInsertOutputSlots(first, last);
-	m_outputSlots.insert(m_outputSlots.begin() + first, last - first + 1, new OutputSlot(this));
+	m_outputSlots.insert(m_outputSlots.begin() + first, last - first + 1, nullptr);
+	for (auto it = m_outputSlots.begin() + first; it != m_outputSlots.begin() + last + 1; ++it) {
+		*it = new OutputSlot(this);
+	}
 }
 
 void Node::removeOutputSlots(int first, int last)

@@ -13,7 +13,7 @@ struct LinkItem {
 	SlotItem *origin, *destination;
 };
 
-class NodeArea : public UiTrackMouseElement {
+class NodeArea : public UiTrackMouseLayout {
 private:
 	struct MovingItem {
 		MovingItem(QuadTree::Accessor _acc);
@@ -35,10 +35,14 @@ public:
 	void SetContextMenu(UiContextMenu * contextMenu) { m_contextMenu = contextMenu; }
 
 public: // protected:
+	void Update() override;
 	void Paint(NVGcontext *vg) const override;
 	void OnMouseOver(int x, int y) override;
 	void OnMouseClick(int button, int action, int mods) override;
 	void OnKey(int key, int scancode, int action, int mods) override;
+
+protected:
+	UiElement * ItemAt(int x, int y) override;
 
 private:
 	void SelectNode(NodeItem *nodeItem, const QuadTree::Accessor & acc);

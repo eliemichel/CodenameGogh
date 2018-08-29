@@ -22,7 +22,8 @@ NodeArea::MovingItem::MovingItem(QuadTree::Accessor _acc)
 }
 
 NodeArea::NodeArea(UiLayout *popupLayout)
-	: m_nodeItems({
+	: m_contextMenu(nullptr)
+	, m_nodeItems({
 	new NodeItem({ 0, 0, 200, 100 }),
 	new NodeItem({ 300, 150, 200, 100 }),
 	new NodeItem({ 400, 200, 200, 100 }),
@@ -55,7 +56,7 @@ NodeArea::NodeArea(UiLayout *popupLayout)
 	Node *node = new Node();
 	node->insertInputSlots(0, 1);
 	node->insertOutputSlots(0, 2);
-	node->insertParams(0, 0);
+	node->insertParams(0, 1);
 	Parameter & param = node->param(0);
 	param.setType(EnumType);
 	param.setName("Enum");
@@ -64,6 +65,10 @@ NodeArea::NodeArea(UiLayout *popupLayout)
 	param.setMenuLabel(1, "Choice B");
 	param.setMenuLabel(2, "Choice C");
 	param.set(1);
+	Parameter & param2 = node->param(1);
+	param2.setType(StringType);
+	param2.setName("Yo");
+	param2.set("bloum");
 	m_nodeItems.push_back(new NodeItem(node, m_tree, popupLayout));
 }
 
@@ -75,8 +80,11 @@ NodeArea::~NodeArea() {
 	delete m_tree;
 }
 
+void NodeArea::Update() {
+	
+}
+
 void NodeArea::Paint(NVGcontext *vg) const {
-	UiTrackMouseElement::Paint(vg);
 	const ::Rect & r = InnerRect();
 
 	// Background
@@ -112,7 +120,7 @@ void NodeArea::Paint(NVGcontext *vg) const {
 }
 
 void NodeArea::OnMouseOver(int x, int y) {
-	UiTrackMouseElement::OnMouseOver(x, y);
+	UiTrackMouseLayout::OnMouseOver(x, y);
 
 	int deltaX = MouseX() - m_moveStartMouseX;
 	int deltaY = MouseY() - m_moveStartMouseY;
@@ -134,6 +142,8 @@ void NodeArea::OnMouseOver(int x, int y) {
 }
 
 void NodeArea::OnMouseClick(int button, int action, int mods) {
+	UiTrackMouseLayout::OnMouseClick(button, action, mods);
+
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
 		const ::Rect & r = InnerRect();
 
@@ -174,6 +184,8 @@ void NodeArea::OnMouseClick(int button, int action, int mods) {
 }
 
 void NodeArea::OnKey(int key, int scancode, int action, int mods) {
+	UiTrackMouseLayout::OnKey(key, scancode, action, mods);
+
 	if (key == GLFW_KEY_DELETE && action == GLFW_PRESS) {
 		std::vector<QuadTree::Accessor> accs;
 		accs.reserve(m_selectedNodes.size());
@@ -187,6 +199,16 @@ void NodeArea::OnKey(int key, int scancode, int action, int mods) {
 	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS) {
 		m_debug = !m_debug;
 	}
+}
+
+UiElement * NodeArea::ItemAt(int x, int y) {
+	QuadTree::Accessor acc = m_tree->ItemAt(static_cast<float>(MouseX()), static_cast<float>(MouseY()));
+	if (!acc.isValid || acc.item->Type() != NodeItemType) {
+		return nullptr;
+	}
+	
+	NodeItem *nodeItem = NodeItem::fromRawItem(acc.item);
+	return nodeItem->Content();
 }
 
 void NodeArea::SelectNode(NodeItem *nodeItem, const QuadTree::Accessor & acc) {

@@ -126,7 +126,7 @@ public:
 	}
 
 protected:
-	bool GetIndexAt(size_t & idx, int x, int y) override {
+	UiElement * ItemAt(int x, int y) override {
 		/* for regular items
 		int itemHeight = Rect().h / m_items.size();
 		size_t i = std::min((size_t)(floor((y - Rect().y) / itemHeight)), m_items.size() - 1);
@@ -134,20 +134,19 @@ protected:
 		*/
 
 		int offset = 0;
-		for (size_t i = 0; i < Items().size(); ++i) {
+		for (UiElement * item : Items()) {
 #ifdef BUI_HBOX_IMPLEMENTATION
-			offset += Items()[i]->InnerRect().w;
+			offset += item->InnerRect().w;
 			if (InnerRect().x + offset > x) {
 #else
-			offset += Items()[i]->InnerRect().h;
+			offset += item->InnerRect().h;
 			if (InnerRect().y + offset > y) {
 #endif
-				idx = i;
-				return true;
+				return item;
 			}
 		}
 
-		return false;
+		return nullptr;
 	}
 
 private:

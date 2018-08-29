@@ -19,6 +19,7 @@ public:
 	NodeItem(Rect bbox);
 	~NodeItem();
 
+	UiElement * Content() const { return m_content; }
 	void SetContent(UiElement *element);
 
 	bool IsSelected() const { return m_selected; }

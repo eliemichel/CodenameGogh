@@ -6,7 +6,7 @@ public: // protected
 		bool closeSizePopup = false;
 		if (action == GLFW_PRESS) {
 			// When one clicks on the background element, all popups are destroyed
-			if (MouseFocusIdx() <= 0) {
+			if (!Items().empty() && MouseFocusItem() == Items()[0]) {
 				closeSizePopup = m_isSizePopupOpened;
 				while (Items().size() > 1) {
 					delete RemoveItem();

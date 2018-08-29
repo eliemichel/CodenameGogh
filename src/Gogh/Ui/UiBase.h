@@ -215,7 +215,7 @@ private:
 /**
  * Generic layout, that must be an ancestor of any element containing others,
  * because it handles the dispatching of events.
- * When inheriting, override at least Update() and GetIndexAt().
+ * When inheriting, override at least Update() and ItemAt().
  * Warning: Do NOT insert a UiElement twice in a layout, neither in two
  * different layouts.
  * There are two notions of focus: the over focus, tracking over which the
@@ -228,9 +228,9 @@ class UiLayout : public UiElement {
 public:
 	UiLayout()
 		: UiElement()
-		, m_mouseOverFocusIdx(-1)
-		, m_mouseClickFocusIdx(-1)
-		, m_mousePressFocusIdx(-1)
+		, m_mouseOverFocus(nullptr)
+		, m_mouseClickFocus(nullptr)
+		, m_mousePressFocus(nullptr)
 	{}
 
 	~UiLayout() {
@@ -255,14 +255,20 @@ public:
 			return nullptr;
 		}
 
-		// CLear focus before removing the element
-		if (m_mouseClickFocusIdx >= m_items.size() - 1) {
-			SetClickFocus(-1);
-		}
-
 		// Pop the last element out
 		UiElement *item = m_items.back();
 		m_items.pop_back();
+
+		// Clear focus if it was on the removed element
+		if (m_mouseClickFocus == item) {
+			SetClickFocus(nullptr);
+		}
+		if (m_mousePressFocus == item) {
+			m_mousePressFocus = nullptr;
+		}
+		if (m_mouseOverFocus == item) {
+			m_mouseOverFocus = nullptr;
+		}
 
 		// Clear element
 		if (item) {
@@ -275,13 +281,15 @@ public:
 		auto it = m_items.begin();
 		for (; it != m_items.end(); ++it) {
 			if (*it == item) {
-				// Clear focus before removing the element, or shift focusIdx
-				// if it was targetting an element placed after the removed one
-				int index = static_cast<int>(it - m_items.begin());
-				if (m_mouseClickFocusIdx == index) {
-					SetClickFocus(-1);
-				} else if (m_mouseClickFocusIdx > index) {
-					m_mouseClickFocusIdx--;
+				// Clear focus before removing the element
+				if (m_mouseClickFocus == item) {
+					SetClickFocus(nullptr);
+				}
+				if (m_mousePressFocus == item) {
+					m_mousePressFocus = nullptr;
+				}
+				if (m_mouseOverFocus == item) {
+					m_mouseOverFocus = nullptr;
 				}
 
 				// Remove the element
@@ -297,49 +305,45 @@ public:
 		return false;
 	}
 
-	size_t ItemCount() const {
-		return Items().size();
-	}
-
 public: // protected:
 	void OnMouseOver(int x, int y) override {
 		UiElement::OnMouseOver(x, y);
-		size_t i;
-		if (GetIndexAt(i, x, y)) {
-			Items()[i]->OnMouseOver(x, y);
-			m_mouseOverFocusIdx = static_cast<int>(i);
+		UiElement *item = ItemAt(x, y);
+		if (item) {
+			item->OnMouseOver(x, y);
 		}
+		m_mouseOverFocus = item;
 	}
 
 	void OnMouseClick(int button, int action, int mods) override {
 		// Forward click events to the move-focused item
 		UiElement::OnMouseClick(button, action, mods);
-		if (m_mouseOverFocusIdx > -1 && m_mouseOverFocusIdx < Items().size()) {
-			Items()[m_mouseOverFocusIdx]->OnMouseClick(button, action, mods);
-			SetClickFocus(m_mouseOverFocusIdx);
+		if (m_mouseOverFocus) {
+			m_mouseOverFocus->OnMouseClick(button, action, mods);
 		}
+		SetClickFocus(m_mouseOverFocus);
 
 		if (action == GLFW_PRESS) {
-			m_mousePressFocusIdx = m_mouseOverFocusIdx;
-		} else if (action == GLFW_RELEASE && m_mousePressFocusIdx > -1 && m_mousePressFocusIdx < Items().size()) {
-			Items()[m_mousePressFocusIdx]->OnMouseClick(button, action, mods);
-			m_mousePressFocusIdx = -1;
+			m_mousePressFocus = m_mouseOverFocus;
+		} else if (action == GLFW_RELEASE && m_mousePressFocus) {
+			m_mousePressFocus->OnMouseClick(button, action, mods);
+			m_mousePressFocus = nullptr;
 		}
 	}
 
 	void OnKey(int key, int scancode, int action, int mods) override {
 		// Forward key events to the click-focused item
 		UiElement::OnKey(key, scancode, action, mods);
-		if (m_mouseClickFocusIdx > -1 && m_mouseClickFocusIdx < Items().size()) {
-			Items()[m_mouseClickFocusIdx]->OnKey(key, scancode, action, mods);
+		if (m_mouseClickFocus) {
+			m_mouseClickFocus->OnKey(key, scancode, action, mods);
 		}
 	}
 
 	void OnChar(unsigned int codepoint) override {
 		// Forward key events to the click-focused item
 		UiElement::OnChar(codepoint);
-		if (m_mouseClickFocusIdx > -1 && m_mouseClickFocusIdx < Items().size()) {
-			Items()[m_mouseClickFocusIdx]->OnChar(codepoint);
+		if (m_mouseClickFocus) {
+			m_mouseClickFocus->OnChar(codepoint);
 		}
 	}
 
@@ -348,7 +352,7 @@ public: // protected:
 		for (auto item : Items()) {
 			item->ResetMouse();
 		}
-		m_mouseOverFocusIdx = -1;
+		m_mouseOverFocus = nullptr;
 	}
 
 	void ResetDebug() override {
@@ -374,46 +378,44 @@ public: // protected:
 	}
 
 	void OnDefocus() override {
-		SetClickFocus(-1);
+		SetClickFocus(nullptr);
 	}
 
 protected:
 	std::vector<UiElement*> & Items() { return m_items; }
 	const std::vector<UiElement*> & Items() const { return m_items; }
 
-	int MouseFocusIdx() const { return m_mouseOverFocusIdx; }
+	UiElement * MouseFocusItem() const { return m_mouseOverFocus; }
 
-	virtual bool GetIndexAt(size_t & idx, int x, int y) {
-		return false;
+	virtual UiElement * ItemAt(int x, int y) {
+		return nullptr;
 	}
 
 private:
-	void SetClickFocus(int idx) {
+	void SetClickFocus(UiElement *element) {
 		// If item already has focus, change nothing
-		if (m_mouseClickFocusIdx == idx) {
+		if (m_mouseClickFocus == element) {
 			return;
 		}
 
-		if (m_mouseClickFocusIdx >= 0 && m_mouseClickFocusIdx < Items().size()) {
-			Items()[m_mouseClickFocusIdx]->OnDefocus();
+		if (m_mouseClickFocus) {
+			m_mouseClickFocus->OnDefocus();
 		}
 
-		m_mouseClickFocusIdx = idx;
+		m_mouseClickFocus = element;
 
-		if (m_mouseClickFocusIdx >= 0 && m_mouseClickFocusIdx < Items().size()) {
+		if (m_mouseClickFocus) {
 			// There is no need for an "OnFocus", elements just assume that
 			// they got it as soon as they receive a OnClick event.
-			//Items()[m_mouseClickFocusIdx]->OnFocus();
-		} else {
-			m_mouseClickFocusIdx = -1;
+			//m_mouseClickFocus->OnFocus();
 		}
 	}
 
 private:
 	std::vector<UiElement*> m_items;
-	int m_mouseOverFocusIdx;
-	int m_mouseClickFocusIdx;
-	int m_mousePressFocusIdx;
+	UiElement *m_mouseOverFocus;
+	UiElement *m_mouseClickFocus;
+	UiElement *m_mousePressFocus;
 };
 
 // Item 0 is the background, other items are stacked popups
@@ -427,19 +429,18 @@ public: // protected:
 	}
 
 protected:
-	bool GetIndexAt(size_t & idx, int x, int y) override {
+	UiElement * ItemAt(int x, int y) override {
 		const ::Rect & r = InnerRect();
-		if (Items().size() == 0) {
-			return false;
+		if (Items().empty()) {
+			return nullptr;
 		}
-		for (size_t i = Items().size() - 1; i > 0; --i) {
-			if (Items()[i]->Rect().Contains(x, y)) {
-				idx = i;
-				return true;
+		for (auto it = Items().rbegin(); it != Items().rend(); ++it) {
+			UiElement *item = *it;
+			if (item->Rect().Contains(x, y)) {
+				return item;
 			}
 		}
-		idx = 0;
-		return true;
+		return Items()[0];
 	}
 };
 
@@ -486,7 +487,7 @@ public: // protected:
 	}
 
 protected:
-	bool GetIndexAt(size_t & idx, int x, int y) override {
+	UiElement * ItemAt(int x, int y) override {
 		const ::Rect & r = InnerRect();
 		int relativeX = x - r.x;
 		int relativeY = y - r.y;
@@ -501,11 +502,11 @@ protected:
 		bool isInRowSpacing = (rowIndex + 1) * itemHeight - relativeY <= RowSpacing();
 
 		if (!isInRowSpacing && !isInColSpacing) {
-			idx = rowIndex * ColCount() + colIndex;
-			return idx < Items().size();
+			size_t idx = rowIndex * ColCount() + colIndex;
+			return idx < Items().size() ? Items()[idx] : nullptr;
 		}
 		else {
-			return false;
+			return nullptr;
 		}
 	}
 
@@ -546,6 +547,62 @@ public: // protected:
 private:
 	std::string m_text;
 	NVGcolor m_color;
+};
+
+/**
+* Mix of UiLayout and UiTrackMouseElement.
+* TODO: find a way to do this diamond inheriting without copying the whole
+* content of UiTrackMouseElement. Anyway it was more important to derive from
+* UiLayout because this is the most likely to change.
+*/
+class UiTrackMouseLayout : public UiLayout {
+public:
+	UiTrackMouseLayout()
+		: UiLayout()
+		, m_isMouseOver(false)
+		, m_wasMouseOver(false)
+		, m_mouseX(0)
+		, m_mouseY(0)
+	{}
+
+public: // protected:
+	void OnMouseOver(int x, int y) override {
+		UiLayout::OnMouseOver(x, y);
+		if (InnerRect().Contains(x, y)) {
+			m_isMouseOver = true;
+		}
+		m_mouseX = x;
+		m_mouseY = y;
+	}
+
+	void ResetMouse() override {
+		UiElement::ResetMouse();
+		if (m_isMouseOver && !m_wasMouseOver) {
+			OnMouseEnter();
+		}
+		if (!m_isMouseOver && m_wasMouseOver) {
+			OnMouseLeave();
+		}
+
+		m_wasMouseOver = m_isMouseOver;
+		m_isMouseOver = false;
+	}
+
+	virtual void OnMouseEnter() {
+	}
+
+	virtual void OnMouseLeave() {
+	}
+
+protected:
+	bool IsMouseOver() const { return m_isMouseOver; }
+	int MouseX() const { return m_mouseX; }
+	int MouseY() const { return m_mouseY; }
+
+private:
+	bool m_isMouseOver, m_wasMouseOver;
+	int m_mouseX, m_mouseY;
+
 };
 
 #endif // H_BASE_UI
