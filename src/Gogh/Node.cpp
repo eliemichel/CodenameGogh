@@ -18,9 +18,9 @@ Node::Node(QObject *parent)
 }
 
 Node::~Node() {
-	removeParams(0, paramCount());
-	removeInputSlots(0, inputSlotCount());
-	removeOutputSlots(0, outputSlotCount());
+	removeParams(0, paramCount() - 1);
+	removeInputSlots(0, inputSlotCount() - 1);
+	removeOutputSlots(0, outputSlotCount() - 1);
 	destroyed.fire();
 }
 
