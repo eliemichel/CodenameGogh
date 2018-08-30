@@ -6,6 +6,10 @@ Parameter::Parameter(QObject *parent)
 	, m_type(NoneType)
 {}
 
+Parameter::~Parameter() {
+	destroyed.fire();
+}
+
 int Parameter::menuCount() const
 {
 	return static_cast<int>(m_menu.size());
@@ -34,7 +38,7 @@ void Parameter::setName(const std::string & name)
 {
 	if (m_name != name) {
 		m_name = name;
-		emit nameChanged();
+		nameChanged.fire();
 	}
 }
 
@@ -42,7 +46,7 @@ void Parameter::setType(ParmType type)
 {
 	if (m_type != type) {
 		m_type = type;
-		emit typeChanged();
+		typeChanged.fire();
 	}
 }
 
@@ -55,7 +59,7 @@ void Parameter::setMenuLabel(int item, const std::string & label)
 	}
 
 	m_menu[item].label = label;
-	emit menuLabelChanged(item);
+	menuLabelChanged.fire(item);
 }
 
 void Parameter::setMenuValue(int item, const Variant & value)
@@ -67,7 +71,7 @@ void Parameter::setMenuValue(int item, const Variant & value)
 	}
 
 	m_menu[item].value = value;
-	emit menuValueChanged(item);
+	menuValueChanged.fire(item);
 }
 
 void Parameter::insertMenuItems(int first, int last)
@@ -78,7 +82,7 @@ void Parameter::insertMenuItems(int first, int last)
 		return;
 	}
 
-	emit aboutToInsertMenuItems(first, last);
+	aboutToInsertMenuItems.fire(first, last);
 	m_menu.insert(m_menu.begin() + first, last - first + 1, MenuItem());
 }
 
@@ -90,6 +94,6 @@ void Parameter::removeMenuItems(int first, int last)
 		return;
 	}
 
-	emit aboutToRemoveMenuItems(first, last);
+	aboutToRemoveMenuItems.fire(first, last);
 	m_menu.erase(m_menu.begin() + first, m_menu.begin() + last + 1);
 }

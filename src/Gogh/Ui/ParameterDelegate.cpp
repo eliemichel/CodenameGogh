@@ -18,8 +18,13 @@ void ParameterDelegate::SetParameter(::Parameter *param)
 {
 	// Disconnect slots from previous parameter
 	if (m_param) {
-		// TODO
-		//disconnect(m_param, 0, this, 0);
+		m_param->valueChanged.disconnect(valueChangedConnection);
+		m_param->nameChanged.disconnect(nameChangedConnection);
+		m_param->typeChanged.disconnect(typeChangedConnection);
+		m_param->menuLabelChanged.disconnect(menuLabelChangedConnection);
+		m_param->aboutToInsertMenuItems.disconnect(aboutToInsertMenuItemsConnection);
+		m_param->aboutToRemoveMenuItems.disconnect(aboutToRemoveMenuItemsConnection);
+		m_param->destroyed.disconnect(destroyedConnection);
 	}
 
 	// Update
@@ -27,16 +32,13 @@ void ParameterDelegate::SetParameter(::Parameter *param)
 
 	// Connect slots to new parameter
 	if (m_param) {
-		// TODO
-		m_param->valueChanged.connect(this, &ParameterDelegate::UpdateValue);
-		/*
-		connect(m_param, &Parameter::valueChanged, this, &ParameterDelegate::UpdateValue);
-		connect(m_param, &Parameter::nameChanged, this, &ParameterDelegate::UpdateName);
-		connect(m_param, &Parameter::typeChanged, this, &ParameterDelegate::UpdateStructure);
-		connect(m_param, &Parameter::menuLabelChanged, this, &ParameterDelegate::UpdateMenuLabel);
-		connect(m_param, &Parameter::aboutToInsertMenuItems, this, &ParameterDelegate::InsertMenuItems);
-		connect(m_param, &Parameter::aboutToRemoveMenuItems, this, &ParameterDelegate::RemoveMenuItems);
-		*/
+		valueChangedConnection = m_param->valueChanged.connect(this, &ParameterDelegate::UpdateValue);
+		nameChangedConnection = m_param->nameChanged.connect(this, &ParameterDelegate::UpdateName);
+		typeChangedConnection = m_param->typeChanged.connect(this, &ParameterDelegate::UpdateStructure);
+		menuLabelChangedConnection = m_param->menuLabelChanged.connect(this, &ParameterDelegate::UpdateMenuLabel);
+		aboutToInsertMenuItemsConnection = m_param->aboutToInsertMenuItems.connect(this, &ParameterDelegate::InsertMenuItems);
+		aboutToRemoveMenuItemsConnection = m_param->aboutToRemoveMenuItems.connect(this, &ParameterDelegate::RemoveMenuItems);
+		destroyedConnection = m_param->destroyed.connect(this, &ParameterDelegate::OnParameterDestroyed);
 	}
 
 	// Rebuild UI
@@ -45,7 +47,7 @@ void ParameterDelegate::SetParameter(::Parameter *param)
 
 void ParameterDelegate::UpdateStructure()
 {
-	if (m_currentType == m_param->type() || (!m_param && m_currentType == NoneType)) {
+	if ((m_param && m_currentType == m_param->type()) || (!m_param && m_currentType == NoneType)) {
 		// Nothing to change
 		return;
 	}
@@ -80,7 +82,6 @@ void ParameterDelegate::UpdateStructure()
 	case StringType:
 	{
 		m_input.lineEdit = new UiTextInput();
-		m_input.lineEdit->SetText("<string>");
 		m_input.lineEdit->textEdited.connect([=](const std::string & text) { m_param->set(text); });
 		AddItem(m_input.lineEdit);
 		break;
@@ -204,4 +205,9 @@ void ParameterDelegate::InsertMenuItems(int first, int last) {
 
 void ParameterDelegate::RemoveMenuItems(int first, int last) {
 	UpdateMenuLabel(-1);
+}
+
+void ParameterDelegate::OnParameterDestroyed() {
+	m_param = nullptr;
+	UpdateStructure();
 }

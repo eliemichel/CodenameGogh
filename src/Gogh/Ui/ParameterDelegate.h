@@ -2,6 +2,7 @@
 #define H_PARAMETERWIDGET
 
 #include "Ui/UiBase.h"
+#include "Signal.h"
 #include "ParameterType.h"
 
 class Parameter;
@@ -48,6 +49,7 @@ private: // slots
 	void UpdateMenuLabel(int item);
 	void InsertMenuItems(int first, int last);
 	void RemoveMenuItems(int first, int last);
+	void OnParameterDestroyed();
 
 private:
 	::Parameter *m_param;
@@ -60,6 +62,14 @@ private:
 
 	/// Layout used to pop up enum menu
 	UiLayout *m_popupLayout;
+
+	SignalConnection valueChangedConnection;
+	SignalConnection nameChangedConnection;
+	SignalConnection typeChangedConnection;
+	SignalConnection menuLabelChangedConnection;
+	SignalConnection aboutToInsertMenuItemsConnection;
+	SignalConnection aboutToRemoveMenuItemsConnection;
+	SignalConnection destroyedConnection;
 
 	// TODO: use a variant
 	union

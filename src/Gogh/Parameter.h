@@ -26,6 +26,7 @@ private:
 
 public:
 	Parameter(QObject *parent = nullptr);
+	~Parameter();
 	
 	// // Getters // //
 
@@ -106,24 +107,26 @@ public: // signals
 	/// emitted when the raw value of the parameter changed
 	Signal<> valueChanged;
 
-signals:
 	/// emitted when the display name of the parameter changed
-	void nameChanged();
+	Signal<> nameChanged;
 
 	/// emitted when the type of the parameter changed
-	void typeChanged();
+	Signal<> typeChanged;
 
 	/// emitted when the menu item label at <item> changed
-	void menuLabelChanged(int item);
+	Signal<int> menuLabelChanged; // (int item)
 
 	/// emitted when the menu item value at <item> changed
-	void menuValueChanged(int item);
+	Signal<int> menuValueChanged; // (int item)
 
 	/// emitted before inserting new items from position <first> to <last> included
-	void aboutToInsertMenuItems(int first, int last);
+	Signal<int, int> aboutToInsertMenuItems; // (int first, int last)
 
 	/// emitted before removing items from position <first> to <last> included
-	void aboutToRemoveMenuItems(int first, int last);
+	Signal<int, int> aboutToRemoveMenuItems; // (int first, int last)
+
+	/// Signal emitted just after destructing the object
+	Signal<> destroyed;
 
 private:
 	std::string m_name;
