@@ -5,6 +5,7 @@
 #include <vector>
 #include <string>
 #include "Variant.h"
+#include "Signal.h"
 #include "ParameterType.h"
 
 /**
@@ -101,10 +102,11 @@ public:
 	//QString evalAsString(int parm) const;
 	//int evalAsInt(int parm) const;
 
-signals:
+public: // signals
 	/// emitted when the raw value of the parameter changed
-	void valueChanged();
+	Signal<> valueChanged;
 
+signals:
 	/// emitted when the display name of the parameter changed
 	void nameChanged();
 

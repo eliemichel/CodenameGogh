@@ -2,6 +2,7 @@
 #define H_UITEXTINPUT
 
 #include "UiBase.h"
+#include "Signal.h"
 #include <string>
 
 class UiTextInput : public UiTrackMouseElement {
@@ -23,6 +24,9 @@ public: // protected:
 
 	void OnDefocus() override;
 	void OnTick(float time) override;
+
+public: // signals
+	Signal<const std::string &> textEdited;
 
 private:
 	void StartEditing();

@@ -26,6 +26,7 @@
 
 int mainGui(const ArgParse & args)
 {
+	Parameter *pParam;
 	Graph *graph = new Graph();
 	{
 		Node *node = new Node();
@@ -44,6 +45,7 @@ int mainGui(const ArgParse & args)
 		param2.setType(StringType);
 		param2.setName("Yo");
 		param2.set("bloum");
+		pParam = &param2;
 		graph->addNode(node);
 	}
 
@@ -64,6 +66,13 @@ int mainGui(const ArgParse & args)
 
 	// Sidebar
 	UiVBoxLayout *layout = new UiVBoxLayout();
+
+	{
+		ParameterDelegate *paramDelegate = new ParameterDelegate(popupLayout);
+		paramDelegate->SetParameter(pParam);
+		paramDelegate->SetInnerSizeHint(0, 0, 0, 30);
+		layout->AddItem(paramDelegate);
+	}
 
 	{
 		Parameter *param = new Parameter();
@@ -149,6 +158,8 @@ int mainGui(const ArgParse & args)
 		window.Render();
 		window.Poll();
 	}
+
+	delete graph;
 
 	return EXIT_SUCCESS;
 }

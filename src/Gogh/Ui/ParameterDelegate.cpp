@@ -28,6 +28,7 @@ void ParameterDelegate::SetParameter(::Parameter *param)
 	// Connect slots to new parameter
 	if (m_param) {
 		// TODO
+		m_param->valueChanged.connect(this, &ParameterDelegate::UpdateValue);
 		/*
 		connect(m_param, &Parameter::valueChanged, this, &ParameterDelegate::UpdateValue);
 		connect(m_param, &Parameter::nameChanged, this, &ParameterDelegate::UpdateName);
@@ -80,8 +81,7 @@ void ParameterDelegate::UpdateStructure()
 	{
 		m_input.lineEdit = new UiTextInput();
 		m_input.lineEdit->SetText("<string>");
-		// TODO
-		//connect(m_input.lineEdit, &QLineEdit::textEdited, [=](const QString &text) { parameter()->set(text); });
+		m_input.lineEdit->textEdited.connect([=](const std::string & text) { m_param->set(text); });
 		AddItem(m_input.lineEdit);
 		break;
 	}

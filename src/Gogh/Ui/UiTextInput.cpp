@@ -169,10 +169,12 @@ void UiTextInput::StartEditing() {
 }
 
 void UiTextInput::SubmitEditing() {
-	m_isEditing = false;
-	m_text = m_editText;
-	m_editText.clear();
-	// TODO: emit textEdited() signal
+	if (m_isEditing) {
+		m_isEditing = false;
+		m_text = m_editText;
+		m_editText.clear();
+		textEdited.fire(m_text);
+	}
 }
 
 void UiTextInput::CancelEditing() {

@@ -207,18 +207,11 @@ void NodeArea::OnKey(int key, int scancode, int action, int mods) {
 		std::vector<QuadTree::Accessor> accs;
 		accs.reserve(m_selectedNodes.size());
 		for (const SelectionEntry & entry : m_selectedNodes) {
-			// Remove node item from m_nodeItems
-			// TODO: avoid this O(n²) complexity, maybe use a set for node items, or mark items to be deleted
-			/*
-			auto it = std::find(m_nodeItems.begin(), m_nodeItems.end(), entry.nodeItem);
-			if (it != m_nodeItems.end()) {
-				m_nodeItems.erase(it);
-			}
-			*/
+			// nodeItem will be naturally cleaned up when node is deleted
 			delete entry.nodeItem->Node();
 			accs.push_back(entry.acc);
 		}
-		m_tree->RemoveItems(accs);
+		m_tree->RemoveItems(accs); // this could be in nodeitem's dtor
 		m_selectedNodes.clear();
 	}
 

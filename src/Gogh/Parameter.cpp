@@ -25,7 +25,7 @@ bool Parameter::set(const Variant & value)
 {
 	if (m_rawValue != value) {
 		m_rawValue = value;
-		emit valueChanged();
+		valueChanged.fire();
 	}
 	return true;
 }
