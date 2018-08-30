@@ -15,6 +15,7 @@
 #include <utils/stringlist.h>
 #include <utils/strutils.h>
 
+#include "Signal.h"
 
 class EnvModel;
 class NodeGraphModel;
@@ -82,6 +83,7 @@ public:
 
 public:
 	explicit Node(QObject *parent = nullptr);
+	Node(const Node &) = delete; // signal emitters must not be copied
 	~Node();
 
 	// // Getters // //
@@ -207,6 +209,9 @@ public:
 	// slot structure read
 	int inputSlotCount_legacy() const { return static_cast<int>(inputLinks.size()); }
 	int outputSlotCount_legacy() const { return static_cast<int>(outputLinks.size()); }
+
+public: // signals
+	Signal<> destroyed;
 
 signals:
 	void parmChanged(int parm);

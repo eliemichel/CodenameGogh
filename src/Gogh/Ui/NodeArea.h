@@ -36,7 +36,7 @@ public:
 	void SetContextMenu(UiContextMenu * contextMenu) { m_contextMenu = contextMenu; }
 
 public: // protected:
-	void Update() override;
+	void OnTick(float time) override;
 	void Paint(NVGcontext *vg) const override;
 	void OnMouseOver(int x, int y) override;
 	void OnMouseClick(int button, int action, int mods) override;
@@ -62,6 +62,7 @@ private:
 	void ClearMovingItems();
 
 private:
+	Graph * m_graph;
 	UiContextMenu * m_contextMenu;
 
 	bool m_debug;

@@ -23,7 +23,8 @@ NodeArea::MovingItem::MovingItem(QuadTree::Accessor _acc)
 }
 
 NodeArea::NodeArea(Graph *graph, UiLayout *popupLayout)
-	: m_contextMenu(nullptr)
+	: m_graph(graph)
+	, m_contextMenu(nullptr)
 	, m_nodeItems({
 	new NodeItem({ 0, 0, 200, 100 }),
 	new NodeItem({ 300, 150, 200, 100 }),
@@ -68,8 +69,15 @@ NodeArea::~NodeArea() {
 	delete m_tree;
 }
 
-void NodeArea::Update() {
-	
+void NodeArea::OnTick(float time) {
+	// Clean up items that no longer represent a Node (because it has been destroyed)
+	for (auto it = m_nodeItems.begin(); it != m_nodeItems.end();) {
+		if (!(*it)->Node()) {
+			it = m_nodeItems.erase(it);
+		} else {
+			++it;
+		}
+	}
 }
 
 void NodeArea::Paint(NVGcontext *vg) const {
@@ -199,9 +207,19 @@ void NodeArea::OnKey(int key, int scancode, int action, int mods) {
 		std::vector<QuadTree::Accessor> accs;
 		accs.reserve(m_selectedNodes.size());
 		for (const SelectionEntry & entry : m_selectedNodes) {
+			// Remove node item from m_nodeItems
+			// TODO: avoid this O(n²) complexity, maybe use a set for node items, or mark items to be deleted
+			/*
+			auto it = std::find(m_nodeItems.begin(), m_nodeItems.end(), entry.nodeItem);
+			if (it != m_nodeItems.end()) {
+				m_nodeItems.erase(it);
+			}
+			*/
+			delete entry.nodeItem->Node();
 			accs.push_back(entry.acc);
 		}
 		m_tree->RemoveItems(accs);
+		m_selectedNodes.clear();
 	}
 
 	// DEBUG

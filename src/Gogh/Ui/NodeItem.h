@@ -15,9 +15,11 @@ public:
 	}
 
 public:
-	NodeItem(Node *node, QuadTree *tree = nullptr, UiLayout *popupLayout = nullptr);
-	NodeItem(Rect bbox);
+	NodeItem(::Node *node, QuadTree *tree = nullptr, UiLayout *popupLayout = nullptr);
+	NodeItem(Rect bbox); // TODO: deleteme
 	~NodeItem();
+
+	::Node * Node() const { return m_node; }
 
 	UiElement * Content() const { return m_content; }
 	void SetContent(UiElement *element);
@@ -31,6 +33,10 @@ protected:
 	void UpdateGeometry() override;
 
 private:
+	void OnNodeDestroyed();
+
+private:
+	::Node * m_node;
 	UiElement * m_content;
 	bool m_selected;
 };

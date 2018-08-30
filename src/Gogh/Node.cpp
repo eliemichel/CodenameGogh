@@ -21,6 +21,7 @@ Node::~Node() {
 	removeParams(0, paramCount());
 	removeInputSlots(0, inputSlotCount());
 	removeOutputSlots(0, outputSlotCount());
+	destroyed.fire();
 }
 
 // // Getters // //

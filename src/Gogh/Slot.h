@@ -11,6 +11,7 @@ public:
 	AbstractSlot(Node *parentNode)
 		: m_parentNode(parentNode)
 	{}
+	AbstractSlot(const AbstractSlot &) = delete; // signal emitters must not be copied
 
 	Node * parentNode() const { return m_parentNode; }
 

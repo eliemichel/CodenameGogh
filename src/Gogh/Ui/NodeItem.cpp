@@ -1,8 +1,9 @@
 #include "NodeItem.h"
 #include "Node.h"
 
-NodeItem::NodeItem(Node *node, QuadTree *tree, UiLayout *popupLayout)
+NodeItem::NodeItem(::Node *node, QuadTree *tree, UiLayout *popupLayout)
 	: AbstractNodeAreaItem({ 0, 0, 200, 100 }, NodeItemType)
+	, m_node(node)
 	, m_content(nullptr)
 	, m_selected(false)
 {
@@ -31,6 +32,7 @@ NodeItem::NodeItem(Node *node, QuadTree *tree, UiLayout *popupLayout)
 	}
 
 	// TODO: connect nodes
+	node->destroyed.connect(this, &NodeItem::OnNodeDestroyed);
 }
 
 NodeItem::NodeItem(Rect bbox)
@@ -74,4 +76,8 @@ void NodeItem::UpdateGeometry() {
 	if (m_content) {
 		m_content->SetRect(BBox());
 	}
+}
+
+void NodeItem::OnNodeDestroyed() {
+	m_node = nullptr;
 }

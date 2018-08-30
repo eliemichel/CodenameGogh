@@ -16,7 +16,6 @@
 #include "Ui/UiEnumInput.h"
 #include "Ui/UiButton.h"
 #include "Ui/UiContextMenu.h"
-
 #include "Variant.h"
 
 #include <GLFW/glfw3.h>
