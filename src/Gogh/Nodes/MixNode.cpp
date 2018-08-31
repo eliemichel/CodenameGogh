@@ -196,7 +196,7 @@ bool MixNode::setParm(int parm, QVariant value)
 	if (parm >= 0 && parm < parmCount())
 	{
 		m_streams[parm] = value.toString().toStdString();
-		emit parmChanged(parm);
+		//emit parmChanged(parm);
 		return true;
 	}
 	else
@@ -231,6 +231,6 @@ void MixNode::slotConnectEvent(SlotEvent *event)
 		return;
 		newInputSlot();
 		m_streams.push_back("");
-		emit parmChanged(parmCount() - 1);
+		//emit parmChanged(parmCount() - 1);
 	}
 }

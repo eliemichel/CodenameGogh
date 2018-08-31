@@ -32,7 +32,7 @@ DefaultNodeEditor::DefaultNodeEditor(Node *_node, QWidget *parent)
 
 	setLayout(layout);
 
-	connect(node(), &Node::parmChanged, this, &DefaultNodeEditor::updateParm);
+	//connect(node(), &Node::parmChanged, this, &DefaultNodeEditor::updateParm);
 }
 
 void DefaultNodeEditor::updateParm(int parm)

@@ -143,7 +143,7 @@ bool InputNode::setParm(int parm, QVariant value)
 	case 0:
 		m_filename = value.toString().toStdString();
 		m_probeProcess.cancel();
-		emit parmChanged(parm);
+		//emit parmChanged(parm);
 		return true;
 	default:
 		return false;

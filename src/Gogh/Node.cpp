@@ -102,11 +102,11 @@ void Node::insertParams(int first, int last)
 		return;
 	}
 
-	emit aboutToInsertParams(first, last);
 	m_params.insert(m_params.begin() + first, last - first + 1, nullptr);
 	for (auto it = m_params.begin() + first; it != m_params.begin() + last + 1; ++it) {
 		*it = new Parameter();
 	}
+	insertedParams.fire(first, last);
 }
 
 void Node::removeParams(int first, int last)
@@ -117,7 +117,7 @@ void Node::removeParams(int first, int last)
 		return;
 	}
 
-	emit aboutToRemoveParams(first, last);
+	aboutToRemoveParams.fire(first, last);
 	for (auto it = m_params.begin() + first; it != m_params.begin() + last + 1; ++it) {
 		delete *it;
 	}
@@ -132,11 +132,11 @@ void Node::insertInputSlots(int first, int last)
 		return;
 	}
 
-	emit aboutToInsertInputSlots(first, last);
 	m_inputSlots.insert(m_inputSlots.begin() + first, last - first + 1, nullptr);
 	for (auto it = m_inputSlots.begin() + first; it != m_inputSlots.begin() + last + 1; ++it) {
 		*it = new InputSlot(this);
 	}
+	insertedInputSlots.fire(first, last);
 }
 
 void Node::removeInputSlots(int first, int last)
@@ -147,7 +147,7 @@ void Node::removeInputSlots(int first, int last)
 		return;
 	}
 
-	emit aboutToRemoveInputSlots(first, last);
+	aboutToRemoveInputSlots.fire(first, last);
 	for (auto it = m_inputSlots.begin() + first; it != m_inputSlots.begin() + last + 1; ++it) {
 		delete *it;
 	}
@@ -162,11 +162,11 @@ void Node::insertOutputSlots(int first, int last)
 		return;
 	}
 
-	emit aboutToInsertOutputSlots(first, last);
 	m_outputSlots.insert(m_outputSlots.begin() + first, last - first + 1, nullptr);
 	for (auto it = m_outputSlots.begin() + first; it != m_outputSlots.begin() + last + 1; ++it) {
 		*it = new OutputSlot(this);
 	}
+	insertedOutputSlots.fire(first, last);
 }
 
 void Node::removeOutputSlots(int first, int last)
@@ -177,7 +177,7 @@ void Node::removeOutputSlots(int first, int last)
 		return;
 	}
 
-	emit aboutToRemoveOutputSlots(first, last);
+	aboutToRemoveOutputSlots.fire(first, last);
 	for (auto it = m_outputSlots.begin() + first; it != m_outputSlots.begin() + last + 1; ++it) {
 		delete *it;
 	}

@@ -3,17 +3,17 @@
 #include "Parameter.h"
 #include "ParameterDelegate.h"
 
+#include <list>
+
 NodeDelegate::NodeDelegate(Node *node, UiLayout *popupLayout)
 	: m_node(node)
+	, m_popupLayout(popupLayout)
 {
-	for (int i = 0; i < m_node->paramCount(); ++i) {
-		ParameterDelegate *paramDelegate = new ParameterDelegate(popupLayout);
-		paramDelegate->SetParameter(&m_node->param(i));
-		paramDelegate->SetInnerSizeHint(0, 0, 0, 30);
-		AddItem(paramDelegate);
-	}
+	InsertParams(0, m_node->paramCount() - 1);
 
 	// TODO: connect signals:
+	node->insertedParams.connect(this, &NodeDelegate::InsertParams);
+	node->aboutToRemoveParams.connect(this, &NodeDelegate::RemoveParams);
 	/*
 	void aboutToInsertParams(int first, int last);
 	void aboutToRemoveParams(int first, int last);
@@ -22,4 +22,45 @@ NodeDelegate::NodeDelegate(Node *node, UiLayout *popupLayout)
 	void aboutToInsertOutputSlots(int first, int last);
 	void aboutToRemoveOutputSlots(int first, int last);
 	*/
+}
+
+void NodeDelegate::InsertParams(int first, int last) {
+	// unstack items after first
+	// TODO: add an InsertItem method in UiLayout
+	std::list<UiElement*> m_lastElements;
+	while (Items().size() > first) {
+		m_lastElements.push_back(RemoveItem());
+	}
+
+	for (int i = first; i <= last; ++i) {
+		ParameterDelegate *paramDelegate = new ParameterDelegate(m_popupLayout);
+		paramDelegate->SetParameter(&m_node->param(i));
+		paramDelegate->SetInnerSizeHint(0, 0, 0, 30);
+		AddItem(paramDelegate);
+	}
+
+	// restack items
+	while (!m_lastElements.empty()) {
+		AddItem(m_lastElements.back());
+		m_lastElements.pop_back();
+	}
+}
+
+void NodeDelegate::RemoveParams(int first, int last) {
+	// unstack items after first
+	// TODO: add an RemoveItems range method in UiLayout
+	std::list<UiElement*> m_lastElements;
+	while (Items().size() > first) {
+		if (Items().size() > last + 1) {
+			m_lastElements.push_back(RemoveItem());
+		} else {
+			delete RemoveItem();
+		}
+	}
+
+	// restack items
+	while (!m_lastElements.empty()) {
+		AddItem(m_lastElements.back());
+		m_lastElements.pop_back();
+	}
 }

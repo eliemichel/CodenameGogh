@@ -14,35 +14,47 @@ ParameterDelegate::ParameterDelegate(UiLayout *popupLayout)
 {
 }
 
+ParameterDelegate::~ParameterDelegate() {
+	DisconnectSlots();
+}
+
 void ParameterDelegate::SetParameter(::Parameter *param)
 {
 	// Disconnect slots from previous parameter
-	if (m_param) {
-		m_param->valueChanged.disconnect(valueChangedConnection);
-		m_param->nameChanged.disconnect(nameChangedConnection);
-		m_param->typeChanged.disconnect(typeChangedConnection);
-		m_param->menuLabelChanged.disconnect(menuLabelChangedConnection);
-		m_param->aboutToInsertMenuItems.disconnect(aboutToInsertMenuItemsConnection);
-		m_param->aboutToRemoveMenuItems.disconnect(aboutToRemoveMenuItemsConnection);
-		m_param->destroyed.disconnect(destroyedConnection);
-	}
+	DisconnectSlots();
 
 	// Update
 	m_param = param;
 
 	// Connect slots to new parameter
-	if (m_param) {
-		valueChangedConnection = m_param->valueChanged.connect(this, &ParameterDelegate::UpdateValue);
-		nameChangedConnection = m_param->nameChanged.connect(this, &ParameterDelegate::UpdateName);
-		typeChangedConnection = m_param->typeChanged.connect(this, &ParameterDelegate::UpdateStructure);
-		menuLabelChangedConnection = m_param->menuLabelChanged.connect(this, &ParameterDelegate::UpdateMenuLabel);
-		aboutToInsertMenuItemsConnection = m_param->aboutToInsertMenuItems.connect(this, &ParameterDelegate::InsertMenuItems);
-		aboutToRemoveMenuItemsConnection = m_param->aboutToRemoveMenuItems.connect(this, &ParameterDelegate::RemoveMenuItems);
-		destroyedConnection = m_param->destroyed.connect(this, &ParameterDelegate::OnParameterDestroyed);
-	}
+	ConnectSlots();
 
 	// Rebuild UI
 	UpdateStructure();
+}
+
+void ParameterDelegate::ConnectSlots() {
+	if (m_param) {
+		m_valueChangedConnection = m_param->valueChanged.connect(this, &ParameterDelegate::UpdateValue);
+		m_nameChangedConnection = m_param->nameChanged.connect(this, &ParameterDelegate::UpdateName);
+		m_typeChangedConnection = m_param->typeChanged.connect(this, &ParameterDelegate::UpdateStructure);
+		m_menuLabelChangedConnection = m_param->menuLabelChanged.connect(this, &ParameterDelegate::UpdateMenuLabel);
+		m_aboutToInsertMenuItemsConnection = m_param->aboutToInsertMenuItems.connect(this, &ParameterDelegate::InsertMenuItems);
+		m_aboutToRemoveMenuItemsConnection = m_param->aboutToRemoveMenuItems.connect(this, &ParameterDelegate::RemoveMenuItems);
+		m_destroyedConnection = m_param->destroyed.connect(this, &ParameterDelegate::OnParameterDestroyed);
+	}
+}
+
+void ParameterDelegate::DisconnectSlots() {
+	if (m_param) {
+		m_param->valueChanged.disconnect(m_valueChangedConnection);
+		m_param->nameChanged.disconnect(m_nameChangedConnection);
+		m_param->typeChanged.disconnect(m_typeChangedConnection);
+		m_param->menuLabelChanged.disconnect(m_menuLabelChangedConnection);
+		m_param->aboutToInsertMenuItems.disconnect(m_aboutToInsertMenuItemsConnection);
+		m_param->aboutToRemoveMenuItems.disconnect(m_aboutToRemoveMenuItemsConnection);
+		m_param->destroyed.disconnect(m_destroyedConnection);
+	}
 }
 
 void ParameterDelegate::UpdateStructure()

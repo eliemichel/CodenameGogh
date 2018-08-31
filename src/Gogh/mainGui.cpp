@@ -27,6 +27,7 @@
 int mainGui(const ArgParse & args)
 {
 	Parameter *pParam;
+	Node *pNode;
 	Graph *graph = new Graph();
 	{
 		Node *node = new Node();
@@ -47,6 +48,8 @@ int mainGui(const ArgParse & args)
 		param2.set("bloum");
 		pParam = &param2;
 		graph->addNode(node);
+
+		pNode = node;
 	}
 
 	UiApp app;
@@ -152,6 +155,15 @@ int mainGui(const ArgParse & args)
 	popupLayout->AddItem(mainLayout);
 	window.SetContent(popupLayout);
 	popupLayout->SetRect(0, 0, 1200, 600);
+
+	pNode->insertParams(0, 0);
+	{
+		Parameter & param = pNode->param(0);
+		param.setType(IntType);
+		param.setName("Stream #");
+		param.set(3);
+	}
+	pNode->removeParams(1, 1);
 
 	while (!window.ShouldClose())
 	{

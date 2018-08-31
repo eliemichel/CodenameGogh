@@ -101,11 +101,11 @@ bool OutputNode::setParm(int parm, QVariant value)
 	{
 	case 0:
 		m_filename = value.toString().toStdString();
-		emit parmChanged(parm);
+		//emit parmChanged(parm);
 		return true;
 	case 1:
 		m_weboptimized = value.toBool();
-		emit parmChanged(parm);
+		//emit parmChanged(parm);
 		return true;
 	default:
 		return false;

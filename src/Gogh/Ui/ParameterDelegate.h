@@ -20,6 +20,7 @@ class ParameterDelegate : public UiHBoxLayout
 {
 public:
 	ParameterDelegate(UiLayout *popupLayout = nullptr);
+	~ParameterDelegate();
 
 	/**
 	 * Set the parameter controlled by this widget.
@@ -33,6 +34,15 @@ public:
 	::Parameter * Parameter() const { return m_param; }
 
 private:
+	/**
+	 * Connect parameter's signal to this delegate's slots
+	 */
+	void ConnectSlots();
+	/**
+	 * Disconnect parameter's signal from this delegate's slots
+	 */
+	void DisconnectSlots();
+
 	/**
 	 * Rebuild the widget content, when controller parameter changes or switch types.
 	 */
@@ -63,13 +73,13 @@ private:
 	/// Layout used to pop up enum menu
 	UiLayout *m_popupLayout;
 
-	SignalConnection valueChangedConnection;
-	SignalConnection nameChangedConnection;
-	SignalConnection typeChangedConnection;
-	SignalConnection menuLabelChangedConnection;
-	SignalConnection aboutToInsertMenuItemsConnection;
-	SignalConnection aboutToRemoveMenuItemsConnection;
-	SignalConnection destroyedConnection;
+	SignalConnection m_valueChangedConnection;
+	SignalConnection m_nameChangedConnection;
+	SignalConnection m_typeChangedConnection;
+	SignalConnection m_menuLabelChangedConnection;
+	SignalConnection m_aboutToInsertMenuItemsConnection;
+	SignalConnection m_aboutToRemoveMenuItemsConnection;
+	SignalConnection m_destroyedConnection;
 
 	// TODO: use a variant
 	union

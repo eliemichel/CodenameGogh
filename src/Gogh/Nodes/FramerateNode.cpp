@@ -80,7 +80,7 @@ bool FramerateNode::setParm(int parm, QVariant value)
 	{
 	case 0:
 		m_framerate = value.toInt();
-		emit parmChanged(parm);
+		//emit parmChanged(parm);
 		return true;
 	default:
 		return false;

@@ -89,11 +89,11 @@ bool ScaleNode::setParm(int parm, QVariant value)
 	{
 	case 0:
 		m_width = value.toInt();
-		emit parmChanged(parm);
+		//emit parmChanged(parm);
 		return true;
 	case 1:
 		m_height = value.toInt();
-		emit parmChanged(parm);
+		//emit parmChanged(parm);
 		return true;
 	default:
 		return false;

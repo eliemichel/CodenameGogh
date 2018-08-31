@@ -211,28 +211,26 @@ public:
 	int outputSlotCount_legacy() const { return static_cast<int>(outputLinks.size()); }
 
 public: // signals
-	Signal<> destroyed;
-
-signals:
-	void parmChanged(int parm);
-
-	/// emitted before inserting new parameters from position <first> to <last> included
-	void aboutToInsertParams(int first, int last);
+	/// emitted after inserting new parameters from position <first> to <last> included
+	Signal<int, int> insertedParams; // (int first, int last)
 
 	/// emitted before removing parameters from position <first> to <last> included
-	void aboutToRemoveParams(int first, int last);
+	Signal<int, int> aboutToRemoveParams; // (int first, int last)
 
-	/// emitted before inserting new input slots from position <first> to <last> included
-	void aboutToInsertInputSlots(int first, int last);
+	/// emitted after  inserting new input slots from position <first> to <last> included
+	Signal<int, int> insertedInputSlots; // (int first, int last)
 
 	/// emitted before removing input slots from position <first> to <last> included
-	void aboutToRemoveInputSlots(int first, int last);
+	Signal<int, int> aboutToRemoveInputSlots; // (int first, int last)
 
-	/// emitted before inserting new output slots from position <first> to <last> included
-	void aboutToInsertOutputSlots(int first, int last);
+	/// emitted after  inserting new output slots from position <first> to <last> included
+	Signal<int, int> insertedOutputSlots; // (int first, int last)
 
 	/// emitted before removing output slots from position <first> to <last> included
-	void aboutToRemoveOutputSlots(int first, int last);
+	Signal<int, int> aboutToRemoveOutputSlots; // (int first, int last)
+
+	/// Signal emitted just after destructing the object
+	Signal<> destroyed;
 
 protected:
 	// slot structure write
