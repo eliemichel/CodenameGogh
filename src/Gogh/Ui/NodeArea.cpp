@@ -70,6 +70,8 @@ NodeArea::~NodeArea() {
 }
 
 void NodeArea::OnTick(float time) {
+	UiTrackMouseLayout::OnTick(time);
+
 	// Clean up items that no longer represent a Node (because it has been destroyed)
 	for (auto it = m_nodeItems.begin(); it != m_nodeItems.end();) {
 		if (!(*it)->Node()) {

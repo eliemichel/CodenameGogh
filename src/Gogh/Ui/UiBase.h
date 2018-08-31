@@ -113,10 +113,21 @@ public: // protected:
 		m_debug = false;
 	}
 
-	/// Call when geometry gets updated
+	/// Call when geometry gets updated. This is called by the parent, going
+	/// from top down. To signal the need for a change from the bottom up, use
+	/// RequestUpdate();
 	/// MUST NOT call this->SetRect() or there would be infinite loops
 	virtual void Update() {}
 
+	/// Called when the size hint changed and so the element needs the parent
+	/// tree to be updated
+	virtual void RequestUpdate() {
+		if (UiElement *parent = Parent()) {
+			parent->RequestUpdate();
+		}
+	}
+
+	/// Method called at every frame -- must be lightweight
 	virtual void OnTick(float time) {}
 
 	virtual void Paint(NVGcontext *vg) const {
@@ -375,6 +386,13 @@ public: // protected:
 			item->Paint(vg);
 		}
 		PaintDebug(vg);
+	}
+
+	/// By default, a layout interrupt any update request and updates its
+	/// children, but it might request an update from its parent if its size
+	/// hint changes.
+	void RequestUpdate() override {
+		Update();
 	}
 
 	void OnDefocus() override {

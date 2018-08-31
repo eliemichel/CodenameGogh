@@ -44,6 +44,8 @@ void NodeDelegate::InsertParams(int first, int last) {
 		AddItem(m_lastElements.back());
 		m_lastElements.pop_back();
 	}
+
+	RequestUpdate();
 }
 
 void NodeDelegate::RemoveParams(int first, int last) {
@@ -63,4 +65,6 @@ void NodeDelegate::RemoveParams(int first, int last) {
 		AddItem(m_lastElements.back());
 		m_lastElements.pop_back();
 	}
+
+	RequestUpdate();
 }
