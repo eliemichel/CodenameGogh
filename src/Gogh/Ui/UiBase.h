@@ -289,20 +289,20 @@ public:
 	}
 	/// Give back ownership of the item
 	bool RemoveItem(UiElement *item) {
+		// Clear focus before removing the element
+		if (m_mouseClickFocus == item) {
+			SetClickFocus(nullptr);
+		}
+		if (m_mousePressFocus == item) {
+			m_mousePressFocus = nullptr;
+		}
+		if (m_mouseOverFocus == item) {
+			m_mouseOverFocus = nullptr;
+		}
+
 		auto it = m_items.begin();
 		for (; it != m_items.end(); ++it) {
 			if (*it == item) {
-				// Clear focus before removing the element
-				if (m_mouseClickFocus == item) {
-					SetClickFocus(nullptr);
-				}
-				if (m_mousePressFocus == item) {
-					m_mousePressFocus = nullptr;
-				}
-				if (m_mouseOverFocus == item) {
-					m_mouseOverFocus = nullptr;
-				}
-
 				// Remove the element
 				m_items.erase(it);
 

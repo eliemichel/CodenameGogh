@@ -22,7 +22,7 @@ QuadTree::~QuadTree() {
 	}
 }
 
-QuadTree::Accessor QuadTree::Insert(Item *item) {
+QuadTree::Accessor QuadTree::Insert(Item *item, bool notify, QuadTree *rootTree) {
 	if (!item) {
 		return Accessor();
 	}
@@ -32,13 +32,16 @@ QuadTree::Accessor QuadTree::Insert(Item *item) {
 		if (IsLeaf()) {
 			Split();
 		}
-		Accessor acc = m_branches[branchIndex]->Insert(item);
+		Accessor acc = m_branches[branchIndex]->Insert(item, notify, rootTree);
 		acc.path.push_back(branchIndex);
 		return acc;
 	}
 	else {
 		m_items.push_back(item);
-		return Accessor(item);;
+		if (notify) {
+			item->OnInsert(rootTree);
+		}
+		return Accessor(item);
 	}
 }
 
@@ -96,7 +99,7 @@ QuadTree::Accessor QuadTree::ItemAt(float x, float y) {
 	return candidate;
 }
 
-void QuadTree::RemoveItems(const std::vector<Accessor> & accessors) {
+void QuadTree::RemoveItems(const std::vector<Accessor> & accessors, bool notify, QuadTree *rootTree) {
 	// split item lists
 	std::vector<Accessor> subAccessors[_BranchCount];
 
@@ -106,6 +109,9 @@ void QuadTree::RemoveItems(const std::vector<Accessor> & accessors) {
 			for (auto it = m_items.begin(); it != m_items.end();) {
 				if (*it == acc.item) {
 					it = m_items.erase(it);
+					if (notify) {
+						acc.item->OnRemove(rootTree);
+					}
 				}
 				else {
 					++it;
@@ -121,7 +127,7 @@ void QuadTree::RemoveItems(const std::vector<Accessor> & accessors) {
 
 	if (!IsLeaf()) {
 		for (int i = 0; i < _BranchCount; ++i) {
-			m_branches[i]->RemoveItems(subAccessors[i]);
+			m_branches[i]->RemoveItems(subAccessors[i], notify, rootTree);
 		}
 	}
 
@@ -151,12 +157,12 @@ QuadTree::Accessor QuadTree::UpdateItemBBox(const Accessor & acc, Rect bbox) {
 
 		// remove from items
 		newAcc.isValid = true;
-		RemoveItem(newAcc);
+		RemoveItem(newAcc, false /* notify */, nullptr);
 
 		// re-insert if possible, potentially inserting deeper
 		if (fit && newAcc.item) {
 			newAcc.item->SetBBox(bbox);
-			newAcc = Insert(newAcc.item);
+			newAcc = Insert(newAcc.item, false /* notify */, nullptr);
 		}
 
 		// Flag invalid if new bbox does not fit for parent to re-insert the item

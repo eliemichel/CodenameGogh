@@ -30,7 +30,17 @@ public:
 public:
 	AbstractNodeAreaItem(Rect bbox, int type)
 		: QuadTree::Item(bbox, type)
+		, m_tree(nullptr)
 	{}
+
+	~AbstractNodeAreaItem() {
+		if (m_tree) {
+			m_tree->RemoveItem(this);
+		}
+		for (AbstractNodeAreaItem *child : Children()) {
+			delete child;
+		}
+	}
 
 	void AddChild(AbstractNodeAreaItem *child) { m_children.push_back(child); }
 	const std::vector<AbstractNodeAreaItem*> & Children() const { return m_children; }
@@ -41,7 +51,36 @@ public:
 		}
 	}
 
+protected:
+	void OnInsert(QuadTree *tree) override {
+		if (m_tree && m_tree != tree) {
+			m_tree->RemoveItem(this);
+		}
+		m_tree = tree;
+		for (AbstractNodeAreaItem *child : Children()) {
+			QuadTree *ctree = child->Tree();
+			if (ctree != tree) {
+				if (ctree) {
+					ctree->RemoveItem(child);
+				}
+				tree->Insert(child);
+			}
+		}
+	}
+
+	void OnRemove(QuadTree *tree) override {
+		m_tree = nullptr;
+		for (AbstractNodeAreaItem *child : Children()) {
+			if (child->Tree() == tree) {
+				tree->RemoveItem(child);
+			}
+		}
+	}
+
+	QuadTree * Tree() const { return m_tree; }
+
 private:
+	QuadTree * m_tree;
 	std::vector<AbstractNodeAreaItem*> m_children;
 };
 

@@ -23,6 +23,7 @@ public:
 	};
 
 	class Item {
+		friend QuadTree;
 	public:
 		Item(Rect bbox, int type)
 			: m_bbox(bbox)
@@ -47,6 +48,10 @@ public:
 	protected:
 		/// Called to update item geometry after bbox changed
 		virtual void UpdateGeometry() {}
+		/// Called after the item has been added to a tree
+		virtual void OnInsert(QuadTree *tree) {}
+		/// Called after the item has been removed from a tree
+		virtual void OnRemove(QuadTree *tree) {}
 
 	private:
 		QuadTree *m_tree;
@@ -77,7 +82,7 @@ public:
 
 	/// Insert at the deepest possible node, branching while the division limit
 	/// has not been reached
-	Accessor Insert(Item *item);
+	Accessor Insert(Item *item) { return Insert(item, true /* notify */, this); }
 
 	/// Try to build an accessor to the item, or return an invalid accessor if
 	/// not found
@@ -86,14 +91,20 @@ public:
 	Accessor ItemAt(float x, float y);
 
 	/// Pop items matching the provided data
-	void RemoveItems(const std::vector<Accessor> & accessors);
-	void RemoveItem(const Accessor & acc) { RemoveItems({ acc }); }
+	void RemoveItems(const std::vector<Accessor> & accessors) { RemoveItems(accessors, true /* notify */, this); }
+	void RemoveItem(const Accessor & acc) { RemoveItems({ acc }, true /* notify */, this); }
 
 	Accessor UpdateItemBBox(const Accessor & acc, Rect bbox);
 
 	void PaintDebug(NVGcontext *vg) const;
 
 private:
+	/// Internal implementations with notification switch (for item insert/remove callbacks)
+	/// Also add root tree for notification
+	Accessor Insert(Item *item, bool notify, QuadTree *rootTree);
+	void RemoveItems(const std::vector<Accessor> & accessors, bool notify, QuadTree *rootTree);
+	void RemoveItem(const Accessor & acc, bool notify, QuadTree *rootTree) { RemoveItems({ acc }, notify, rootTree); }
+
 	void Split();
 
 	/// Prune unused children

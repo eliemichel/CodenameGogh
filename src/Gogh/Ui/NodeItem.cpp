@@ -10,25 +10,19 @@ NodeItem::NodeItem(::Node *node, QuadTree *tree, UiLayout *popupLayout)
 	// Content
 	SetContent(node->createDelegate(popupLayout));
 
-	if (tree) {
-		tree->Insert(this);
-	}
-
 	for (int i = 0; i < node->inputSlotCount(); ++i) {
 		InputSlot & slot = node->inputSlot(i);
 		SlotItem *slotItem = new SlotItem({ -8, 20 + 30 * i, 16, 16 });
-		if (tree) {
-			tree->Insert(slotItem);
-		}
 		AddChild(slotItem);
 	}
 	for (int i = 0; i < node->outputSlotCount(); ++i) {
 		OutputSlot & slot = node->outputSlot(i);
 		SlotItem *slotItem = new SlotItem({ 192, 20 + 30 * i, 16, 16 });
-		if (tree) {
-			tree->Insert(slotItem);
-		}
 		AddChild(slotItem);
+	}
+
+	if (tree) {
+		tree->Insert(this);
 	}
 
 	// TODO: connect nodes

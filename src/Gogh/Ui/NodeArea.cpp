@@ -40,16 +40,13 @@ NodeArea::NodeArea(Graph *graph, UiLayout *popupLayout)
 	SlotItem *slot;
 
 	slot = new SlotItem({ 192, 30, 16, 16 });
-	m_tree->Insert(slot);
 	m_nodeItems[0]->AddChild(slot); // DEBUG
 
 	slot = new SlotItem({ 192, 60, 16, 16 });
-	m_tree->Insert(slot);
 	m_nodeItems[0]->AddChild(slot); // DEBUG
 	SlotItem *slot1 = slot;
 
 	slot = new SlotItem({ 292, 210, 16, 16 });
-	m_tree->Insert(slot);
 	m_nodeItems[1]->AddChild(slot); // DEBUG
 
 	m_linkItems.push_back({ slot1, slot });
@@ -75,6 +72,10 @@ void NodeArea::OnTick(float time) {
 	// Clean up items that no longer represent a Node (because it has been destroyed)
 	for (auto it = m_nodeItems.begin(); it != m_nodeItems.end();) {
 		if (!(*it)->Node()) {
+			if (UiElement *content = (*it)->Content()) {
+				RemoveItem(content);
+			}
+			delete *it;
 			it = m_nodeItems.erase(it);
 		} else {
 			++it;
@@ -206,14 +207,10 @@ void NodeArea::OnKey(int key, int scancode, int action, int mods) {
 	UiTrackMouseLayout::OnKey(key, scancode, action, mods);
 
 	if (key == GLFW_KEY_DELETE && action == GLFW_PRESS) {
-		std::vector<QuadTree::Accessor> accs;
-		accs.reserve(m_selectedNodes.size());
 		for (const SelectionEntry & entry : m_selectedNodes) {
 			// nodeItem will be naturally cleaned up when node is deleted
 			delete entry.nodeItem->Node();
-			accs.push_back(entry.acc);
 		}
-		m_tree->RemoveItems(accs); // this could be in nodeitem's dtor
 		m_selectedNodes.clear();
 	}
 
