@@ -48,7 +48,7 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		bool isNewFile = true;
 		for (int j = 0; j <= inputFiles.size(); j++)
 		{
-			if (inputFiles.size() > 0 && cmx.cmd[1] == inputFiles[j])
+			if (inputFiles.size() > 0 && cmx.map.first == inputFiles[j])
 			{
 				isNewFile = false;
 				currentFileID = j;
@@ -57,14 +57,15 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		}
 		if (isNewFile)
 		{
-			inputFiles.push_back(cmx.cmd[1]);
+			inputFiles.push_back(cmx.map.first);
 			currentFileID = i;
 		}
 
 		//For each input file, every used output stream is stored
-		fileMaps[cmx.cmd[1]].push_back(cmx.map);
+		fileMaps[cmx.map.first].push_back(cmx.map.second);
 
 		//Get every stream of each input parm
+		DEBUG_LOG << cmx.stream;
 		parmStreams.push_back(cmx.stream);
 
 		// Keep built command without "-i filename"

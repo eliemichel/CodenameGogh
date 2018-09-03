@@ -82,7 +82,7 @@ bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	//TODO: Set default keys from ffprobe file properties, like "codec" or "scale"
 
 	//MixNode mapping
-	cmd.map = outputIndex;
+	cmd.map = std::make_pair(filename.toStdString(), outputIndex);
 	cmd.stream = m_probeProcess.streamsAsChar(outputIndex);
 
 	//RenderCommand

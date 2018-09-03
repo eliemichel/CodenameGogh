@@ -20,24 +20,37 @@ class EnvModel;
 class NodeGraphModel;
 class QWidget;
 
+/* Type defined to transmit a pair (input_file, stream_number)
+	 which characterizes a stream.
+	*/
+typedef std::pair<std::string, int> filestream;
+
+enum StreamType
+{
+	VideoStream,
+	AudioStream,
+	SubtitleStream,
+	DataStream,
+};
+
 /**
  * This structure is transmitted among the graph nodes while building the
  * render command. Feel free to add any field required to properly build
  * the command.
  */
 struct RenderCommand {
-	// raw command being built
+	// Final command to send to ffmpeg, must be filled only int the OuputNode
 	std::vector<std::string> cmd;
 
 	// OutputNode's smart renaming : keys (like : "codec", "scale") associated to current nodes values (like : "h264", "1920x1080")
 	std::map<std::string, std::string> env;
 
 	// Map informations for MixNode :
-	int map;
+	filestream map;
 
 	// StreamType
+	//std::map<filestream, SteamType> stream;
 	char stream;
-
 	// error message that may be filled when returning false in buildRenderCommand
 	std::string err;
 };

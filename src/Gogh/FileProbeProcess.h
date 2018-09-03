@@ -3,15 +3,7 @@
 
 #include <QProcess>
 #include <vector>
-
-// TODO: move somewhere else
-enum StreamType
-{
-	VideoStream,
-	AudioStream,
-	SubtitleStream,
-	DataStream,
-};
+#include <node.h>
 
 class FileProbeProcess : public QProcess
 {

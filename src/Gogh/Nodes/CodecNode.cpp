@@ -28,7 +28,7 @@ bool CodecNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	//RenderCommand
 	cmd.cmd.push_back("-c:v");
 	cmd.cmd.push_back(parmEvalAsString(0).toStdString());
-	
+
 	return true;
 }
 
