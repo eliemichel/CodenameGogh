@@ -7,11 +7,13 @@
 class Graph;
 class AbstractNodeAreaItem;
 class NodeItem;
-class SlotItem;
+class InputSlotItem;
+class OutputSlotItem;
 class UiContextMenu;
 
 struct LinkItem {
-	SlotItem *origin, *destination;
+	OutputSlotItem *origin;
+	InputSlotItem *destination;
 };
 
 class NodeArea : public UiTrackMouseLayout {

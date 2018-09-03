@@ -1,4 +1,5 @@
 #include "NodeItem.h"
+#include "SlotItem.h"
 #include "Node.h"
 
 NodeItem::NodeItem(::Node *node, QuadTree *tree, UiLayout *popupLayout)
@@ -12,12 +13,12 @@ NodeItem::NodeItem(::Node *node, QuadTree *tree, UiLayout *popupLayout)
 
 	for (int i = 0; i < node->inputSlotCount(); ++i) {
 		InputSlot & slot = node->inputSlot(i);
-		SlotItem *slotItem = new SlotItem({ -8, 20 + 30 * i, 16, 16 });
+		InputSlotItem *slotItem = new InputSlotItem({ -8, 20 + 30 * i, 16, 16 });
 		AddChild(slotItem);
 	}
 	for (int i = 0; i < node->outputSlotCount(); ++i) {
 		OutputSlot & slot = node->outputSlot(i);
-		SlotItem *slotItem = new SlotItem({ 192, 20 + 30 * i, 16, 16 });
+		OutputSlotItem *slotItem = new OutputSlotItem({ 192, 20 + 30 * i, 16, 16 });
 		AddChild(slotItem);
 	}
 

@@ -7,7 +7,8 @@
 enum NodeAreaItemType {
 	_BeginNodeAreaItems,
 	NodeItemType,
-	SlotItemType,
+	InputSlotItemType,
+	OutputSlotItemType,
 	_EndNodeAreaItems,
 };
 
@@ -82,49 +83,6 @@ protected:
 private:
 	QuadTree * m_tree;
 	std::vector<AbstractNodeAreaItem*> m_children;
-};
-
-class SlotItem : public AbstractNodeAreaItem {
-public:
-	static SlotItem * fromRawItem(QuadTree::Item *rawItem) {
-		if (rawItem && rawItem->Type() == SlotItemType) {
-			return static_cast<SlotItem*>(rawItem);
-		} else {
-			return nullptr;
-		}
-	}
-
-public:
-	SlotItem(Rect bbox)
-		: AbstractNodeAreaItem(bbox, SlotItemType)
-	{}
-
-	bool Hit(float x, float y) override {
-		// treated as an ellipse
-		const Rect & r = BBox();
-		float hw = r.wf() / 2.f;
-		float hh = r.hf() / 2.f;
-		float cx = r.xf() + hw;
-		float cy = r.yf() + hh;
-		float dx = (x - cx) / hw;
-		float dy = (y - cy) / hh;
-		return (dx * dx + dy * dy) < 1.f;
-	}
-
-	void Paint(NVGcontext *vg) const override {
-		const Rect & r = BBox();
-		float hw = r.wf() / 2.f;
-		float hh = r.hf() / 2.f;
-		float cx = r.xf() + hw;
-		float cy = r.yf() + hh;
-
-		nvgBeginPath(vg);
-		nvgEllipse(vg, cx, cy, hw, hh);
-		nvgFillColor(vg, nvgRGB(255, 255, 255));
-		nvgFill(vg);
-
-		AbstractNodeAreaItem::Paint(vg);
-	}
 };
 
 #endif // H_NODEAREAITEMS

@@ -2,6 +2,7 @@
 #include "QuadTree.h"
 #include "NodeAreaItems.h"
 #include "NodeItem.h"
+#include "SlotItem.h"
 #include "UiContextMenu.h"
 #include "Logger.h"
 #include "Node.h"
@@ -36,20 +37,6 @@ NodeArea::NodeArea(Graph *graph, UiLayout *popupLayout)
 	for (NodeItem *item : m_nodeItems) {
 		m_tree->Insert(item);
 	}
-
-	SlotItem *slot;
-
-	slot = new SlotItem({ 192, 30, 16, 16 });
-	m_nodeItems[0]->AddChild(slot); // DEBUG
-
-	slot = new SlotItem({ 192, 60, 16, 16 });
-	m_nodeItems[0]->AddChild(slot); // DEBUG
-	SlotItem *slot1 = slot;
-
-	slot = new SlotItem({ 292, 210, 16, 16 });
-	m_nodeItems[1]->AddChild(slot); // DEBUG
-
-	m_linkItems.push_back({ slot1, slot });
 
 	for (Node *node : graph->nodes()) {
 		m_nodeItems.push_back(new NodeItem(node, m_tree, popupLayout));
@@ -178,12 +165,21 @@ void NodeArea::OnMouseClick(int button, int action, int mods) {
 				break;
 			}
 
-			case SlotItemType:
+			case InputSlotItemType:
 			{
-				SlotItem *slotItem = SlotItem::fromRawItem(acc.item);
+				InputSlotItem *slotItem = InputSlotItem::fromRawItem(acc.item);
+				m_pendingLink.destination = slotItem;
+				m_pendingLink.origin = nullptr;
+				DEBUG_LOG << "Start dragging link from destination";
+				break;
+			}
+
+			case OutputSlotItemType:
+			{
+				OutputSlotItem *slotItem = OutputSlotItem::fromRawItem(acc.item);
 				m_pendingLink.origin = slotItem;
 				m_pendingLink.destination = nullptr;
-				DEBUG_LOG << "Start dragging link";
+				DEBUG_LOG << "Start dragging link from origin";
 				break;
 			}
 			}
@@ -193,7 +189,30 @@ void NodeArea::OnMouseClick(int button, int action, int mods) {
 	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_RELEASE) {
 		ClearMovingItems();
 
-		m_pendingLink.origin = m_pendingLink.destination = nullptr;
+		if (m_pendingLink.origin || m_pendingLink.destination) {
+			QuadTree::Accessor acc = m_tree->ItemAt(static_cast<float>(MouseX()), static_cast<float>(MouseY()));
+			if (acc.isValid) {
+				switch (acc.item->Type()) {
+				case InputSlotItemType:
+					if (!m_pendingLink.destination) {
+						InputSlotItem * slotItem = InputSlotItem::fromRawItem(acc.item);
+						m_pendingLink.destination = slotItem;
+						m_graph->addLink(m_pendingLink.origin->Slot(), m_pendingLink.destination->Slot());
+					}
+					break;
+
+				case OutputSlotItemType:
+					if (!m_pendingLink.origin) {
+						OutputSlotItem * slotItem = OutputSlotItem::fromRawItem(acc.item);
+						m_pendingLink.origin = slotItem;
+						m_graph->addLink(m_pendingLink.origin->Slot(), m_pendingLink.destination->Slot());
+					}
+					break;
+				}
+			}
+
+			m_pendingLink.origin = m_pendingLink.destination = nullptr;
+		}
 	}
 
 	if (button == GLFW_MOUSE_BUTTON_RIGHT && action == GLFW_PRESS) {

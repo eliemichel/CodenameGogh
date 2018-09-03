@@ -23,10 +23,13 @@ set(SRC
 	ArgParse.cpp
 	mainGui.h
 	mainGui.cpp
-	Slot.h
-	Slot.cpp
+	Graph.h
+	Graph.cpp
 	Node.h
 	Node.cpp
+	Link.h
+	Slot.h
+	Slot.cpp
 	NodeType.h
 	NodeType.cpp
 	Parameter.h
@@ -107,6 +110,10 @@ set(SRC
 	Ui/NodeArea.h
 	Ui/NodeArea.cpp
 	Ui/NodeAreaItems.h
+	Ui/NodeItem.h
+	Ui/NodeItem.cpp
+	Ui/SlotItem.h
+	Ui/SlotItem.cpp
 	Ui/UiApp.h
 	Ui/UiApp.cpp
 	Ui/UiWindow.h
@@ -115,8 +122,6 @@ set(SRC
 	Ui/ParameterDelegate.cpp
 	Ui/QuadTree.h
 	Ui/QuadTree.cpp
-	Ui/NodeItem.h
-	Ui/NodeItem.cpp
 	Ui/NodeDelegate.h
 	Ui/NodeDelegate.cpp
 
