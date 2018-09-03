@@ -48,7 +48,7 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		bool isNewFile = true;
 		for (int j = 0; j <= inputFiles.size(); j++)
 		{
-			if (inputFiles.size() > 0 && cmx.map.first == inputFiles[j])
+			if (inputFiles.size() > 0 && cmx.fs.first == inputFiles[j])
 			{
 				isNewFile = false;
 				currentFileID = j;
@@ -57,12 +57,12 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		}
 		if (isNewFile)
 		{
-			inputFiles.push_back(cmx.map.first);
+			inputFiles.push_back(cmx.fs.first);
 			currentFileID = i;
 		}
 
 		//For each input file, every used output stream is stored
-		fileMaps[cmx.map.first].push_back(cmx.map.second);
+		fileMaps[cmx.fs.first].push_back(cmx.fs.second);
 
 		//Get every stream of each input parm
 		DEBUG_LOG << cmx.stream;

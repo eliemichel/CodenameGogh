@@ -45,8 +45,8 @@ struct RenderCommand {
 	// OutputNode's smart renaming : keys (like : "codec", "scale") associated to current nodes values (like : "h264", "1920x1080")
 	std::map<std::string, std::string> env;
 
-	// Map informations for MixNode :
-	filestream map;
+	// Current filestream, mainly used for MixNode:
+	filestream fs;
 
 	// StreamType
 	//std::map<filestream, SteamType> stream;
