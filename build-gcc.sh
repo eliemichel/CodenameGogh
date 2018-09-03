@@ -1,5 +1,10 @@
 #!/bin/bash
 # (This is a script for Linux)
+
+# Update/pull git submodules
+# This only has to run once
+git submodule update --init --recursive --remote
+
 # Place all build related files in a specific directory.
 # Whenever you'd like to clean the build and restart it from scratch, you can
 # delete this directory without worrying about deleting important files.

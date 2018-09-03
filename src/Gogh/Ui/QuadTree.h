@@ -2,7 +2,6 @@
 #define H_QUADTREE
 
 #include "UiRect.h"
-#include "Logger.h"
 
 #include <list>
 #include <vector>
@@ -64,7 +63,7 @@ public:
 	class Accessor {
 	public:
 		Accessor() : isValid(false) {}
-		Accessor(Item *_item) : item(_item), isValid(true) {}
+		explicit Accessor(Item *_item) : item(_item), isValid(true) {}
 
 		bool IsValid() const { return isValid; }
 
@@ -92,8 +91,9 @@ public:
 	Accessor ItemAt(float x, float y);
 
 	/// Pop items matching the provided data
-	void RemoveItems(const std::vector<Accessor> & accessors) { DEBUG_LOG << "==========="; RemoveItems(accessors, true /* notify */); }
-	void RemoveItem(const Accessor & acc) { DEBUG_LOG << "==========="; RemoveItems({ acc }, true /* notify */); }
+	void RemoveItems(const std::vector<Accessor> & accessors) { RemoveItems(accessors, true /* notify */); }
+	void RemoveItem(const Accessor & acc) { RemoveItems({ acc }, true /* notify */); }
+	void RemoveItem(Item * item) { RemoveItem(Find(item)); }
 
 	Accessor UpdateItemBBox(const Accessor & acc, Rect bbox);
 

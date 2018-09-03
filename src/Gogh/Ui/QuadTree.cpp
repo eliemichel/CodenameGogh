@@ -1,5 +1,5 @@
 #include "QuadTree.h"
-#include "Logger.h"
+
 #include <nanovg.h>
 
 QuadTree::QuadTree(float cx, float cy, float hw, float hh, int divisions)
@@ -102,11 +102,13 @@ QuadTree::Accessor QuadTree::ItemAt(float x, float y) {
 }
 
 void QuadTree::RemoveItems(const std::vector<Accessor> & accessors, bool notify) {
-	DEBUG_LOG << "RemoveItems";
 	// split item lists
 	std::vector<Accessor> subAccessors[_BranchCount];
 
 	for (Accessor acc : accessors) {
+		if (!acc.isValid) {
+			continue;
+		}
 		if (acc.path.empty()) {
 			// search in items
 			for (auto it = m_items.begin(); it != m_items.end();) {
@@ -126,9 +128,9 @@ void QuadTree::RemoveItems(const std::vector<Accessor> & accessors, bool notify)
 
 	if (!IsLeaf()) {
 		for (int i = 0; i < _BranchCount; ++i) {
-			DEBUG_LOG << "> RemoveItems->recurse in subbranch " << i;
-			m_branches[i]->RemoveItems(subAccessors[i], false /* notify */);
-			DEBUG_LOG << "<";
+			if (!subAccessors[i].empty()) {
+				m_branches[i]->RemoveItems(subAccessors[i], false /* notify */);
+			}
 		}
 	}
 
@@ -224,21 +226,13 @@ void QuadTree::Split() {
 }
 
 void QuadTree::Prune() {
-	DEBUG_LOG << "Prune";
 	if (IsLeaf()) {
-		DEBUG_LOG << "IsLeaf, abort";
 		return;
 	}
 
 	bool canPrune = true;
 	for (int i = 0; i < _BranchCount; ++i) {
 		canPrune = canPrune && m_branches[i]->IsLeaf() && m_branches[i]->m_items.empty();
-		if (!m_branches[i]->IsLeaf()) {
-			DEBUG_LOG << "Cannot prune (subbranch " << i << " is not a leaf)";
-		}
-		if (!m_branches[i]->m_items.empty()) {
-			DEBUG_LOG << "Cannot prune (subbranch " << i << " contains " << m_branches[i]->m_items.size() << " items)";
-		}
 	}
 
 	if (canPrune) {
