@@ -1,5 +1,5 @@
 #include "QuadTree.h"
-
+#include "Logger.h"
 #include <nanovg.h>
 
 QuadTree::QuadTree(float cx, float cy, float hw, float hh, int divisions)
@@ -22,7 +22,7 @@ QuadTree::~QuadTree() {
 	}
 }
 
-QuadTree::Accessor QuadTree::Insert(Item *item, bool notify, QuadTree *rootTree) {
+QuadTree::Accessor QuadTree::Insert(Item *item, bool notify) {
 	if (!item) {
 		return Accessor();
 	}
@@ -32,14 +32,16 @@ QuadTree::Accessor QuadTree::Insert(Item *item, bool notify, QuadTree *rootTree)
 		if (IsLeaf()) {
 			Split();
 		}
-		Accessor acc = m_branches[branchIndex]->Insert(item, notify, rootTree);
+		Accessor acc = m_branches[branchIndex]->Insert(item, false /* notify */);
+		if (notify) {
+			item->OnInsert(this);
+		}
 		acc.path.push_back(branchIndex);
 		return acc;
-	}
-	else {
+	} else {
 		m_items.push_back(item);
 		if (notify) {
-			item->OnInsert(rootTree);
+			item->OnInsert(this);
 		}
 		return Accessor(item);
 	}
@@ -99,7 +101,8 @@ QuadTree::Accessor QuadTree::ItemAt(float x, float y) {
 	return candidate;
 }
 
-void QuadTree::RemoveItems(const std::vector<Accessor> & accessors, bool notify, QuadTree *rootTree) {
+void QuadTree::RemoveItems(const std::vector<Accessor> & accessors, bool notify) {
+	DEBUG_LOG << "RemoveItems";
 	// split item lists
 	std::vector<Accessor> subAccessors[_BranchCount];
 
@@ -109,16 +112,12 @@ void QuadTree::RemoveItems(const std::vector<Accessor> & accessors, bool notify,
 			for (auto it = m_items.begin(); it != m_items.end();) {
 				if (*it == acc.item) {
 					it = m_items.erase(it);
-					if (notify) {
-						acc.item->OnRemove(rootTree);
-					}
 				}
 				else {
 					++it;
 				}
 			}
-		}
-		else {
+		} else {
 			Branch branchIndex = acc.path.back();
 			acc.path.pop_back();
 			subAccessors[branchIndex].push_back(acc);
@@ -127,11 +126,19 @@ void QuadTree::RemoveItems(const std::vector<Accessor> & accessors, bool notify,
 
 	if (!IsLeaf()) {
 		for (int i = 0; i < _BranchCount; ++i) {
-			m_branches[i]->RemoveItems(subAccessors[i], notify, rootTree);
+			DEBUG_LOG << "> RemoveItems->recurse in subbranch " << i;
+			m_branches[i]->RemoveItems(subAccessors[i], false /* notify */);
+			DEBUG_LOG << "<";
 		}
 	}
 
 	Prune();
+
+	if (notify) {
+		for (Accessor acc : accessors) {
+			acc.item->OnRemove(this);
+		}
+	}
 }
 
 QuadTree::Accessor QuadTree::UpdateItemBBox(const Accessor & acc, Rect bbox) {
@@ -157,12 +164,12 @@ QuadTree::Accessor QuadTree::UpdateItemBBox(const Accessor & acc, Rect bbox) {
 
 		// remove from items
 		newAcc.isValid = true;
-		RemoveItem(newAcc, false /* notify */, nullptr);
+		RemoveItem(newAcc, false /* notify */);
 
 		// re-insert if possible, potentially inserting deeper
 		if (fit && newAcc.item) {
 			newAcc.item->SetBBox(bbox);
-			newAcc = Insert(newAcc.item, false /* notify */, nullptr);
+			newAcc = Insert(newAcc.item, false /* notify */);
 		}
 
 		// Flag invalid if new bbox does not fit for parent to re-insert the item
@@ -217,13 +224,21 @@ void QuadTree::Split() {
 }
 
 void QuadTree::Prune() {
+	DEBUG_LOG << "Prune";
 	if (IsLeaf()) {
+		DEBUG_LOG << "IsLeaf, abort";
 		return;
 	}
 
 	bool canPrune = true;
 	for (int i = 0; i < _BranchCount; ++i) {
 		canPrune = canPrune && m_branches[i]->IsLeaf() && m_branches[i]->m_items.empty();
+		if (!m_branches[i]->IsLeaf()) {
+			DEBUG_LOG << "Cannot prune (subbranch " << i << " is not a leaf)";
+		}
+		if (!m_branches[i]->m_items.empty()) {
+			DEBUG_LOG << "Cannot prune (subbranch " << i << " contains " << m_branches[i]->m_items.size() << " items)";
+		}
 	}
 
 	if (canPrune) {

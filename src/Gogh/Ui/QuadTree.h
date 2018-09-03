@@ -2,6 +2,7 @@
 #define H_QUADTREE
 
 #include "UiRect.h"
+#include "Logger.h"
 
 #include <list>
 #include <vector>
@@ -82,7 +83,7 @@ public:
 
 	/// Insert at the deepest possible node, branching while the division limit
 	/// has not been reached
-	Accessor Insert(Item *item) { return Insert(item, true /* notify */, this); }
+	Accessor Insert(Item *item) { return Insert(item, true /* notify */); }
 
 	/// Try to build an accessor to the item, or return an invalid accessor if
 	/// not found
@@ -91,8 +92,8 @@ public:
 	Accessor ItemAt(float x, float y);
 
 	/// Pop items matching the provided data
-	void RemoveItems(const std::vector<Accessor> & accessors) { RemoveItems(accessors, true /* notify */, this); }
-	void RemoveItem(const Accessor & acc) { RemoveItems({ acc }, true /* notify */, this); }
+	void RemoveItems(const std::vector<Accessor> & accessors) { DEBUG_LOG << "==========="; RemoveItems(accessors, true /* notify */); }
+	void RemoveItem(const Accessor & acc) { DEBUG_LOG << "==========="; RemoveItems({ acc }, true /* notify */); }
 
 	Accessor UpdateItemBBox(const Accessor & acc, Rect bbox);
 
@@ -101,9 +102,9 @@ public:
 private:
 	/// Internal implementations with notification switch (for item insert/remove callbacks)
 	/// Also add root tree for notification
-	Accessor Insert(Item *item, bool notify, QuadTree *rootTree);
-	void RemoveItems(const std::vector<Accessor> & accessors, bool notify, QuadTree *rootTree);
-	void RemoveItem(const Accessor & acc, bool notify, QuadTree *rootTree) { RemoveItems({ acc }, notify, rootTree); }
+	Accessor Insert(Item *item, bool notify);
+	void RemoveItems(const std::vector<Accessor> & accessors, bool notify);
+	void RemoveItem(const Accessor & acc, bool notify) { RemoveItems({ acc }, notify); }
 
 	void Split();
 
