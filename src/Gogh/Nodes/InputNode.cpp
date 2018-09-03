@@ -83,7 +83,7 @@ bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 
 	//MixNode mapping
 	cmd.fs = std::make_pair(filename.toStdString(), outputIndex);
-	cmd.stream = m_probeProcess.streamsAsChar(outputIndex);
+	cmd.stream = std::make_pair(cmd.fs, m_probeProcess.streams()[outputIndex]);
 
 	//RenderCommand
 	cmd.cmd.push_back("-i");

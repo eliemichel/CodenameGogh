@@ -34,7 +34,7 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 
 	// Map inputs
 	stringlist inputFiles;
-	std::vector<char> parmStreams;
+	std::vector<StreamType> parmStreams;
 	std::vector<stringlist> parmCommands;
 	int currentFileID = 0;
 	std::map<std::string, std::vector<int>> fileMaps;
@@ -65,8 +65,8 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		fileMaps[cmx.fs.first].push_back(cmx.fs.second);
 
 		//Get every stream of each input parm
-		DEBUG_LOG << cmx.stream;
-		parmStreams.push_back(cmx.stream);
+		DEBUG_LOG << cmx.stream.second;
+		parmStreams.push_back(cmx.stream.second);
 
 		// Keep built command without "-i filename"
 		stringlist currentCommand;
@@ -111,17 +111,20 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		//Get the counter for the current stream
 		int* currentStreamN = &videoStreamN;
 		switch (parmStreams[i]) {
-			case 'v':
+			case VideoStream:
 				currentStreamN = &videoStreamN;
 				break;
-			case 'a':
+			case AudioStream:
 				currentStreamN = &audioStreamN;
 				break;
-			case 's':
+			case SubtitleStream:
 				currentStreamN = &subtitleStreamN;
 				break;
-			case 'd':
+			case DataStream:
 				currentStreamN = &dataStreamN;
+				break;
+			default:
+				DEBUG_LOG << "This stream type doesn't exit.";
 				break;
 		}
 		//Correct name based on mapping

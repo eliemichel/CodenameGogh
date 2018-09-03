@@ -48,9 +48,9 @@ struct RenderCommand {
 	// Current filestream, mainly used for MixNode:
 	filestream fs;
 
-	// StreamType
-	//std::map<filestream, SteamType> stream;
-	char stream;
+	// StreamType by filestream
+	std::pair<filestream, StreamType> stream;
+	//char stream;
 	// error message that may be filled when returning false in buildRenderCommand
 	std::string err;
 };
