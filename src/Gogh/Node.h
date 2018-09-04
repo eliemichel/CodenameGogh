@@ -39,8 +39,8 @@ enum StreamType
  * the command.
  */
 struct RenderCommand {
-	// Final command to send to ffmpeg, must be filled only int the OuputNode
-	std::vector<std::string> cmd;
+	// == Input ==
+	// Variables used for input treatment
 
 	// OutputNode's smart renaming : keys (like : "codec", "scale") associated to current nodes values (like : "h264", "1920x1080")
 	std::map<std::string, std::string> env;
@@ -50,7 +50,22 @@ struct RenderCommand {
 
 	// StreamType by filestream
 	std::pair<filestream, StreamType> stream;
-	//char stream;
+
+	// ------------
+	// == Output ==
+	// Variables used for output command building
+
+	// General settings for ffmpeg, not linked to a specific stream (like -r for the framerate)
+	stringlist global;
+
+	// Filestream settings by output ID
+	 std::pair<int, std::map<filestream, stringlist>> settings;
+
+ 	// Final command to send to ffmpeg, must be filled only int the OuputNode
+ 	stringlist cmd;
+
+	// ------------
+	// == Other ==
 	// error message that may be filled when returning false in buildRenderCommand
 	std::string err;
 };
