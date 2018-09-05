@@ -30,10 +30,10 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	}
 
 	// Clear cmd.cmd
-	cmd.cmd.clear();
+	//cmd.cmd.clear();
 
 	// Map inputs
-	stringlist inputFiles;
+	//stringlist cmd.inputs;
 	std::vector<StreamType> parmStreams;
 	std::vector<stringlist> parmCommands;
 	int currentFileID = 0;
@@ -41,14 +41,14 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 
 	for (int i = 0; i < parmCount(); i++)
 	{
-		RenderCommand cmx;
-		parentBuildRenderCommand(i, cmx);
+		//RenderCommand cmd;
+		parentBuildRenderCommand(i, cmd);
 
 		//Get every input file and if it already exists, get the ID
 		bool isNewFile = true;
-		for (int j = 0; j <= inputFiles.size(); j++)
+		for (int j = 0; j <= cmd.inputs.size(); j++)
 		{
-			if (inputFiles.size() > 0 && cmx.fs.first == inputFiles[j])
+			if (cmd.inputs.size() > 0 && cmd.fs == cmd.inputs[j])
 			{
 				isNewFile = false;
 				currentFileID = j;
@@ -57,31 +57,32 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		}
 		if (isNewFile)
 		{
-			inputFiles.push_back(cmx.fs.first);
+			cmd.inputs.push_back(cmd.fs);
 			currentFileID = i;
+			isNewFile = false;
 		}
 
 		//For each input file, every used output stream is stored
-		fileMaps[cmx.fs.first].push_back(cmx.fs.second);
+		fileMaps[cmd.fs.first].push_back(cmd.fs.second);
 
 		//Get every stream of each input parm
-		parmStreams.push_back(cmx.streams[cmx.fs]);
+		parmStreams.push_back(cmd.streams[cmd.fs]);
 
 		// Keep built command without "-i filename"
 		stringlist currentCommand;
-		for (int c = 2; c < cmx.cmd.size(); c++)
+		for (int c = 2; c < cmd.cmd.size(); c++)
 		{
-			currentCommand.push_back(cmx.cmd[c]);
+			currentCommand.push_back(cmd.cmd[c]);
 		}
 		parmCommands.push_back(currentCommand);
 	}
 
 	//Build RenderCommand
 	//Input files
-	for (int j = 0; j < inputFiles.size(); j++)
+	for (int j = 0; j < cmd.inputs.size(); j++)
 	{
 		cmd.cmd.push_back("-i");
-		cmd.cmd.push_back(inputFiles[j]);
+		cmd.cmd.push_back(cmd.inputs[j].first);
 	}
 
 	//Files' streams mapping

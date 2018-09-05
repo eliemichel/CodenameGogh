@@ -48,6 +48,9 @@ struct RenderCommand {
 	// Current filestream, mainly used for MixNode:
 	filestream fs;
 
+	//Input filestreams
+	std::vector<filestream> inputs;
+
 	// StreamType by filestream
 	std::map<filestream, StreamType> streams;
 
@@ -59,7 +62,7 @@ struct RenderCommand {
 	stringlist global;
 
 	// Filestream settings by output ID
-	 std::map<int, std::map<filestream, stringlist>> settings;
+	 std::map<int, std::map<filestream, stringlist>> outputs;
 
  	// Final command to send to ffmpeg, must be filled only int the OuputNode
  	stringlist cmd;
