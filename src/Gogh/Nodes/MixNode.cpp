@@ -65,7 +65,7 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		fileMaps[cmx.fs.first].push_back(cmx.fs.second);
 
 		//Get every stream of each input parm
-		parmStreams.push_back(cmx.stream.second);
+		parmStreams.push_back(cmx.streams[cmx.fs]);
 
 		// Keep built command without "-i filename"
 		stringlist currentCommand;

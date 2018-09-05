@@ -49,7 +49,7 @@ struct RenderCommand {
 	filestream fs;
 
 	// StreamType by filestream
-	std::pair<filestream, StreamType> stream;
+	std::map<filestream, StreamType> streams;
 
 	// ------------
 	// == Output ==
@@ -59,7 +59,7 @@ struct RenderCommand {
 	stringlist global;
 
 	// Filestream settings by output ID
-	 std::pair<int, std::map<filestream, stringlist>> settings;
+	 std::map<int, std::map<filestream, stringlist>> settings;
 
  	// Final command to send to ffmpeg, must be filled only int the OuputNode
  	stringlist cmd;
