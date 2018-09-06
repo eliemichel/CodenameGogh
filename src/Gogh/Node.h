@@ -78,7 +78,7 @@ struct RenderCommand {
 
 	// ------------
 	// == Getters ==
-	int input_id (filestream filestream){
+	int source_id (filestream filestream){
 		for (int i = 0; i < sources.size(); i++)
 		{
 			if(filestream.first == sources[i])

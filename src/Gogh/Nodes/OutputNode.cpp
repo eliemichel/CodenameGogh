@@ -17,13 +17,22 @@ QWidget * OutputNode::createEditor(QWidget * parent)
 
 bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 {
-	// Clean cmd.env :
+	// Clear cmd --
+	// Clear cmd.env and initialize with empty string :
 	cmd.env["path"];
 	cmd.env["filename"];
 	cmd.env["ext"];
 	cmd.env["input"];
 	cmd.env["scale"];
 	cmd.env["codec"];
+
+	// Clear the remaining
+	cmd.sources.clear();
+	cmd.inputs.clear();
+	cmd.streams.clear();
+	cmd.outputs.clear();
+	cmd.names.clear();
+	cmd.settings.clear();
 
 	// special output index for render function
 	if (outputIndex != -1) {
@@ -36,42 +45,23 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		return false;
 	}
 
-	if(parmEvalAsBool(1))
-	{
-		//cmd.cmd.push_back("-movflags");
-		//cmd.cmd.push_back("faststart");
-	}
-	//cmd.cmd.push_back(parmEvalAsString(0).toStdString());
+	//TODO: Add checkbox to reorder the streams in the common order : v - a - s - d
 
 	//Build RenderCommand
 	int count = cmd.outputs.size();
 
 	//Input files
-	for (size_t i = 0; i < count; i++) {
+	for (int i = 0; i < count; i++) {
 		cmd.cmd.push_back("-i");
-		cmd.cmd.push-back(cmd.inputs[i].first);
+		cmd.cmd.push_back(cmd.inputs[i].first);
 	}
 
 	//Files' streams mapping
-	for (size_t i = 0; i < count; i++) {
+	for (int i = 0; i < count; i++) {
 		cmd.cmd.push_back("-map");
 		std::ostringstream ss;
-		ss << cmd.input_id(cmd.inputs[i].first) << ":" << cmd.inputs[i].second;
-		DEBUG_LOG << ss;
-	}
-
-	currentFileID = 0;
-	for (auto const& m : fileMaps)
-	{
-		for (int i = 0; i < fileMaps[m.first].size(); i++)
-		{
-			//Mapping
-			cmd.cmd.push_back("-map");
-			std::ostringstream ss;
-			ss << currentFileID << ":" << fileMaps[m.first][i];
-			cmd.cmd.push_back(ss.str());
-		}
-		currentFileID++;
+		ss << cmd.source_id(cmd.inputs[i]) << ":" << cmd.inputs[i].second;
+		cmd.cmd.push_back(ss.str());
 	}
 
 	//Correct RenderCommand parameters depending on the mapping
@@ -80,11 +70,11 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	int subtitleStreamN = 0;
 	int dataStreamN = 0;
 
-	for (int i = 0; i < parmCount(); i++)
+	for (int i = 0; i < count; i++)
 	{
 		//Get the counter for the current stream
 		int* currentStreamN = &videoStreamN;
-		switch (parmStreams[i]) {
+		switch (cmd.streams[cmd.inputs[i]]) {
 			case VideoStream:
 				currentStreamN = &videoStreamN;
 				break;
@@ -101,27 +91,39 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 				DEBUG_LOG << "This stream type doesn't exit.";
 				break;
 		}
-		//Correct name based on mapping
-		for (auto& pc : parmCommands[i])
+
+		//Writing settings to output streams
+		for (auto& set : cmd.settings[i])
 		{
-			if (pc == "-c:v" || pc == "-c:b")
+			//Correct name based on mapping
+			if (set == "-c:v" || set == "-c:b")
 			{
-				pc = pc + ":" + std::to_string(*currentStreamN);
+				set = set + ":" + std::to_string(*currentStreamN);
 			}
+			cmd.cmd.push_back(set);
 		}
+
 		//Streams Naming
 		std::ostringstream ss;
-		ss << "-metadata:s:" << parmStreams[i] << ":" << *currentStreamN;
+		ss << "-metadata:s:" << streamsAsChar(cmd.streams[cmd.inputs[i]]) << ":" << *currentStreamN;
 		cmd.cmd.push_back(ss.str());
 		ss.str(std::string());
-		ss << "title=\"" << parmEvalAsString(i).toStdString() << "\"";
+		ss << "title=\"" << cmd.names[i] << "\"";
 		cmd.cmd.push_back(ss.str());
 
 		*currentStreamN += 1;
-
-		//Final build of RenderCommand
-		cmd.cmd.insert(std::end(cmd.cmd), std::begin(parmCommands[i]), std::end(parmCommands[i]));
 	}
+
+	//TODO : move this to codecnode
+	if (parmEvalAsBool(1))
+	{
+		cmd.cmd.push_back("-movflags");
+		cmd.cmd.push_back("faststart");
+	}
+
+	//Write the output file
+	cmd.cmd.push_back(parmEvalAsString(0).toStdString());
+
 	return true;
 }
 
@@ -212,5 +214,39 @@ void OutputNode::slotConnectEvent(SlotEvent *event)
 			}
 			setParm(0, QString().fromStdString(userPattern));
 		}
+	}
+}
+
+std::string OutputNode::streamsAsString(StreamType stream) const
+{
+	switch (stream)
+	{
+	case VideoStream:
+		return "VideoStream";
+	case AudioStream:
+		return "AudioStream";
+	case SubtitleStream:
+		return "SubtitleStream";
+	case DataStream:
+		return "DataStream";
+	default:
+	return "No Stream";
+	}
+}
+
+char OutputNode::streamsAsChar(StreamType stream) const
+{
+	switch (stream)
+	{
+	case VideoStream:
+		return 'v';
+	case AudioStream:
+		return 'a';
+	case SubtitleStream:
+		return 's';
+	case DataStream:
+		return 'd';
+	default:
+		return '-';
 	}
 }

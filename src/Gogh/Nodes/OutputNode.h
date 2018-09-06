@@ -26,6 +26,10 @@ public: // data model
 protected:
 	void slotConnectEvent(SlotEvent *event) override;
 
+	//Return the StreamType in another type
+	std::string streamsAsString(StreamType stream) const;
+	char streamsAsChar(StreamType stream) const;
+
 private:
 	std::string m_filename;
 	bool m_weboptimized;

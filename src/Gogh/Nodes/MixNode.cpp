@@ -29,16 +29,7 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		return false;
 	}
 
-	// Clear cmd.cmd
-	//cmd.cmd.clear();
-
-	// Map inputs
-	//stringlist cmd.inputs;
-	std::vector<StreamType> parmStreams;
-	std::vector<stringlist> parmCommands;
-	int currentFileID = 0;
-	std::map<std::string, std::vector<int>> fileMaps;
-
+	// Map data for every inputSlot
 	for (int i = 0; i < parmCount(); i++)
 	{
 		//Clear current settings
@@ -47,32 +38,19 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		//RenderCommand cmd;
 		parentBuildRenderCommand(i, cmd);
 
-		// Creates one output stream for every inputSlot
-		cmd.outputs[cmd.outputs.size()] = cmd.fs;
+		int id = cmd.outputs.size();
 
-		//Get every input file and if it already exists, get the ID
-		bool isNewFile = true;
-		for (int j = 0; j < cmd.inputs.size(); j++)
-		{
-			if (cmd.inputs.size() > 0 && cmd.fs == cmd.inputs[j])
-			{
-				isNewFile = false;
-				currentFileID = j;
-				break;
-			}
-		}
-		if (isNewFile)
-		{
-			cmd.inputs.push_back(cmd.fs);
-			currentFileID = i;
-			isNewFile = false;
-		}
+		// Creates one output stream for every inputSlot
+		cmd.outputs[id] = cmd.fs;
+
+		//Get every input streams
+		cmd.inputs.push_back(cmd.fs);
 
 		//Get settings of this output stream
-		cmd.settings[cmd.outputs.size()] = cmd.cs;
+		cmd.settings[id] = cmd.cs;
 
 		//Get output stream name
-		cmd.names[cmd.outputs.size()] = parmEvalAsString(i).toStdString();
+		cmd.names[id] = parmEvalAsString(i).toStdString();
 	}
 	return true;
 }

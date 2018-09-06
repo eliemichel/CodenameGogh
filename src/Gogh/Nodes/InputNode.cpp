@@ -99,10 +99,6 @@ bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	cmd.fs = std::make_pair(filename.toStdString(), outputIndex);
 	cmd.streams[cmd.fs] = m_probeProcess.streams()[outputIndex];
 
-	//RenderCommand
-	//cmd.cs.push_back("-i");
-	//cmd.cs.push_back(filename.toStdString());
-
 	return true;
 }
 
