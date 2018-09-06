@@ -48,6 +48,12 @@ struct RenderCommand {
 	// Current filestream, mainly used for MixNode:
 	filestream fs;
 
+	// Current settings, mainly used for MixNode:
+	stringlist cs;
+
+	//Input sources
+	stringlist sources;
+
 	//Input filestreams
 	std::vector<filestream> inputs;
 
@@ -58,14 +64,30 @@ struct RenderCommand {
 	// == Output ==
 	// Variables used for output command building
 
-	// General settings for ffmpeg, not linked to a specific stream (like -r for the framerate)
-	stringlist global;
+	// Filestream by output streams
+	std::map<int, filestream> outputs;
 
-	// Filestream settings by output ID
-	 std::map<int, std::map<filestream, stringlist>> outputs;
+	//Output streams names
+	std::map<int, std::string> names;
+
+	// Settings by output
+	std::map<int, stringlist> settings;
 
  	// Final command to send to ffmpeg, must be filled only int the OuputNode
  	stringlist cmd;
+
+	// ------------
+	// == Getters ==
+	int input_id (filestream filestream){
+		for (int i = 0; i < sources.size(); i++)
+		{
+			if(filestream.first == sources[i])
+			{
+				return i;
+			}
+		}
+		return 0;
+	}
 
 	// ------------
 	// == Other ==

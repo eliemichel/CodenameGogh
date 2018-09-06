@@ -41,12 +41,18 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 
 	for (int i = 0; i < parmCount(); i++)
 	{
+		//Clear current settings
+		cmd.cs.clear();
+
 		//RenderCommand cmd;
 		parentBuildRenderCommand(i, cmd);
 
+		// Creates one output stream for every inputSlot
+		cmd.outputs[cmd.outputs.size()] = cmd.fs;
+
 		//Get every input file and if it already exists, get the ID
 		bool isNewFile = true;
-		for (int j = 0; j <= cmd.inputs.size(); j++)
+		for (int j = 0; j < cmd.inputs.size(); j++)
 		{
 			if (cmd.inputs.size() > 0 && cmd.fs == cmd.inputs[j])
 			{
@@ -62,93 +68,12 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 			isNewFile = false;
 		}
 
-		//For each input file, every used output stream is stored
-		fileMaps[cmd.fs.first].push_back(cmd.fs.second);
+		//Get settings of this output stream
+		cmd.settings[cmd.outputs.size()] = cmd.cs;
 
-		//Get every stream of each input parm
-		parmStreams.push_back(cmd.streams[cmd.fs]);
-
-		// Keep built command without "-i filename"
-		stringlist currentCommand;
-		for (int c = 2; c < cmd.cmd.size(); c++)
-		{
-			currentCommand.push_back(cmd.cmd[c]);
-		}
-		parmCommands.push_back(currentCommand);
+		//Get output stream name
+		cmd.names[cmd.outputs.size()] = parmEvalAsString(i).toStdString();
 	}
-
-	//Build RenderCommand
-	//Input files
-	for (int j = 0; j < cmd.inputs.size(); j++)
-	{
-		cmd.cmd.push_back("-i");
-		cmd.cmd.push_back(cmd.inputs[j].first);
-	}
-
-	//Files' streams mapping
-	currentFileID = 0;
-	for (auto const& m : fileMaps)
-	{
-		for (int i = 0; i < fileMaps[m.first].size(); i++)
-		{
-			//Mapping
-			cmd.cmd.push_back("-map");
-			std::ostringstream ss;
-			ss << currentFileID << ":" << fileMaps[m.first][i];
-			cmd.cmd.push_back(ss.str());
-		}
-		currentFileID++;
-	}
-
-	//Correct RenderCommand parameters depending on the mapping
-	int videoStreamN = 0;
-	int audioStreamN = 0;
-	int subtitleStreamN = 0;
-	int dataStreamN = 0;
-
-	for (int i = 0; i < parmCount(); i++)
-	{
-		//Get the counter for the current stream
-		int* currentStreamN = &videoStreamN;
-		switch (parmStreams[i]) {
-			case VideoStream:
-				currentStreamN = &videoStreamN;
-				break;
-			case AudioStream:
-				currentStreamN = &audioStreamN;
-				break;
-			case SubtitleStream:
-				currentStreamN = &subtitleStreamN;
-				break;
-			case DataStream:
-				currentStreamN = &dataStreamN;
-				break;
-			default:
-				DEBUG_LOG << "This stream type doesn't exit.";
-				break;
-		}
-		//Correct name based on mapping
-		for (auto& pc : parmCommands[i])
-		{
-			if (pc == "-c:v" || pc == "-c:b")
-			{
-				pc = pc + ":" + std::to_string(*currentStreamN);
-			}
-		}
-		//Streams Naming
-		std::ostringstream ss;
-		ss << "-metadata:s:" << parmStreams[i] << ":" << *currentStreamN;
-		cmd.cmd.push_back(ss.str());
-		ss.str(std::string());
-		ss << "title=\"" << parmEvalAsString(i).toStdString() << "\"";
-		cmd.cmd.push_back(ss.str());
-
-		*currentStreamN += 1;
-
-		//Final build of RenderCommand
-		cmd.cmd.insert(std::end(cmd.cmd), std::begin(parmCommands[i]), std::end(parmCommands[i]));
-	}
-
 	return true;
 }
 

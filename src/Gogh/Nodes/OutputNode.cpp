@@ -38,10 +38,90 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 
 	if(parmEvalAsBool(1))
 	{
-		cmd.cmd.push_back("-movflags");
-		cmd.cmd.push_back("faststart");
+		//cmd.cmd.push_back("-movflags");
+		//cmd.cmd.push_back("faststart");
 	}
-	cmd.cmd.push_back(parmEvalAsString(0).toStdString());
+	//cmd.cmd.push_back(parmEvalAsString(0).toStdString());
+
+	//Build RenderCommand
+	int count = cmd.outputs.size();
+
+	//Input files
+	for (size_t i = 0; i < count; i++) {
+		cmd.cmd.push_back("-i");
+		cmd.cmd.push-back(cmd.inputs[i].first);
+	}
+
+	//Files' streams mapping
+	for (size_t i = 0; i < count; i++) {
+		cmd.cmd.push_back("-map");
+		std::ostringstream ss;
+		ss << cmd.input_id(cmd.inputs[i].first) << ":" << cmd.inputs[i].second;
+		DEBUG_LOG << ss;
+	}
+
+	currentFileID = 0;
+	for (auto const& m : fileMaps)
+	{
+		for (int i = 0; i < fileMaps[m.first].size(); i++)
+		{
+			//Mapping
+			cmd.cmd.push_back("-map");
+			std::ostringstream ss;
+			ss << currentFileID << ":" << fileMaps[m.first][i];
+			cmd.cmd.push_back(ss.str());
+		}
+		currentFileID++;
+	}
+
+	//Correct RenderCommand parameters depending on the mapping
+	int videoStreamN = 0;
+	int audioStreamN = 0;
+	int subtitleStreamN = 0;
+	int dataStreamN = 0;
+
+	for (int i = 0; i < parmCount(); i++)
+	{
+		//Get the counter for the current stream
+		int* currentStreamN = &videoStreamN;
+		switch (parmStreams[i]) {
+			case VideoStream:
+				currentStreamN = &videoStreamN;
+				break;
+			case AudioStream:
+				currentStreamN = &audioStreamN;
+				break;
+			case SubtitleStream:
+				currentStreamN = &subtitleStreamN;
+				break;
+			case DataStream:
+				currentStreamN = &dataStreamN;
+				break;
+			default:
+				DEBUG_LOG << "This stream type doesn't exit.";
+				break;
+		}
+		//Correct name based on mapping
+		for (auto& pc : parmCommands[i])
+		{
+			if (pc == "-c:v" || pc == "-c:b")
+			{
+				pc = pc + ":" + std::to_string(*currentStreamN);
+			}
+		}
+		//Streams Naming
+		std::ostringstream ss;
+		ss << "-metadata:s:" << parmStreams[i] << ":" << *currentStreamN;
+		cmd.cmd.push_back(ss.str());
+		ss.str(std::string());
+		ss << "title=\"" << parmEvalAsString(i).toStdString() << "\"";
+		cmd.cmd.push_back(ss.str());
+
+		*currentStreamN += 1;
+
+		//Final build of RenderCommand
+		cmd.cmd.insert(std::end(cmd.cmd), std::begin(parmCommands[i]), std::end(parmCommands[i]));
+	}
 	return true;
 }
 

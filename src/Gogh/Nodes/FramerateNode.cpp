@@ -26,8 +26,8 @@ bool FramerateNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) con
 	cmd.env["framerate"] = parmEvalAsString(0).toStdString();
 
 	//RenderCommand
-	cmd.cmd.push_back("-r");
-	cmd.cmd.push_back(parmEvalAsString(0).toStdString());
+	cmd.cs.push_back("-r");
+	cmd.cs.push_back(parmEvalAsString(0).toStdString());
 
 	return true;
 }

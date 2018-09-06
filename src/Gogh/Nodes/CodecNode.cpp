@@ -26,8 +26,8 @@ bool CodecNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	cmd.env["codec"] = parmEvalAsString(0).toStdString();
 
 	//RenderCommand
-	cmd.cmd.push_back("-c:v");
-	cmd.cmd.push_back(parmEvalAsString(0).toStdString());
+	cmd.cs.push_back("-c:v");
+	cmd.cs.push_back(parmEvalAsString(0).toStdString());
 
 	return true;
 }

@@ -74,6 +74,20 @@ bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		delete[] splitedName;
 	}
 
+	//Register the source
+	bool isNewSource = true;
+	for (int i = 0; i < cmd.sources.size(); i++)
+	 {
+		 if (filename.toStdString() == cmd.sources[i])
+		 {
+			 isNewSource = false;
+		 }
+	 }
+	 if (isNewSource)
+	 {
+		 cmd.sources.push_back(filename.toStdString());
+	 }
+
 	//Output smart-renaming
 	cmd.env["path"] = fileinfo.absolutePath().toStdString() + "/";
 	cmd.env["filename"] = fileinfo.baseName().toStdString();
@@ -86,8 +100,8 @@ bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	cmd.streams[cmd.fs] = m_probeProcess.streams()[outputIndex];
 
 	//RenderCommand
-	cmd.cmd.push_back("-i");
-	cmd.cmd.push_back(filename.toStdString());
+	//cmd.cs.push_back("-i");
+	//cmd.cs.push_back(filename.toStdString());
 
 	return true;
 }
