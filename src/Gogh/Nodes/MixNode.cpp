@@ -52,16 +52,17 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		}
 
 		// Get informations from intputSlot
-		parentBuildRenderCommand(i, cmd);
+		if(parentBuildRenderCommand(i, cmd))
+		{
+			// Add input stream
+			cmd.inputs.push_back(cmd.fs);
 
-		// Add input stream
-		cmd.inputs.push_back(cmd.fs);
+			// Creates one output stream with the current stream
+			cmd.outputs[id] = cmd.fs;
 
-		// Creates one output stream with the current stream
-		cmd.outputs[id] = cmd.fs;
-
-		// Get settings of this output stream
-		cmd.settings[id] = cmd.cs;
+			// Get settings of this output stream
+			cmd.settings[id] = cmd.cs;
+		}
 	}
 	return true;
 }

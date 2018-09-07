@@ -45,7 +45,7 @@ void OutputNodeEditor::onButtonClicked(int parm)
 {
 	switch (parm)
 	{
-	case 2:
+	case 1:
 		render();
 		break;
 	}
