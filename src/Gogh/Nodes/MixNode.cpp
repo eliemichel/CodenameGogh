@@ -24,6 +24,13 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		return false;
 	}
 
+	//Save parent stream name
+	std::string parentName;
+	if(cmd.names.size() > 0)
+	{
+		parentName = cmd.names[cmd.names.size()-1];
+	}
+
 	if (!parentBuildRenderCommand(0, cmd))
 	{
 		return false;
@@ -35,22 +42,28 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		//Clear current settings
 		cmd.cs.clear();
 
-		//RenderCommand cmd;
-		parentBuildRenderCommand(i, cmd);
-
 		int id = cmd.outputs.size();
 
-		// Creates one output stream for every inputSlot
-		cmd.outputs[id] = cmd.fs;
+		// Get output stream name
+		if (parentName == "")
+		{
+			cmd.names[id] = parmEvalAsString(i).toStdString();
+		} else
+		{
+			cmd.names[id] = parentName + parmEvalAsString(i).toStdString();
+		}
 
-		//Get every input streams
+		// Get informations from intputSlot
+		parentBuildRenderCommand(i, cmd);
+
+		// Add input stream
 		cmd.inputs.push_back(cmd.fs);
 
-		//Get settings of this output stream
-		cmd.settings[id] = cmd.cs;
+		// Creates one output stream with the current stream
+		cmd.outputs[id] = cmd.fs;
 
-		//Get output stream name
-		cmd.names[id] = parmEvalAsString(i).toStdString();
+		// Get settings of this output stream
+		cmd.settings[id] = cmd.cs;
 	}
 	return true;
 }
