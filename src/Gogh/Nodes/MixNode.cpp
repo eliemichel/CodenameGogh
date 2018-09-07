@@ -12,8 +12,6 @@ MixNode::MixNode()
 	m_streams.push_back("");
 	newInputSlot();
 	m_streams.push_back("");
-	newInputSlot();
-	m_streams.push_back("");
 
 	newOutputSlot();
 }
@@ -146,9 +144,8 @@ void MixNode::write(QDataStream & stream) const
 
 void MixNode::slotConnectEvent(SlotEvent *event)
 {
-	if (event->isInputSlot() && event->slotIndex() == 0)
+	if (event->isInputSlot() && event->slotIndex() == 0 && parmCount() >= 2)
 	{
-		return;
 		newInputSlot();
 		m_streams.push_back("");
 		emit parmChanged(parmCount() - 1);
