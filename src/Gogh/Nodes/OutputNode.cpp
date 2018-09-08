@@ -26,13 +26,9 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	cmd.env["scale"];
 	cmd.env["codec"];
 
-	// Clear the remaining
+	// Clear cmd datas
 	cmd.sources.clear();
-	//cmd.inputs.clear();
-	//cmd.streams.clear();
 	cmd.outputs.clear();
-	//cmd.names.clear();
-	//cmd.settings.clear();
 
 	// special output index for render function
 	if (outputIndex != -1) {
@@ -46,6 +42,12 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	}
 
 	//TODO: Add checkbox to reorder the streams in the common order : v - a - s - d
+
+	// If there is only one stream to render (no MixNode in the graph)
+	if (cmd.outputs.size() == 0)
+	{
+		cmd.outputs[0] = cmd.os;
+	}
 
 	//Build RenderCommand
 	int count = cmd.outputs.size();

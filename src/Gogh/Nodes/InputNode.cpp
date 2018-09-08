@@ -99,9 +99,6 @@ bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	cmd.os.input = std::make_pair(filename.toStdString(), outputIndex);
 	cmd.os.stream = m_probeProcess.streams()[outputIndex];
 
-	//cmd.fs = std::make_pair(filename.toStdString(), outputIndex);
-	//cmd.streams[cmd.fs] = m_probeProcess.streams()[outputIndex];
-
 	return true;
 }
 
