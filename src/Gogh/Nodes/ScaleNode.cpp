@@ -29,10 +29,10 @@ bool ScaleNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	cmd.env["scale"] = ss.str();
 
 	//RenderCommand
-	cmd.cs.push_back("-vf");
+	cmd.os.settings.push_back("-vf");
 	std::ostringstream().swap(ss);
 	ss << "scale=" << parmEvalAsInt(0) << ":" << parmEvalAsInt(1);
-	cmd.cs.push_back(ss.str());
+	cmd.os.settings.push_back(ss.str());
 
 	return true;
 }

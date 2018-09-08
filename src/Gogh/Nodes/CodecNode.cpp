@@ -26,13 +26,13 @@ bool CodecNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	cmd.env["codec"] = parmEvalAsString(0).toStdString();
 
 	//RenderCommand
-	cmd.cs.push_back("-c:v");
-	cmd.cs.push_back(parmEvalAsString(0).toStdString());
+	cmd.os.settings.push_back("-c:v");
+	cmd.os.settings.push_back(parmEvalAsString(0).toStdString());
 
 	if (parmEvalAsBool(1))
 	{
-		cmd.cs.push_back("-movflags");
-		cmd.cs.push_back("faststart");
+		cmd.os.settings.push_back("-movflags");
+		cmd.os.settings.push_back("faststart");
 	}
 
 	return true;

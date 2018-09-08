@@ -28,11 +28,11 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 
 	// Clear the remaining
 	cmd.sources.clear();
-	cmd.inputs.clear();
-	cmd.streams.clear();
+	//cmd.inputs.clear();
+	//cmd.streams.clear();
 	cmd.outputs.clear();
-	cmd.names.clear();
-	cmd.settings.clear();
+	//cmd.names.clear();
+	//cmd.settings.clear();
 
 	// special output index for render function
 	if (outputIndex != -1) {
@@ -51,16 +51,16 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	int count = cmd.outputs.size();
 
 	//Input files
-	for (int i = 0; i < count; i++) {
+	for (int i = 0; i < cmd.sources.size(); i++) {
 		cmd.cmd.push_back("-i");
-		cmd.cmd.push_back(cmd.inputs[i].first);
+		cmd.cmd.push_back(cmd.outputs[i].input.first);
 	}
 
 	//Files' streams mapping
 	for (int i = 0; i < count; i++) {
 		cmd.cmd.push_back("-map");
 		std::ostringstream ss;
-		ss << cmd.source_id(cmd.inputs[i]) << ":" << cmd.inputs[i].second;
+		ss << cmd.source_id(cmd.outputs[i].input) << ":" << cmd.outputs[i].input.second;
 		cmd.cmd.push_back(ss.str());
 	}
 
@@ -74,7 +74,7 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	{
 		//Get the counter for the current stream
 		int* currentStreamN = &videoStreamN;
-		switch (cmd.streams[cmd.inputs[i]]) {
+		switch (cmd.outputs[i].stream) {
 			case VideoStream:
 				currentStreamN = &videoStreamN;
 				break;
@@ -93,7 +93,7 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		}
 
 		//Writing settings to output streams
-		for (auto& set : cmd.settings[i])
+		for (auto& set : cmd.outputs[i].settings)
 		{
 			//Correct name based on mapping
 			if (set == "-c:v" || set == "-c:b")
@@ -105,10 +105,10 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 
 		//Streams Naming
 		std::ostringstream ss;
-		ss << "-metadata:s:" << streamsAsChar(cmd.streams[cmd.inputs[i]]) << ":" << *currentStreamN;
+		ss << "-metadata:s:" << streamsAsChar(cmd.outputs[i].stream) << ":" << *currentStreamN;
 		cmd.cmd.push_back(ss.str());
 		ss.str(std::string());
-		ss << "title=\"" << cmd.names[i] << "\"";
+		ss << "title=\"" << cmd.outputs[i].name << "\"";
 		cmd.cmd.push_back(ss.str());
 
 		*currentStreamN += 1;

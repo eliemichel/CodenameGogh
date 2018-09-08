@@ -20,7 +20,7 @@ class EnvModel;
 class NodeGraphModel;
 class QWidget;
 
-/* Type defined to transmit a pair (input_file, stream_number)
+/** Type defined to transmit a pair (input_file, stream_number)
 	 which characterizes a stream.
 	*/
 typedef std::pair<std::string, int> filestream;
@@ -31,6 +31,24 @@ enum StreamType
 	AudioStream,
 	SubtitleStream,
 	DataStream,
+};
+
+/**
+ * This structure constains everything that defines an output stream
+ * in the rendered file.
+*/
+struct OutputStream {
+	// Input filestream
+	filestream input;
+
+	// StreamType
+	StreamType stream;
+
+	// Output stream name
+	std::string name;
+
+	// Settings
+	stringlist settings;
 };
 
 /**
@@ -45,33 +63,18 @@ struct RenderCommand {
 	// OutputNode's smart renaming : keys (like : "codec", "scale") associated to current nodes values (like : "h264", "1920x1080")
 	std::map<std::string, std::string> env;
 
-	// Current filestream, mainly used for MixNode:
-	filestream fs;
-
-	// Current settings, mainly used for MixNode:
-	stringlist cs;
+	// Current output stream, mainly used for MixNode:
+	OutputStream os;
 
 	//Input sources
 	stringlist sources;
-
-	//Input filestreams
-	std::vector<filestream> inputs;
-
-	// StreamType by filestream
-	std::map<filestream, StreamType> streams;
 
 	// ------------
 	// == Output ==
 	// Variables used for output command building
 
 	// Filestream by output streams
-	std::map<int, filestream> outputs;
-
-	//Output streams names
-	std::map<int, std::string> names;
-
-	// Settings by output
-	std::map<int, stringlist> settings;
+	std::map<int, OutputStream> outputs;
 
  	// Final command to send to ffmpeg, must be filled only int the OuputNode
  	stringlist cmd;

@@ -24,9 +24,9 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 
 	//Save parent stream name
 	std::string parentName;
-	if(cmd.names.size() > 0)
+	if (cmd.outputs.size() > 0)
 	{
-		parentName = cmd.names[cmd.names.size()-1];
+		parentName = cmd.os.name;
 	}
 
 	if (!parentBuildRenderCommand(0, cmd))
@@ -37,31 +37,28 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	// Map data for every inputSlot
 	for (int i = 0; i < parmCount(); i++)
 	{
-		//Clear current settings
-		cmd.cs.clear();
-
-		int id = cmd.outputs.size();
-
 		// Get output stream name
 		if (parentName == "")
 		{
-			cmd.names[id] = parmEvalAsString(i).toStdString();
+			cmd.os.name = parmEvalAsString(i).toStdString();
 		} else
 		{
-			cmd.names[id] = parentName + parmEvalAsString(i).toStdString();
+			cmd.os.name = parentName + parmEvalAsString(i).toStdString();
 		}
 
+		//Save outputs count for output creation test: if outputsCount != outputs.size(),
+		//then this inputSlot is chained to a MixNode, don't create output for this one.
+		int outputsCount = cmd.outputs.size();
+
+		// Clear settings
+		cmd.os.settings.clear();
+
 		// Get informations from intputSlot
-		if(parentBuildRenderCommand(i, cmd))
+		if (parentBuildRenderCommand(i, cmd) && outputsCount == cmd.outputs.size())
 		{
-			// Add input stream
-			cmd.inputs.push_back(cmd.fs);
-
+			int id = cmd.outputs.size();
 			// Creates one output stream with the current stream
-			cmd.outputs[id] = cmd.fs;
-
-			// Get settings of this output stream
-			cmd.settings[id] = cmd.cs;
+			cmd.outputs[id] = cmd.os;
 		}
 	}
 	return true;
