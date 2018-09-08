@@ -32,6 +32,7 @@ protected:
 
 private:
 	std::string m_filename;
+	bool m_sortOutputs;
 
 	/// Used to keep track of whether the user set the filename or whether it has been auto generated and must hence be updated
 	/// if filename is user-defined, it is displayed in bold

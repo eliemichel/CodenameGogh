@@ -80,7 +80,8 @@ struct RenderCommand {
  	stringlist cmd;
 
 	// ------------
-	// == Getters ==
+	// == Functions ==
+	// Return the ID of a source regarding an input filestream
 	int source_id (filestream filestream){
 		for (int i = 0; i < sources.size(); i++)
 		{
@@ -90,6 +91,28 @@ struct RenderCommand {
 			}
 		}
 		return 0;
+	}
+
+	// Sort outputs in the pattern : v - a - s - d
+	void sort_outputs()
+	{
+		std::vector<OutputStream> sort;
+		// Order streams
+		for (int i = 0; i < 4 ; i++)
+		{
+			for (int j = 0; j < outputs.size(); j++)
+			{
+				if (int(outputs[j].stream) == i)
+				{
+					sort.push_back(outputs[j]);
+				}
+			}
+		}
+		// Set ordered streams in outputs
+		for (int i = 0; i < outputs.size(); i++)
+		{
+			outputs[i] = sort[i];
+		}
 	}
 
 	// ------------

@@ -4,7 +4,8 @@
 #include "Logger.h"
 
 OutputNode::OutputNode()
-	: m_isFilenameUserDefined(false)
+	: m_isFilenameUserDefined(false),
+	m_sortOutputs(false)
 {
 	// Add slots
 	newInputSlot();
@@ -41,7 +42,10 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		return false;
 	}
 
-	//TODO: Add checkbox to reorder the streams in the common order : v - a - s - d
+	if (m_sortOutputs)
+	{
+		cmd.sort_outputs();
+	}
 
 	// If there is only one stream to render (no MixNode in the graph)
 	if (cmd.outputs.size() == 0)
@@ -126,7 +130,7 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 
 int OutputNode::parmCount() const
 {
-	return 2;
+	return 3;
 }
 
 QString OutputNode::parmName(int parm) const
@@ -136,6 +140,8 @@ QString OutputNode::parmName(int parm) const
 	case 0:
 		return "filename";
 	case 1:
+		return "Sort outputs";
+	case 2:
 		return "Render";
 	default:
 		return QString();
@@ -149,6 +155,8 @@ ParmType OutputNode::parmType(int parm) const
 	case 0:
 		return StringType;
 	case 1:
+		return CheckboxType;
+	case 2:
 		return ButtonType;
 	default:
 		return NoneType;
@@ -161,6 +169,8 @@ QVariant OutputNode::parmRawValue(int parm) const
 	{
 	case 0:
 		return QString::fromStdString(m_filename);
+	case 1:
+		return bool(m_sortOutputs);
 	default:
 		return QVariant();
 	}
@@ -172,6 +182,10 @@ bool OutputNode::setParm(int parm, QVariant value)
 	{
 	case 0:
 		m_filename = value.toString().toStdString();
+		emit parmChanged(parm);
+		return true;
+	case 1:
+		m_sortOutputs = value.toBool();
 		emit parmChanged(parm);
 		return true;
 	default:
