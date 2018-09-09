@@ -237,6 +237,10 @@ protected:
 	virtual void slotConnectEvent(SlotEvent *event) {}
 	virtual void slotDisconnectEvent(SlotEvent *event) {}
 
+	//Return the StreamType in another type
+	std::string streamTypeAsString(StreamType stream) const;
+	char streamTypeAsChar(StreamType stream) const;
+
 private:
 	EnvModel *m_envModel;
 	NodeGraphModel *m_graphModel;

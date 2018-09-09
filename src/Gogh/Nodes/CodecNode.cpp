@@ -26,7 +26,9 @@ bool CodecNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	cmd.env["codec"] = parmEvalAsString(0).toStdString();
 
 	//RenderCommand
-	cmd.os.settings.push_back("-c:v");
+	std::ostringstream ss;
+	ss << "-c:" << streamTypeAsChar(cmd.os.stream);
+	cmd.os.settings.push_back(ss.str());
 	cmd.os.settings.push_back(parmEvalAsString(0).toStdString());
 
 	if (parmEvalAsBool(1))

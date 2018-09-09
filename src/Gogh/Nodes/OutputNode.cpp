@@ -102,15 +102,19 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		// Copy the stream if no codec modification is set
 		if (cmd.outputs[i].settings.size() == 0)
 		{
-			cmd.cmd.push_back("-c:v");
+			std::ostringstream ss;
+			ss << "-c:" << streamTypeAsChar(cmd.outputs[i].stream);
+			cmd.cmd.push_back(ss.str());
 			cmd.cmd.push_back("copy");
 		} else
 		{
 			//Writing settings to output streams
 			for (auto& set : cmd.outputs[i].settings)
 			{
+				//Codec : stream type
+				std::string codecStreamType = "-c:" + streamTypeAsChar(cmd.outputs[i].stream);
 				//Correct name based on mapping
-				if (set == "-c:v" || set == "-c:b")
+				if (set == codecStreamType || set == "-c:b")
 				{
 					set = set + ":" + std::to_string(*currentStreamN);
 				}
@@ -120,7 +124,7 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 
 		//Streams Naming
 		std::ostringstream ss;
-		ss << "-metadata:s:" << streamsAsChar(cmd.outputs[i].stream) << ":" << *currentStreamN;
+		ss << "-metadata:s:" << streamTypeAsChar(cmd.outputs[i].stream) << ":" << *currentStreamN;
 		cmd.cmd.push_back(ss.str());
 		ss.str(std::string());
 		ss << "title=\"" << cmd.outputs[i].name << "\"";
@@ -241,39 +245,5 @@ void OutputNode::slotConnectEvent(SlotEvent *event)
 			}
 			setParm(0, QString().fromStdString(userPattern));
 		}
-	}
-}
-
-std::string OutputNode::streamsAsString(StreamType stream) const
-{
-	switch (stream)
-	{
-	case VideoStream:
-		return "VideoStream";
-	case AudioStream:
-		return "AudioStream";
-	case SubtitleStream:
-		return "SubtitleStream";
-	case DataStream:
-		return "DataStream";
-	default:
-	return "No Stream";
-	}
-}
-
-char OutputNode::streamsAsChar(StreamType stream) const
-{
-	switch (stream)
-	{
-	case VideoStream:
-		return 'v';
-	case AudioStream:
-		return 'a';
-	case SubtitleStream:
-		return 's';
-	case DataStream:
-		return 'd';
-	default:
-		return '-';
 	}
 }
