@@ -99,15 +99,23 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 				break;
 		}
 
-		//Writing settings to output streams
-		for (auto& set : cmd.outputs[i].settings)
+		// Copy the stream if no codec modification is set
+		if (cmd.outputs[i].settings.size() == 0)
 		{
-			//Correct name based on mapping
-			if (set == "-c:v" || set == "-c:b")
+			cmd.cmd.push_back("-c:v");
+			cmd.cmd.push_back("copy");
+		} else
+		{
+			//Writing settings to output streams
+			for (auto& set : cmd.outputs[i].settings)
 			{
-				set = set + ":" + std::to_string(*currentStreamN);
+				//Correct name based on mapping
+				if (set == "-c:v" || set == "-c:b")
+				{
+					set = set + ":" + std::to_string(*currentStreamN);
+				}
+				cmd.cmd.push_back(set);
 			}
-			cmd.cmd.push_back(set);
 		}
 
 		//Streams Naming
