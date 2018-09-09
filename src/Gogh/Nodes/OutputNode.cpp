@@ -5,7 +5,8 @@
 
 OutputNode::OutputNode()
 	: m_isFilenameUserDefined(false),
-	m_sortOutputs(false)
+	m_sortOutputs(false),
+	m_overwrite(false)
 {
 	// Add slots
 	newInputSlot();
@@ -120,6 +121,15 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		*currentStreamN += 1;
 	}
 
+	//Overwrite the output file
+	if (m_overwrite)
+	{
+		cmd.cmd.push_back("-y");
+	} else
+	{
+		cmd.cmd.push_back("-n");
+	}
+
 	//Write the output file
 	cmd.cmd.push_back(parmEvalAsString(0).toStdString());
 
@@ -130,7 +140,7 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 
 int OutputNode::parmCount() const
 {
-	return 3;
+	return 4;
 }
 
 QString OutputNode::parmName(int parm) const
@@ -140,9 +150,11 @@ QString OutputNode::parmName(int parm) const
 	case 0:
 		return "filename";
 	case 1:
-		return "Sort outputs";
+		return "Sort streams";
 	case 2:
 		return "Render";
+	case 3:
+		return "Overwrite";
 	default:
 		return QString();
 	}
@@ -158,6 +170,8 @@ ParmType OutputNode::parmType(int parm) const
 		return CheckboxType;
 	case 2:
 		return ButtonType;
+	case 3:
+		return CheckboxType;
 	default:
 		return NoneType;
 	}
@@ -171,6 +185,8 @@ QVariant OutputNode::parmRawValue(int parm) const
 		return QString::fromStdString(m_filename);
 	case 1:
 		return bool(m_sortOutputs);
+	case 3:
+		return bool(m_overwrite);
 	default:
 		return QVariant();
 	}
@@ -186,6 +202,10 @@ bool OutputNode::setParm(int parm, QVariant value)
 		return true;
 	case 1:
 		m_sortOutputs = value.toBool();
+		emit parmChanged(parm);
+		return true;
+	case 3:
+		m_overwrite = value.toBool();
 		emit parmChanged(parm);
 		return true;
 	default:
