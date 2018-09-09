@@ -65,9 +65,10 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 
 	//Files' streams mapping
 	for (int i = 0; i < count; i++) {
+		cmd.os = cmd.outputs[i];
 		cmd.cmd.push_back("-map");
 		std::ostringstream ss;
-		ss << cmd.source_id(cmd.outputs[i].input) << ":" << cmd.outputs[i].input.second;
+		ss << cmd.source_id(cmd.os.input) << ":" << cmd.os.input.second;
 		cmd.cmd.push_back(ss.str());
 	}
 
@@ -79,9 +80,10 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 
 	for (int i = 0; i < count; i++)
 	{
+		cmd.os = cmd.outputs[i];
 		//Get the counter for the current stream
 		int* currentStreamN = &videoStreamN;
-		switch (cmd.outputs[i].stream) {
+		switch (cmd.os.stream) {
 			case VideoStream:
 				currentStreamN = &videoStreamN;
 				break;
@@ -100,19 +102,19 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		}
 
 		// Copy the stream if no codec modification is set
-		if (cmd.outputs[i].settings.size() == 0)
+		if (cmd.os.settings.size() == 0)
 		{
 			std::ostringstream ss;
-			ss << "-c:" << streamTypeAsChar(cmd.outputs[i].stream);
+			ss << "-c:" << streamTypeAsChar(cmd.os.stream);
 			cmd.cmd.push_back(ss.str());
 			cmd.cmd.push_back("copy");
 		} else
 		{
 			//Writing settings to output streams
-			for (auto& set : cmd.outputs[i].settings)
+			for (auto& set : cmd.os.settings)
 			{
 				//Codec : stream type
-				std::string codecStreamType = "-c:" + streamTypeAsChar(cmd.outputs[i].stream);
+				std::string codecStreamType = "-c:" + streamTypeAsChar(cmd.os.stream);
 				//Correct name based on mapping
 				if (set == codecStreamType || set == "-c:b")
 				{
@@ -124,10 +126,10 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 
 		//Streams Naming
 		std::ostringstream ss;
-		ss << "-metadata:s:" << streamTypeAsChar(cmd.outputs[i].stream) << ":" << *currentStreamN;
+		ss << "-metadata:s:" << streamTypeAsChar(cmd.os.stream) << ":" << *currentStreamN;
 		cmd.cmd.push_back(ss.str());
 		ss.str(std::string());
-		ss << "title=\"" << cmd.outputs[i].name << "\"";
+		ss << "title=\"" << cmd.os.name << "\"";
 		cmd.cmd.push_back(ss.str());
 
 		*currentStreamN += 1;
