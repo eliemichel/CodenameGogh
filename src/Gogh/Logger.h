@@ -2,14 +2,14 @@
  * This file is part of RayStep
  *
  * Copyright (c) 2017 -- Élie Michel <elie.michel@exppad.com>
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the “Software”), to
  * deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
  * sell copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
  *
@@ -90,4 +90,3 @@ private:
 #define LOG Logger(__func__, __FILE__, __LINE__, Logger::LINFO).stream()
 #define WARN_LOG Logger(__func__, __FILE__, __LINE__, Logger::LWARNING).stream()
 #define ERR_LOG Logger(__func__, __FILE__, __LINE__, Logger::LERROR).stream()
-

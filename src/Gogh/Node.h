@@ -25,6 +25,8 @@ class QWidget;
 	*/
 typedef std::pair<std::string, int> filestream;
 
+std::ostream& operator<<(std::ostream& stream, const filestream& fs);
+
 enum StreamType
 {
 	VideoStream,
@@ -50,6 +52,8 @@ struct OutputStream {
 	// Settings
 	stringlist settings;
 };
+
+std::ostream& operator<<(std::ostream& stream, const OutputStream& fs);
 
 /**
  * This structure is transmitted among the graph nodes while building the
@@ -233,13 +237,13 @@ public:
 	void fireSlotConnectEvent(int slotIndex, bool isInput);
 	void fireSlotDisconnectEvent(int slotIndex, bool isInput);
 
-protected:
-	virtual void slotConnectEvent(SlotEvent *event) {}
-	virtual void slotDisconnectEvent(SlotEvent *event) {}
-
 	//Return the StreamType in another type
 	std::string streamTypeAsString(StreamType stream) const;
 	char streamTypeAsChar(StreamType stream) const;
+
+protected:
+	virtual void slotConnectEvent(SlotEvent *event) {}
+	virtual void slotDisconnectEvent(SlotEvent *event) {}
 
 private:
 	EnvModel *m_envModel;
