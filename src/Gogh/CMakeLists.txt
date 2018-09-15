@@ -28,6 +28,7 @@ set(SRC
 	Node.h
 	Node.cpp
 	Link.h
+	Link.cpp
 	Slot.h
 	Slot.cpp
 	NodeType.h
@@ -113,7 +114,6 @@ set(SRC
 	Ui/NodeItem.h
 	Ui/NodeItem.cpp
 	Ui/SlotItem.h
-	Ui/SlotItem.cpp
 	Ui/UiApp.h
 	Ui/UiApp.cpp
 	Ui/UiWindow.h

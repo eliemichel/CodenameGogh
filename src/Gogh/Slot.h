@@ -1,9 +1,12 @@
 #ifndef H_SLOT
 #define H_SLOT
 
+#include <set>
+
 class Node;
 class InputSlot;
 class OutputSlot;
+class Link;
 
 // TODO: add signals
 class AbstractSlot {
@@ -15,38 +18,30 @@ public:
 
 	Node * parentNode() const { return m_parentNode; }
 
+	void removeLink(Link *link);
+	virtual void addLink(Link *link);
+
+protected:
+	std::set<Link*> & links() { return m_links; }
+	const std::set<Link*> & links() const { return m_links; }
+
 private:
 	Node * m_parentNode;
+	std::set<Link*> m_links;
 };
 
 class InputSlot : public AbstractSlot {
 public:
 	InputSlot(Node *parentNode) : AbstractSlot(parentNode) {}
 
-	bool isConnected() const { return m_origin != nullptr; }
-
-	OutputSlot *origin() const { return m_origin; }
-	void connectTo(OutputSlot *origin) { m_origin = origin; } // check if it was connected
-
-	Node * originNode() const;
-
-private:
-	OutputSlot * m_origin;
+	void addLink(Link *link) override;
 };
 
 class OutputSlot : public AbstractSlot {
 public:
 	OutputSlot(Node *parentNode) : AbstractSlot(parentNode) {}
 
-	bool isConnected() const { return m_destination != nullptr; }
-
-	InputSlot *destination() const { return m_destination; }
-	void connectTo(InputSlot *destination) { m_destination = destination; }
-
-	Node * destinationNode() const;
-
-private:
-	InputSlot * m_destination;
+	void addLink(Link *link) override;
 };
 
 #endif // H_SLOT

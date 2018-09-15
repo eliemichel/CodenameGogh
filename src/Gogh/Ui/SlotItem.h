@@ -3,16 +3,14 @@
 
 #include "NodeAreaItems.h"
 
-class Slot;
+class InputSlot;
+class OutputSlot;
 
 class AbstractSlotItem : public AbstractNodeAreaItem {
 public:
-	AbstractSlotItem(::Slot *slot, Rect bbox, int type)
+	AbstractSlotItem(Rect bbox, int type)
 		: AbstractNodeAreaItem(bbox, type)
-		, m_slot(slot)
 	{}
-
-	::Slot * Slot() const { return m_slot; }
 
 	bool Hit(float x, float y) override {
 		// treated as an ellipse
@@ -40,9 +38,6 @@ public:
 
 		AbstractNodeAreaItem::Paint(vg);
 	}
-
-private:
-	::Slot *m_slot;
 };
 
 class InputSlotItem : public AbstractSlotItem {
@@ -56,9 +51,15 @@ public:
 	}
 
 public:
-	InputSlotItem(::Slot *slot, Rect bbox)
-		: AbstractSlotItem(slot, bbox, InputSlotItemType)
+	InputSlotItem(InputSlot *slot, Rect bbox)
+		: AbstractSlotItem(bbox, InputSlotItemType)
+		, m_slot(slot)
 	{}
+
+	InputSlot * Slot() const { return m_slot; }
+
+private:
+	InputSlot *m_slot;
 };
 
 class OutputSlotItem : public AbstractSlotItem {
@@ -72,9 +73,15 @@ public:
 	}
 
 public:
-	OutputSlotItem(::Slot *slot, Rect bbox)
-		: AbstractSlotItem(slot, bbox, OutputSlotItemType)
+	OutputSlotItem(OutputSlot *slot, Rect bbox)
+		: AbstractSlotItem(bbox, OutputSlotItemType)
+		, m_slot(slot)
 	{}
+
+	OutputSlot * Slot() const { return m_slot; }
+
+private:
+	OutputSlot * m_slot;
 };
 
 

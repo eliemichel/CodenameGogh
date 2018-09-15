@@ -4,17 +4,25 @@
 #include "Slot.h"
 
 Graph::~Graph() {
-	while (!m_links.empty()) {
-		delete m_links.back();
-		m_links.pop_back();
+	for (auto it = m_links.begin(); it != m_links.end();) {
+		Link *link = *it;
+		it = m_links.erase(it);
+		delete link;
 	}
 
-	while (!m_nodes.empty()) {
-		delete m_nodes.back();
-		m_nodes.pop_back();
+	for (auto it = m_nodes.begin(); it != m_nodes.end();) {
+		Node *node = *it;
+		it = m_nodes.erase(it);
+		delete node;
 	}
 }
 
-void Graph::addLink(OutputSlot *origin, InputSlot *destination) {
-	destination->Node();
+void Graph::addNode(Node *node) {
+	node->destroyed.connect([this, node]() { m_nodes.erase(node); });
+	m_nodes.insert(node);
+}
+
+void Graph::addLink(Link *link) {
+	link->destroyed.connect([this, link]() { m_links.erase(link); });
+	m_links.insert(link);
 }

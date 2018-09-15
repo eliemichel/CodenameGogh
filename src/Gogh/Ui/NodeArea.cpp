@@ -8,6 +8,7 @@
 #include "Node.h"
 #include "Parameter.h"
 #include "Slot.h"
+#include "Link.h"
 #include "Graph.h"
 #include "UiButton.h"
 
@@ -85,6 +86,21 @@ void NodeArea::Paint(NVGcontext *vg) const {
 	}
 
 	// Links
+	for (const LinkItem & link : m_linkItems) {
+		const ::Rect & or = link.origin->BBox();
+		const ::Rect & dr = link.destination->BBox();
+		float ox = or .xf() + or .wf() / 2.f;
+		float oy = or .yf() + or .hf() / 2.f;
+		float dx = dr.xf() + dr.wf() / 2.f;
+		float dy = dr.yf() + dr.hf() / 2.f;
+		nvgBeginPath(vg);
+		nvgMoveTo(vg, ox, oy);
+		nvgLineTo(vg, dx, dy);
+		nvgStrokeColor(vg, nvgRGB(255, 255, 255));
+		nvgStroke(vg);
+	}
+
+	// Legacy Links
 	for (const LinkItem & link : m_linkItems) {
 		const ::Rect & or = link.origin->BBox();
 		const ::Rect & dr = link.destination->BBox();
@@ -197,7 +213,7 @@ void NodeArea::OnMouseClick(int button, int action, int mods) {
 					if (!m_pendingLink.destination) {
 						InputSlotItem * slotItem = InputSlotItem::fromRawItem(acc.item);
 						m_pendingLink.destination = slotItem;
-						m_graph->addLink(m_pendingLink.origin->Slot(), m_pendingLink.destination->Slot());
+						m_graph->addLink(new Link(m_pendingLink.origin->Slot(), m_pendingLink.destination->Slot()));
 					}
 					break;
 
@@ -205,13 +221,14 @@ void NodeArea::OnMouseClick(int button, int action, int mods) {
 					if (!m_pendingLink.origin) {
 						OutputSlotItem * slotItem = OutputSlotItem::fromRawItem(acc.item);
 						m_pendingLink.origin = slotItem;
-						m_graph->addLink(m_pendingLink.origin->Slot(), m_pendingLink.destination->Slot());
+						m_graph->addLink(new Link(m_pendingLink.origin->Slot(), m_pendingLink.destination->Slot()));
 					}
 					break;
 				}
 			}
 
-			m_pendingLink.origin = m_pendingLink.destination = nullptr;
+			m_pendingLink.origin = nullptr;
+			m_pendingLink.destination = nullptr;
 		}
 	}
 
