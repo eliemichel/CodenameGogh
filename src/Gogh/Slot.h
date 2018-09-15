@@ -8,18 +8,20 @@ class InputSlot;
 class OutputSlot;
 class Link;
 
-// TODO: add signals
 class AbstractSlot {
 public:
 	AbstractSlot(Node *parentNode)
 		: m_parentNode(parentNode)
 	{}
-	AbstractSlot(const AbstractSlot &) = delete; // signal emitters must not be copied
+	~AbstractSlot();
 
 	Node * parentNode() const { return m_parentNode; }
 
-	void removeLink(Link *link);
 	virtual void addLink(Link *link);
+	/// This "forgets" the link( remove the reference to it) but does not delete it
+	void removeLink(Link *link);
+	/// Delete the link object and remove them
+	void deleteLinks();
 
 protected:
 	std::set<Link*> & links() { return m_links; }

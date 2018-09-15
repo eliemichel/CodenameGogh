@@ -9,12 +9,8 @@ class AbstractNodeAreaItem;
 class NodeItem;
 class InputSlotItem;
 class OutputSlotItem;
+class LinkItem;
 class UiContextMenu;
-
-struct LinkItem {
-	OutputSlotItem *origin;
-	InputSlotItem *destination;
-};
 
 class NodeArea : public UiTrackMouseLayout {
 private:
@@ -23,6 +19,11 @@ private:
 		QuadTree::Accessor acc;
 		int startX;
 		int startY;
+	};
+
+	struct PendingLinkItem {
+		OutputSlotItem *origin;
+		InputSlotItem *destination;
 	};
 
 	// Node item and its accessor for quicker tree access
@@ -35,6 +36,7 @@ public:
 	NodeArea(Graph *graph, UiLayout *popupLayout = nullptr);
 	~NodeArea();
 
+	void SetGraph(Graph *graph);
 	void SetContextMenu(UiContextMenu * contextMenu) { m_contextMenu = contextMenu; }
 
 public: // protected:
@@ -64,6 +66,7 @@ private:
 	void ClearMovingItems();
 
 private:
+	UiLayout *m_popupLayout;
 	Graph * m_graph;
 	UiContextMenu * m_contextMenu;
 
@@ -71,16 +74,14 @@ private:
 
 	QuadTree *m_tree;
 	std::vector<NodeItem*> m_nodeItems;
+	std::vector<LinkItem*> m_linkItems;
 
 	int m_moveStartMouseX;
 	int m_moveStartMouseY;
 	std::vector<MovingItem> m_movingNodes;
 
 	std::vector<SelectionEntry> m_selectedNodes;
-
-	std::vector<LinkItem> m_linkItems;
-
-	LinkItem m_pendingLink;
+	PendingLinkItem m_pendingLink;
 };
 
 

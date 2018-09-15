@@ -12,8 +12,8 @@ public:
 	Link()
 		: m_origin(nullptr), m_destination(nullptr)
 	{}
-
 	Link(OutputSlot *origin, InputSlot *destination);
+	Link(const Link &) = delete; // signal emitters must not be copied
 
 	~Link();
 

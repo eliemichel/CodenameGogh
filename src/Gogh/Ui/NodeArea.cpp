@@ -3,6 +3,7 @@
 #include "NodeAreaItems.h"
 #include "NodeItem.h"
 #include "SlotItem.h"
+#include "LinkItem.h"
 #include "UiContextMenu.h"
 #include "Logger.h"
 #include "Node.h"
@@ -25,23 +26,13 @@ NodeArea::MovingItem::MovingItem(QuadTree::Accessor _acc)
 }
 
 NodeArea::NodeArea(Graph *graph, UiLayout *popupLayout)
-	: m_graph(graph)
+	: m_popupLayout(popupLayout)
+	, m_graph(nullptr)
 	, m_contextMenu(nullptr)
-	, m_nodeItems({
-	new NodeItem({ 0, 0, 200, 100 }),
-	new NodeItem({ 300, 150, 200, 100 }),
-	new NodeItem({ 400, 200, 200, 100 }),
-	})
 	, m_tree(new QuadTree(250, 300, 500, 500, 5))
 	, m_pendingLink({ nullptr, nullptr })
 {
-	for (NodeItem *item : m_nodeItems) {
-		m_tree->Insert(item);
-	}
-
-	for (Node *node : graph->nodes()) {
-		m_nodeItems.push_back(new NodeItem(node, m_tree, popupLayout));
-	}
+	SetGraph(graph);
 
 	SortItems();
 }
@@ -52,6 +43,25 @@ NodeArea::~NodeArea() {
 	}
 	assert(m_tree);
 	delete m_tree;
+}
+
+void NodeArea::SetGraph(Graph *graph) {
+	if (m_graph) {
+		// TODO: disconnect
+	}
+
+	m_graph = graph;
+
+	for (Node *node : graph->nodes()) {
+		m_nodeItems.push_back(new NodeItem(node, m_tree, m_popupLayout));
+	}
+
+	graph->nodeAdded.connect([this](Node *node) {
+		m_nodeItems.push_back(new NodeItem(node, m_tree, m_popupLayout));
+	});
+	graph->linkAdded.connect([this](Link *link) {
+		m_linkItems.push_back(new LinkItem(link, m_tree, m_popupLayout));
+	});
 }
 
 void NodeArea::OnTick(float time) {
@@ -86,7 +96,8 @@ void NodeArea::Paint(NVGcontext *vg) const {
 	}
 
 	// Links
-	for (const LinkItem & link : m_linkItems) {
+	for (const LinkItem * link : m_linkItems) {
+		/*
 		const ::Rect & or = link.origin->BBox();
 		const ::Rect & dr = link.destination->BBox();
 		float ox = or .xf() + or .wf() / 2.f;
@@ -98,21 +109,7 @@ void NodeArea::Paint(NVGcontext *vg) const {
 		nvgLineTo(vg, dx, dy);
 		nvgStrokeColor(vg, nvgRGB(255, 255, 255));
 		nvgStroke(vg);
-	}
-
-	// Legacy Links
-	for (const LinkItem & link : m_linkItems) {
-		const ::Rect & or = link.origin->BBox();
-		const ::Rect & dr = link.destination->BBox();
-		float ox = or.xf() + or.wf() / 2.f;
-		float oy = or.yf() + or.hf() / 2.f;
-		float dx = dr.xf() + dr.wf() / 2.f;
-		float dy = dr.yf() + dr.hf() / 2.f;
-		nvgBeginPath(vg);
-		nvgMoveTo(vg, ox, oy);
-		nvgLineTo(vg, dx, dy);
-		nvgStrokeColor(vg, nvgRGB(255, 255, 255));
-		nvgStroke(vg);
+		*/
 	}
 
 	if (m_pendingLink.origin || m_pendingLink.destination) {

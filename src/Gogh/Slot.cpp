@@ -3,6 +3,14 @@
 
 #include <cassert>
 
+AbstractSlot::~AbstractSlot() {
+	deleteLinks();
+}
+
+void AbstractSlot::addLink(Link *link) {
+	m_links.insert(link);
+}
+
 void AbstractSlot::removeLink(Link *link) {
 	for (auto it = m_links.begin(); it != m_links.end(); ) {
 		if (*it == link) {
@@ -13,8 +21,12 @@ void AbstractSlot::removeLink(Link *link) {
 	}
 }
 
-void AbstractSlot::addLink(Link *link) {
-	m_links.insert(link);
+void AbstractSlot::deleteLinks() {
+	while (!m_links.empty()) {
+		Link *link = *m_links.begin();
+		m_links.erase(m_links.begin());
+		delete link;
+	}
 }
 
 void InputSlot::addLink(Link *link) {
@@ -24,10 +36,7 @@ void InputSlot::addLink(Link *link) {
 
 	// Remove previous link
 	assert(links().empty() || links().size() == 1);
-	for (Link * l : links()) {
-		delete l;
-	}
-	links().clear();
+	deleteLinks();
 	
 	link->setDestination(this);
 	AbstractSlot::addLink(link);

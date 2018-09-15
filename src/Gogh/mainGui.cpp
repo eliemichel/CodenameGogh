@@ -52,6 +52,18 @@ int mainGui(const ArgParse & args)
 		pNode = node;
 	}
 
+	{
+		Node *node = new Node();
+		node->insertInputSlots(0, 2);
+		node->insertOutputSlots(0, 1);
+		node->insertParams(0, 0);
+		Parameter & param = node->param(0);
+		param.setType(IntType);
+		param.setName("Coucou");
+		param.set(38);
+		graph->addNode(node);
+	}
+
 	UiApp app;
 	UiWindow window(1200, 600, "Gogh");
 

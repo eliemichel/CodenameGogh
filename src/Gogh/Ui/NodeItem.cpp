@@ -26,15 +26,9 @@ NodeItem::NodeItem(::Node *node, QuadTree *tree, UiLayout *popupLayout)
 		tree->Insert(this);
 	}
 
-	// TODO: connect nodes
+	// TODO: connect nodes addslots/removeslots
 	node->destroyed.connect(this, &NodeItem::OnNodeDestroyed);
 }
-
-NodeItem::NodeItem(Rect bbox)
-	: AbstractNodeAreaItem(bbox, NodeItemType)
-	, m_content(nullptr)
-	, m_selected(false)
-{}
 
 NodeItem::~NodeItem() {
 	if (m_content) {

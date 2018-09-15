@@ -114,6 +114,8 @@ set(SRC
 	Ui/NodeItem.h
 	Ui/NodeItem.cpp
 	Ui/SlotItem.h
+	Ui/LinkItem.h
+	Ui/LinkItem.cpp
 	Ui/UiApp.h
 	Ui/UiApp.cpp
 	Ui/UiWindow.h

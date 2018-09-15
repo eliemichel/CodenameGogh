@@ -16,7 +16,6 @@ public:
 
 public:
 	NodeItem(::Node *node, QuadTree *tree = nullptr, UiLayout *popupLayout = nullptr);
-	NodeItem(Rect bbox); // TODO: deleteme
 	~NodeItem();
 
 	::Node * Node() const { return m_node; }
