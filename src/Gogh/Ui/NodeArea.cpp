@@ -60,7 +60,36 @@ void NodeArea::SetGraph(Graph *graph) {
 		m_nodeItems.push_back(new NodeItem(node, m_tree, m_popupLayout));
 	});
 	graph->linkAdded.connect([this](Link *link) {
-		m_linkItems.push_back(new LinkItem(link, m_tree, m_popupLayout));
+		OutputSlotItem *originItem = nullptr;
+		InputSlotItem *destinationItem = nullptr;
+		// TODO: avoid this costly research, even though it does not happen so often
+		// A possible option is to keep a link from Slot to SlotItem
+		for (NodeItem *nodeItem : m_nodeItems) {
+			if (!originItem && nodeItem->Node() == link->origin()->parentNode()) {
+				for (AbstractNodeAreaItem *child : nodeItem->Children()) {
+					OutputSlotItem *slotItem = OutputSlotItem::fromRawItem(child);
+					if (slotItem && slotItem->Slot() == link->origin()) {
+						originItem = slotItem;
+						break;
+					}
+				}
+			}
+
+			if (!destinationItem && nodeItem->Node() == link->destination()->parentNode()) {
+				for (AbstractNodeAreaItem *child : nodeItem->Children()) {
+					InputSlotItem *slotItem = InputSlotItem::fromRawItem(child);
+					if (slotItem && slotItem->Slot() == link->destination()) {
+						destinationItem = slotItem;
+						break;
+					}
+				}
+			}
+
+			if (originItem && destinationItem) {
+				break;
+			}
+		}
+		m_linkItems.push_back(new LinkItem(originItem, destinationItem, link, m_tree));
 	});
 }
 
@@ -97,19 +126,7 @@ void NodeArea::Paint(NVGcontext *vg) const {
 
 	// Links
 	for (const LinkItem * link : m_linkItems) {
-		/*
-		const ::Rect & or = link.origin->BBox();
-		const ::Rect & dr = link.destination->BBox();
-		float ox = or .xf() + or .wf() / 2.f;
-		float oy = or .yf() + or .hf() / 2.f;
-		float dx = dr.xf() + dr.wf() / 2.f;
-		float dy = dr.yf() + dr.hf() / 2.f;
-		nvgBeginPath(vg);
-		nvgMoveTo(vg, ox, oy);
-		nvgLineTo(vg, dx, dy);
-		nvgStrokeColor(vg, nvgRGB(255, 255, 255));
-		nvgStroke(vg);
-		*/
+		link->Paint(vg);
 	}
 
 	if (m_pendingLink.origin || m_pendingLink.destination) {

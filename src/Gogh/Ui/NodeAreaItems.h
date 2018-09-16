@@ -9,6 +9,7 @@ enum NodeAreaItemType {
 	NodeItemType,
 	InputSlotItemType,
 	OutputSlotItemType,
+	LinkItemType,
 	_EndNodeAreaItems,
 };
 

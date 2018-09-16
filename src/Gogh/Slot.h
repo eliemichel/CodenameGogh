@@ -8,6 +8,9 @@ class InputSlot;
 class OutputSlot;
 class Link;
 
+/**
+ * NB: A slot has immutable parent node
+ */
 class AbstractSlot {
 public:
 	AbstractSlot(Node *parentNode)

@@ -1,6 +1,8 @@
 #ifndef H_UIRECT
 #define H_UIRECT
 
+// TODO: remove from UI
+
 struct Rect {
 	int x, y, w, h;
 

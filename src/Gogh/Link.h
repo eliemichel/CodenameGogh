@@ -6,6 +6,9 @@
 class InputSlot;
 class OutputSlot;
 
+/**
+ * NB: A link has immutable origin/destination
+ */
 class Link
 {
 public:
@@ -18,9 +21,10 @@ public:
 	~Link();
 
 	OutputSlot* origin() const { return m_origin; }
-	void setOrigin(OutputSlot *origin);
-
 	InputSlot* destination() const { return m_destination; }
+
+private:
+	void setOrigin(OutputSlot *origin);
 	void setDestination(InputSlot *destination);
 
 public: // signals

@@ -1,5 +1,6 @@
 #include "Slot.h"
 #include "Link.h"
+#include "Logger.h"
 
 #include <cassert>
 
@@ -34,11 +35,15 @@ void InputSlot::addLink(Link *link) {
 		return;
 	}
 
+	if (link->destination() != this) {
+		ERR_LOG << "Adding link to input slot with different destination";
+		return;
+	}
+
 	// Remove previous link
 	assert(links().empty() || links().size() == 1);
 	deleteLinks();
 	
-	link->setDestination(this);
 	AbstractSlot::addLink(link);
 }
 
@@ -47,6 +52,10 @@ void OutputSlot::addLink(Link *link) {
 		return;
 	}
 
-	link->setOrigin(this);
+	if (link->origin() != this) {
+		ERR_LOG << "Adding link to output slot with different origin";
+		return;
+	}
+
 	AbstractSlot::addLink(link);
 }

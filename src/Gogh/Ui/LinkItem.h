@@ -1,13 +1,27 @@
 #ifndef H_LINKITEM
 #define H_LINKITEM
 
-class Link;
-class QuadTree;
-class UiLayout;
+#include "NodeAreaItems.h"
 
-class LinkItem {
+class Link;
+class InputSlotItem;
+class OutputSlotItem;
+class QuadTree;
+
+class LinkItem : public AbstractNodeAreaItem {
 public:
-	LinkItem(Link *link, QuadTree *tree, UiLayout *popupLayout) {}
+	/// origin and destination items must match the link object. They are used for positionning the links.
+	LinkItem(OutputSlotItem *originItem, InputSlotItem *destinationItem, Link *link, QuadTree *tree = nullptr);
+
+	void Paint(NVGcontext *vg) const override;
+
+private:
+	void OnLinkDestroyed();
+
+private:
+	Link *m_link;
+	OutputSlotItem *m_originItem;
+	InputSlotItem *m_destinationItem;
 };
 
 #endif // H_LINKITEM
