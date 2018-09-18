@@ -11,16 +11,8 @@ NodeItem::NodeItem(::Node *node, QuadTree *tree, UiLayout *popupLayout)
 	// Content
 	SetContent(node->createDelegate(popupLayout));
 
-	for (int i = 0; i < node->inputSlotCount(); ++i) {
-		InputSlot & slot = node->inputSlot(i);
-		InputSlotItem *slotItem = new InputSlotItem(&slot, { -8, 20 + 30 * i, 16, 16 });
-		AddChild(slotItem);
-	}
-	for (int i = 0; i < node->outputSlotCount(); ++i) {
-		OutputSlot & slot = node->outputSlot(i);
-		OutputSlotItem *slotItem = new OutputSlotItem(&slot, { 192, 20 + 30 * i, 16, 16 });
-		AddChild(slotItem);
-	}
+	OnInsertedInputSlots(0, node->inputSlotCount() - 1);
+	OnInsertedOutputSlots(0, node->outputSlotCount() - 1);
 
 	if (tree) {
 		tree->Insert(this);
@@ -28,6 +20,10 @@ NodeItem::NodeItem(::Node *node, QuadTree *tree, UiLayout *popupLayout)
 
 	// TODO: connect nodes addslots/removeslots
 	node->destroyed.connect(this, &NodeItem::OnNodeDestroyed);
+	node->insertedInputSlots.connect(this, &NodeItem::OnInsertedInputSlots);
+	node->aboutToRemoveInputSlots.connect(this, &NodeItem::WhenAboutToRemoveInputSlots);
+	node->insertedOutputSlots.connect(this, &NodeItem::OnInsertedOutputSlots);
+	node->aboutToRemoveOutputSlots.connect(this, &NodeItem::WhenAboutToRemoveOutputSlots);
 }
 
 NodeItem::~NodeItem() {
@@ -69,4 +65,64 @@ void NodeItem::UpdateGeometry() {
 
 void NodeItem::OnNodeDestroyed() {
 	m_node = nullptr;
+}
+
+void NodeItem::OnInsertedInputSlots(int first, int last) {
+	for (int i = first; i <= last; ++i) {
+		InputSlot & slot = Node()->inputSlot(i);
+		InputSlotItem *slotItem = new InputSlotItem(&slot, { -8, 20 + 30 * i, 16, 16 });
+		AddChild(slotItem);
+		m_inputSlotItems.push_back(slotItem);
+	}
+
+	// Shift the next slots
+	for (int i = last + 1; i < Node()->inputSlotCount(); ++i) {
+		Rect rect(-8, 20 + 30 * i, 16, 16);
+		Tree()->UpdateItemBBox(Tree()->Find(m_inputSlotItems[i]), rect);
+	}
+}
+
+void NodeItem::WhenAboutToRemoveInputSlots(int first, int last) {
+	// Shift the next slots
+	int count = last - first + 1;
+	for (int i = last; i < Node()->inputSlotCount(); ++i) {
+		Rect rect(-8, 20 + 30 * (i - count), 16, 16);
+		Tree()->UpdateItemBBox(Tree()->Find(m_inputSlotItems[i]), rect);
+	}
+
+	auto it = m_inputSlotItems.begin() + first;
+	for (int i = first; i <= last; ++i) {
+		delete *it;
+		it = m_inputSlotItems.erase(it);
+	}
+}
+
+void NodeItem::OnInsertedOutputSlots(int first, int last) {
+	for (int i = first; i <= last; ++i) {
+		OutputSlot & slot = Node()->outputSlot(i);
+		OutputSlotItem *slotItem = new OutputSlotItem(&slot, { 192, 20 + 30 * i, 16, 16 });
+		AddChild(slotItem);
+		m_outputSlotItems.push_back(slotItem);
+	}
+
+	// Shift the next slots
+	for (int i = last + 1; i < Node()->outputSlotCount(); ++i) {
+		Rect rect(-8, 20 + 30 * i, 16, 16);
+		Tree()->UpdateItemBBox(Tree()->Find(m_outputSlotItems[i]), rect);
+	}
+}
+
+void NodeItem::WhenAboutToRemoveOutputSlots(int first, int last) {
+	// Shift the next slots
+	int count = last - first + 1;
+	for (int i = last; i < Node()->outputSlotCount(); ++i) {
+		Rect rect(-8, 20 + 30 * (i - count), 16, 16);
+		Tree()->UpdateItemBBox(Tree()->Find(m_outputSlotItems[i]), rect);
+	}
+
+	auto it = m_outputSlotItems.begin() + first;
+	for (int i = first; i <= last; ++i) {
+		delete *it;
+		it = m_outputSlotItems.erase(it);
+	}
 }

@@ -3,6 +3,8 @@
 
 #include "NodeAreaItems.h"
 class Node;
+class InputSlotItem;
+class OutputSlotItem;
 
 class NodeItem : public AbstractNodeAreaItem {
 public:
@@ -33,10 +35,16 @@ protected:
 
 private:
 	void OnNodeDestroyed();
+	void OnInsertedInputSlots(int first, int last);
+	void WhenAboutToRemoveInputSlots(int first, int last);
+	void OnInsertedOutputSlots(int first, int last);
+	void WhenAboutToRemoveOutputSlots(int first, int last);
 
 private:
 	::Node * m_node;
 	UiElement * m_content;
+	std::vector<InputSlotItem*> m_inputSlotItems;
+	std::vector<OutputSlotItem*> m_outputSlotItems;
 	bool m_selected;
 };
 
