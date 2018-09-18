@@ -3,6 +3,7 @@
 
 #include "QuadTree.h"
 #include "UiBase.h"
+#include "Signal.h"
 
 enum NodeAreaItemType {
 	_BeginNodeAreaItems,
@@ -54,6 +55,10 @@ public:
 	}
 
 protected:
+	void UpdateGeometry() override {
+		moved.fire();
+	}
+
 	void OnInsert(QuadTree *tree) override {
 		if (m_tree && m_tree != tree) {
 			m_tree->RemoveItem(this);
@@ -80,6 +85,9 @@ protected:
 	}
 
 	QuadTree * Tree() const { return m_tree; }
+
+public: // signals
+	Signal<> moved;
 
 private:
 	QuadTree * m_tree;

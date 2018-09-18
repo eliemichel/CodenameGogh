@@ -108,6 +108,16 @@ void NodeArea::OnTick(float time) {
 			++it;
 		}
 	}
+
+	for (auto it = m_linkItems.begin(); it != m_linkItems.end();) {
+		if (!(*it)->Link()) {
+			delete *it;
+			it = m_linkItems.erase(it);
+		}
+		else {
+			++it;
+		}
+	}
 }
 
 void NodeArea::Paint(NVGcontext *vg) const {
