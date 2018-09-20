@@ -22,6 +22,7 @@
 #include "Nodes/CodecNode.h"
 #include "Nodes/FramerateNode.h"
 #include "Nodes/MixNode.h"
+#include "Nodes/InputNode.h"
 
 #include <GLFW/glfw3.h>
 #include <nanovg.h>
@@ -41,6 +42,7 @@ int mainGui(const ArgParse & args)
 	graph->addNode(new CodecNode());
 	graph->addNode(new FramerateNode());
 	graph->addNode(new MixNode());
+	graph->addNode(new InputNode());
 
 	pNode = scaleNode;
 	pParam = &scaleNode->param(0);

@@ -77,8 +77,7 @@ void ParameterDelegate::UpdateStructure()
 	if (m_currentType == ButtonType) {
 		m_input.pushButton = new UiButton();
 		m_input.pushButton->SetText(m_param->name());
-		// TODO
-		//connect(m_input.lineEdit, &QLineEdit::textEdited, [=](const QString &text) { parameter()->set(text); });
+		m_input.pushButton->clicked.connect([this]() { buttonClicked.fire(); });
 		AddItem(m_input.pushButton);
 		return;
 	}

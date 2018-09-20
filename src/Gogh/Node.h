@@ -140,6 +140,7 @@ public:
 	* The emits the signal aboutToRemoveOutputSlots before changing the underlying data
 	*/
 	void removeOutputSlots(int first, int last);
+	void removeOutputSlots() { removeOutputSlots(0, outputSlotCount() - 1); }
 
 	// Extra utility inserters
 
@@ -235,8 +236,6 @@ protected:
 	// slot structure write
 	void newInputSlot();
 	void newOutputSlot();
-
-	void removeOutputSlots();
 
 	Connection inputConnection(int inputSlotIndex);
 	std::set<Connection> outputConnection(int outputSlotIndex);

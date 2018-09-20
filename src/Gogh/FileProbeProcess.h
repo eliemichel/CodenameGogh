@@ -3,7 +3,9 @@
 
 #include <QProcess>
 #include <vector>
+#include <string>
 #include <node.h>
+#include "Signal.h"
 
 class FileProbeProcess : public QProcess
 {
@@ -16,13 +18,13 @@ public:
 	FileProbeProcess(QObject *parent = nullptr);
 
 	// If a job is running, this will interupt it
-	void probe(QString filename);
+	void probe(std::string filename);
 	void cancel();
 
 	const std::vector<StreamType> & streams() const { return m_streams; }
 
-signals:
-	void probed();
+public: // signals
+	Signal<> probed;
 
 private slots:
 	void onProcessFinished();

@@ -21,9 +21,9 @@ FileProbeProcess::FileProbeProcess(QObject *parent)
 	setReadChannel(StandardOutput);
 }
 
-void FileProbeProcess::probe(QString filename)
+void FileProbeProcess::probe(std::string filename)
 {
-	m_filename = filename;
+	m_filename = QString::fromStdString(filename);
 	if (m_isRunning)
 	{
 		m_mustRetry = true;
@@ -35,7 +35,7 @@ void FileProbeProcess::probe(QString filename)
 		<< "-v" << "error"
 		<< "-show_entries" << "stream=codec_type"
 		<< "-print_format" << "default=noprint_wrappers=1:nokey=1"
-		<< filename;
+		<< m_filename;
 
 	DEBUG_LOG << program.toStdString() << " " << arguments.join(" ").toStdString();
 
@@ -60,7 +60,7 @@ void FileProbeProcess::onProcessFinished()
 	{
 		if (m_mustRetry)
 		{
-			probe(m_filename);
+			probe(m_filename.toStdString());
 		}
 	}
 
@@ -92,12 +92,11 @@ void FileProbeProcess::onProcessFinished()
 			m_streams.push_back(DataStream);
 		}
 	} while (!line.isNull());
-	emit probed();
+	probed.fire();
 }
 
 void FileProbeProcess::readStdout()
-{
-}
+{}
 
 void FileProbeProcess::readStderr()
 {

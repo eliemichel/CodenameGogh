@@ -2,12 +2,16 @@
 #define H_NODEDELEGATE
 
 #include "Ui/UiBase.h"
+#include "Signal.h"
 
 class Node;
 
 class NodeDelegate : public UiVBoxLayout {
 public:
 	NodeDelegate(Node *node, UiLayout *popupLayout = nullptr);
+
+public: // signals
+	Signal<int> buttonClicked; // (int param)
 
 private: // slots
 	void InsertParams(int first, int last);

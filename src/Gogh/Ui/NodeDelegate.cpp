@@ -11,17 +11,8 @@ NodeDelegate::NodeDelegate(Node *node, UiLayout *popupLayout)
 {
 	InsertParams(0, m_node->paramCount() - 1);
 
-	// TODO: connect signals:
 	node->insertedParams.connect(this, &NodeDelegate::InsertParams);
 	node->aboutToRemoveParams.connect(this, &NodeDelegate::RemoveParams);
-	/*
-	void aboutToInsertParams(int first, int last);
-	void aboutToRemoveParams(int first, int last);
-	void aboutToInsertInputSlots(int first, int last);
-	void aboutToRemoveInputSlots(int first, int last);
-	void aboutToInsertOutputSlots(int first, int last);
-	void aboutToRemoveOutputSlots(int first, int last);
-	*/
 }
 
 void NodeDelegate::InsertParams(int first, int last) {
@@ -36,6 +27,7 @@ void NodeDelegate::InsertParams(int first, int last) {
 		ParameterDelegate *paramDelegate = new ParameterDelegate(m_popupLayout);
 		paramDelegate->SetParameter(&m_node->param(i));
 		paramDelegate->SetInnerSizeHint(0, 0, 0, 30);
+		paramDelegate->buttonClicked.connect([this, i]() { buttonClicked.fire(i); });
 		AddItem(paramDelegate);
 	}
 

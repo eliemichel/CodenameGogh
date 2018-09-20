@@ -1,6 +1,7 @@
 #include "InputNode.h"
-#include "DefaultNodeEditor.h"
+#include "Ui/NodeDelegate.h"
 #include "Logger.h"
+#include "Parameter.h"
 
 #include <QFileInfo>
 
@@ -9,20 +10,29 @@
 InputNode::InputNode()
 	: m_probeProcess(this)
 {
-	// Add slots
-	newOutputSlot();
+	appendOutputSlot();
+	appendParams(2);
+
+	param(0).setName("Filename");
+	param(0).setType(StringType);
+	param(0).valueChanged.connect([this]() {
+		m_probeProcess.cancel();
+	});
 
 	// Quick tests with video samples
-	m_filename = "/Users/felixdavid/Documents/Logiciels/Tunnel/data/GoghTestSample.mp4";
+	param(0).set("C:/Users/emichel.ATI.000/Videos/LAllumeurDeReverberes_Demo/_DAVID_DAVID_MACAIGNE_MICHEL_LAllumeurDeReverberes.mp4");
 
-	connect(&m_probeProcess, &FileProbeProcess::probed, this, &InputNode::updateStreams);
+	param(1).setName("Analyze");
+	param(1).setType(ButtonType);
+
+	m_probeProcess.probed.connect(this, &InputNode::updateStreams);
 }
 
-QWidget * InputNode::createEditor(QWidget *parent)
+UiElement * InputNode::createDelegate(UiLayout *popupLayout)
 {
-	DefaultNodeEditor *ed = new DefaultNodeEditor(this, parent);
-	connect(ed, &DefaultNodeEditor::buttonClicked, this, &InputNode::onButtonClicked);
-	return ed;
+	NodeDelegate *del = new NodeDelegate(this, popupLayout);
+	del->buttonClicked.connect(this, &InputNode::onButtonClicked);
+	return del;
 }
 
 bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
@@ -31,7 +41,7 @@ bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		return false;
 	}*/
 
-	QString filename = parmEvalAsString(0);
+	QString filename = QString::fromStdString(param(0).evalAsString());
 	QFileInfo fileinfo(filename);
 	if (!fileinfo.isFile())
 	{
@@ -102,64 +112,6 @@ bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	return true;
 }
 
-// Data model
-
-int InputNode::parmCount() const
-{
-	return 2;
-}
-
-QString InputNode::parmName(int parm) const
-{
-	switch (parm)
-	{
-	case 0:
-		return "filename";
-	case 1:
-		return "Analyze";
-	default:
-		return QString();
-	}
-}
-
-ParmType InputNode::parmType(int parm) const
-{
-	switch (parm)
-	{
-	case 0:
-		return StringType;
-	case 1:
-		return ButtonType;
-	default:
-		return NoneType;
-	}
-}
-
-QVariant InputNode::parmRawValue(int parm) const
-{
-	switch (parm)
-	{
-	case 0:
-		return QString::fromStdString(m_filename);
-	default:
-		return QVariant();
-	}
-}
-
-bool InputNode::setParm(int parm, QVariant value)
-{
-	switch (parm)
-	{
-	case 0:
-		m_filename = value.toString().toStdString();
-		m_probeProcess.cancel();
-		//emit parmChanged(parm);
-		return true;
-	default:
-		return false;
-	}
-}
-
 void InputNode::updateStreams()
 {
 	removeOutputSlots();
@@ -170,7 +122,7 @@ void InputNode::updateStreams()
 		case AudioStream:
 		case SubtitleStream:
 		case DataStream:
-			newOutputSlot();
+			appendOutputSlot();
 		}
 	}
 }
@@ -180,7 +132,7 @@ void InputNode::onButtonClicked(int parm)
 	switch (parm)
 	{
 	case 1:
-		m_probeProcess.probe(parmEvalAsString(0));
+		m_probeProcess.probe(param(0).evalAsString());
 		break;
 	}
 }

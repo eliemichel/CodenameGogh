@@ -10,6 +10,12 @@ void UiButton::PaintLabel(NVGcontext *vg) const {
 	nvgTextBox(vg, r.xf() + 2.f, r.yf() + r.hf() - 6.f, r.wf() - 4.f, Text().c_str(), NULL);
 }
 
+void UiButton::OnMouseClick(int button, int action, int mods) {
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+		clicked.fire();
+	}
+}
+
 void UiButton::Paint(NVGcontext *vg) const {
 	const ::Rect & r = InnerRect();
 	bool isMouseOver = IsMouseOver();

@@ -6,23 +6,14 @@
 
 class InputNode : public Node
 {
-	Q_OBJECT
-
 public:
 	InputNode();
 
-	QWidget * createEditor(QWidget *parent = nullptr) override;
+	UiElement * createDelegate(UiLayout *popupLayout) override;
 
 	bool buildRenderCommand(int outputIndex, RenderCommand & cmd) const override;
 
-public: // data model
-	int parmCount() const override;
-	QString parmName(int parm) const override;
-	ParmType parmType(int parm) const override;
-	QVariant parmRawValue(int parm) const override;
-	bool setParm(int parm, QVariant value) override;
-
-private slots:
+private: // slots
 	/// Update output slots, corresponding to input file streams
 	void updateStreams();
 	void onButtonClicked(int parm);

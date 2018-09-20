@@ -53,6 +53,9 @@ private:
 	 */
 	void DestroyStructure();
 
+public: // signal
+	Signal<> buttonClicked;
+
 private: // slots
 	void UpdateValue();
 	void UpdateName();
