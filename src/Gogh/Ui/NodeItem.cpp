@@ -4,7 +4,7 @@
 #include "Logger.h"
 
 NodeItem::NodeItem(::Node *node, QuadTree *tree, UiLayout *popupLayout)
-	: AbstractNodeAreaItem({ 0, 0, 200, 100 }, NodeItemType)
+	: AbstractNodeAreaItem({ 0, 0, 200, 150 }, NodeItemType)
 	, m_node(node)
 	, m_content(nullptr)
 	, m_selected(false)

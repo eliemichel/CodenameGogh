@@ -1,5 +1,5 @@
 #include "QuadTree.h"
-
+#include "Logger.h"
 #include <nanovg.h>
 
 QuadTree::QuadTree(float cx, float cy, float hw, float hh, int divisions)
@@ -182,7 +182,7 @@ QuadTree::Accessor QuadTree::UpdateItemBBox(const Accessor & acc, Rect bbox) {
 		}
 
 		// Flag invalid if new bbox does not fit for parent to re-insert the item
-		newAcc.isValid = fit;
+		newAcc.isValid = newAcc.isValid && fit;
 	}
 
 	return newAcc;

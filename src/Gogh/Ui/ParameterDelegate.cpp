@@ -5,6 +5,7 @@
 #include "Ui/UiIntInput.h"
 #include "Ui/UiEnumInput.h"
 #include "Ui/UiButton.h"
+#include "Ui/UiCheckbox.h"
 
 ParameterDelegate::ParameterDelegate(UiLayout *popupLayout)
 	: m_param(nullptr)
@@ -118,6 +119,13 @@ void ParameterDelegate::UpdateStructure()
 		AddItem(m_input.comboBox);
 		break;
 	}
+	case CheckboxType:
+	{
+		m_input.checkbox = new UiCheckbox();
+		m_input.checkbox->changed.connect([=](bool checked) { m_param->set(checked); });
+		AddItem(m_input.checkbox);
+		break;
+	}
 	default:
 	{
 		ERR_LOG << "Not implemented: Node Type " << m_param->type();
@@ -154,6 +162,10 @@ void ParameterDelegate::DestroyStructure()
 		RemoveItem(m_input.pushButton);
 		delete m_input.pushButton;
 		break;
+	case CheckboxType:
+		RemoveItem(m_input.checkbox);
+		delete m_input.checkbox;
+		break;
 	default:
 		ERR_LOG << "Not implemented: Node Type " << m_param->type();
 		break;
@@ -166,28 +178,29 @@ void ParameterDelegate::UpdateValue()
 	{
 	case NoneType:
 		break;
+	
 	case StringType:
-	{
 		m_input.lineEdit->SetText(m_param->rawValue().toString());
 		break;
-	}
+	
 	case IntType:
-	{
 		m_input.spinBox->SetValue(m_param->rawValue().toInt());
 		break;
-	}
+	
 	case EnumType:
-	{
 		m_input.comboBox->SetCurrentItemIndex(m_param->rawValue().toInt());
 		break;
-	}
+	
 	case ButtonType:
 		break;
+	
+	case CheckboxType:
+		m_input.checkbox->SetChecked(m_param->rawValue().toBool());
+		break;
+	
 	default:
-	{
 		ERR_LOG << "Not implemented: Node Type " << m_param->type();
 		break;
-	}
 	}
 }
 

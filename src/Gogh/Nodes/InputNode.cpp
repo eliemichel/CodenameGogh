@@ -107,7 +107,9 @@ bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 
 	//MixNode mapping
 	cmd.os.input = std::make_pair(filename.toStdString(), outputIndex);
-	cmd.os.stream = m_probeProcess.streams()[outputIndex];
+	if (m_probeProcess.streams().size() > outputIndex) {
+		cmd.os.stream = m_probeProcess.streams()[outputIndex];
+	}
 
 	return true;
 }

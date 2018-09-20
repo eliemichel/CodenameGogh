@@ -6,6 +6,7 @@
 #include "Ui/NodeDelegate.h"
 #include "Parameter.h"
 #include "Slot.h"
+#include "Link.h"
 #include "Logger.h"
 
 #include <cassert>
@@ -200,34 +201,38 @@ QWidget *Node::createEditor(QWidget *parent)
 	return new DefaultNodeEditor(this, parent);
 }
 
+bool Node::buildRenderCommand(OutputSlot *slot, RenderCommand & cmd) const {
+	for (int i = 0; i < outputSlotCount(); ++i) {
+		if (slot == &outputSlot(i)) {
+			return buildRenderCommand(i, cmd);
+		}
+	}
+	return false;
+}
+
 bool Node::parentBuildRenderCommand(int inputIndex, RenderCommand & cmd) const
 {
-	if (!graphModel())
-	{
-		ERR_LOG << "node has no model";
-	}
-
-	if (inputIndex >= inputLinks.size())
+	if (inputIndex >= inputSlotCount())
 	{
 		ERR_LOG << "Input " << inputIndex << " does not exist";
 		return false;
 	}
 
-	const SlotIndex & origin = inputLinks[inputIndex];
-	if (!origin.isValid())
+	const Link *link = inputSlot(inputIndex).link();
+	if (!link || !link->origin())
 	{
 		ERR_LOG << "Input " << inputIndex << " is not connected, unable to render";
 		return false;
 	}
 
-	const Node *parentNode = graphModel()->node(origin.node);
+	const Node *parentNode = link->origin()->parentNode();
 	if (!parentNode)
 	{
 		ERR_LOG << "Input " << inputIndex << " is connected to an orphan slot";
 		return false;
 	}
 
-	return parentNode->buildRenderCommand(origin.slot, cmd);
+	return parentNode->buildRenderCommand(link->origin(), cmd);
 }
 
 void Node::read(QDataStream & stream)

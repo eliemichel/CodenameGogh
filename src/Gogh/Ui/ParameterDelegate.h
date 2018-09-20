@@ -10,6 +10,7 @@ class UiTextInput;
 class UiIntInput;
 class UiEnumInput;
 class UiButton;
+class UiCheckbox;
 
 /**
  * A parameter widget is a widget designed to display and edit any parameter.
@@ -92,6 +93,7 @@ private:
 		UiIntInput* spinBox;
 		UiEnumInput* comboBox;
 		UiButton* pushButton;
+		UiCheckbox* checkbox;
 	} m_input;
 };
 

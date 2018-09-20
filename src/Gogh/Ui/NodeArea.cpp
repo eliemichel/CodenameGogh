@@ -29,7 +29,8 @@ NodeArea::NodeArea(Graph *graph, UiLayout *popupLayout)
 	: m_popupLayout(popupLayout)
 	, m_graph(nullptr)
 	, m_contextMenu(nullptr)
-	, m_tree(new QuadTree(250, 300, 500, 500, 5))
+	, m_debug(false)
+	, m_tree(new QuadTree(250, 300, 1000, 1000, 5))
 	, m_pendingLink({ nullptr, nullptr })
 {
 	SetGraph(graph);

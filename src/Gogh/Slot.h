@@ -43,6 +43,8 @@ class InputSlot : public AbstractSlot {
 public:
 	InputSlot(Node *parentNode) : AbstractSlot(parentNode) {}
 
+	Link * link() const { return links().empty() ? nullptr : *links().begin(); }
+
 	void addLink(Link *link) override;
 };
 

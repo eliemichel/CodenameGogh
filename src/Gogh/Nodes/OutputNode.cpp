@@ -1,20 +1,34 @@
 #include "OutputNode.h"
-
+#include "Ui/NodeDelegate.h"
 #include "OutputNodeEditor.h"
+#include "Parameter.h"
 #include "Logger.h"
 
 OutputNode::OutputNode()
-	: m_isFilenameUserDefined(false),
-	m_sortOutputs(false),
-	m_overwrite(false)
+	: m_isFilenameUserDefined(false)
 {
-	// Add slots
-	newInputSlot();
+	appendInputSlot();
+	appendParams(4);
+
+	param(0).setName("Filename");
+	param(0).setType(StringType);
+	
+	param(1).setName("Sort streams");
+	param(1).setType(CheckboxType);
+
+	param(2).setName("Overwrite");
+	param(2).setType(CheckboxType);
+
+	param(3).setName("Render");
+	param(3).setType(ButtonType);
 }
 
-QWidget * OutputNode::createEditor(QWidget * parent)
-{
-	return new OutputNodeEditor(this, parent);
+UiElement * OutputNode::createDelegate(UiLayout *popupLayout) {
+	NodeDelegate *del = new NodeDelegate(this, popupLayout);
+	del->buttonClicked.connect(this, &OutputNode::onButtonClicked);
+	return del;
+	// TODO: port OutputNodeEditor to noqt
+	//return new OutputNodeEditor(this, parent);
 }
 
 bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
@@ -43,7 +57,7 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		return false;
 	}
 
-	if (m_sortOutputs)
+	if (param(1).evalAsBool())
 	{
 		cmd.sort_outputs();
 	}
@@ -136,7 +150,7 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	}
 
 	//Overwrite the output file
-	if (m_overwrite)
+	if (param(2).evalAsBool())
 	{
 		cmd.cmd.push_back("-y");
 	} else
@@ -145,91 +159,14 @@ bool OutputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	}
 
 	//Write the output file
-	cmd.cmd.push_back(parmEvalAsString(0).toStdString());
+	cmd.cmd.push_back(param(0).evalAsString());
 
 	return true;
 }
 
-// Data model
-
-int OutputNode::parmCount() const
+void OutputNode::inputSlotConnectEvent(SlotEvent *event)
 {
-	return 4;
-}
-
-QString OutputNode::parmName(int parm) const
-{
-	switch (parm)
-	{
-	case 0:
-		return "filename";
-	case 1:
-		return "Sort streams";
-	case 2:
-		return "Render";
-	case 3:
-		return "Overwrite";
-	default:
-		return QString();
-	}
-}
-
-ParmType OutputNode::parmType(int parm) const
-{
-	switch (parm)
-	{
-	case 0:
-		return StringType;
-	case 1:
-		return CheckboxType;
-	case 2:
-		return ButtonType;
-	case 3:
-		return CheckboxType;
-	default:
-		return NoneType;
-	}
-}
-
-QVariant OutputNode::parmRawValue(int parm) const
-{
-	switch (parm)
-	{
-	case 0:
-		return QString::fromStdString(m_filename);
-	case 1:
-		return bool(m_sortOutputs);
-	case 3:
-		return bool(m_overwrite);
-	default:
-		return QVariant();
-	}
-}
-
-bool OutputNode::setParm(int parm, QVariant value)
-{
-	switch (parm)
-	{
-	case 0:
-		m_filename = value.toString().toStdString();
-		//emit parmChanged(parm);
-		return true;
-	case 1:
-		m_sortOutputs = value.toBool();
-		//emit parmChanged(parm);
-		return true;
-	case 3:
-		m_overwrite = value.toBool();
-		//emit parmChanged(parm);
-		return true;
-	default:
-		return false;
-	}
-}
-
-void OutputNode::slotConnectEvent(SlotEvent *event)
-{
-	if (event->isInputSlot() && event->slotIndex() == 0)
+	if (event->slotIndex() == 0)
 	{
 		if (!m_isFilenameUserDefined)
 		{
@@ -247,5 +184,21 @@ void OutputNode::slotConnectEvent(SlotEvent *event)
 			}
 			setParm(0, QString().fromStdString(userPattern));
 		}
+	}
+}
+
+void OutputNode::onButtonClicked(int parm)
+{
+	switch (parm)
+	{
+	case 3:
+	{
+		RenderCommand cmd;
+		if (buildRenderCommand(-1, cmd))
+		{
+			DEBUG_LOG << cmd.cmd;
+		}
+		break;
+	}
 	}
 }

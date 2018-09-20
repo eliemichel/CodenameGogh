@@ -250,6 +250,7 @@ public:
 	 * in each node and is called when building the render command.
 	 */
 	virtual bool buildRenderCommand(int outputIndex, RenderCommand & cmd) const { return true; }
+	bool buildRenderCommand(OutputSlot *slot, RenderCommand & cmd) const;
 
 	/**
 	 * Convenience function calling buildRenderCommand() on the source output slot

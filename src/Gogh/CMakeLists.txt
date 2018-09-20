@@ -107,6 +107,8 @@ set(SRC
 	Ui/UiEnumInput.cpp
 	Ui/UiButton.h
 	Ui/UiButton.cpp
+	Ui/UiCheckbox.h
+	Ui/UiCheckbox.cpp
 	Ui/UiMenu.h
 	Ui/UiContextMenu.h
 	Ui/UiContextMenu.cpp
