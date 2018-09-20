@@ -97,3 +97,43 @@ void Parameter::removeMenuItems(int first, int last)
 	aboutToRemoveMenuItems.fire(first, last);
 	m_menu.erase(m_menu.begin() + first, m_menu.begin() + last + 1);
 }
+
+std::string Parameter::evalAsString() const {
+	std::string value;
+	switch (type())
+	{
+	case EnumType:
+	{
+		int menu = rawValue().toInt();
+		value = menuValue(menu).toString();
+		break;
+	}
+	default:
+		value = rawValue().toString();
+	}
+
+	// TODO: Environment variables
+	/*
+	if (EnvModel *env = envModel()) {
+		for (auto it = env->env().cbegin(); it != env->env().cend(); ++it)
+		{
+			value = value.replace(QString::fromStdString("$" + it->first), QString::fromStdString(it->second));
+		}
+	}
+	*/
+	return value;
+}
+
+int Parameter::evalAsInt() const {
+	switch (type())
+	{
+	case EnumType:
+	{
+		int menu = rawValue().toInt();
+		return menuValue(menu).toInt();
+		break;
+	}
+	default:
+		return rawValue().toInt();
+	}
+}

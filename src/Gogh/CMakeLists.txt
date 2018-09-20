@@ -35,6 +35,8 @@ set(SRC
 	NodeType.cpp
 	Parameter.h
 	Parameter.cpp
+	RenderCommand.h
+	RenderCommand.cpp
 
 	DefaultNodeEditor.h
 	DefaultNodeEditor.cpp

@@ -99,9 +99,8 @@ public:
 
 	// // Evaluators // //
 
-	// TODO:
-	//QString evalAsString(int parm) const;
-	//int evalAsInt(int parm) const;
+	std::string evalAsString() const;
+	int evalAsInt() const;
 
 public: // signals
 	/// emitted when the raw value of the parameter changed

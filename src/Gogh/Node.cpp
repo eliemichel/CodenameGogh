@@ -397,3 +397,37 @@ std::set<Connection> Node::outputConnection(int outputSlotIndex)
 		return std::set<Connection>();
 	}
 }
+
+std::string Node::streamTypeAsString(StreamType stream) const
+{
+	switch (stream)
+	{
+	case VideoStream:
+		return "VideoStream";
+	case AudioStream:
+		return "AudioStream";
+	case SubtitleStream:
+		return "SubtitleStream";
+	case DataStream:
+		return "DataStream";
+	default:
+	return "No Stream";
+	}
+}
+
+char Node::streamTypeAsChar(StreamType stream) const
+{
+	switch (stream)
+	{
+	case VideoStream:
+		return 'v';
+	case AudioStream:
+		return 'a';
+	case SubtitleStream:
+		return 's';
+	case DataStream:
+		return 'd';
+	default:
+		return '-';
+	}
+}

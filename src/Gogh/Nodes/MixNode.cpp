@@ -12,8 +12,6 @@ MixNode::MixNode()
 	m_streams.push_back("");
 	newInputSlot();
 	m_streams.push_back("");
-	newInputSlot();
-	m_streams.push_back("");
 
 	newOutputSlot();
 }
@@ -24,127 +22,45 @@ bool MixNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		return false;
 	}
 
+	//Save parent stream name
+	std::string parentName;
+	if (cmd.outputs.size() > 0)
+	{
+		parentName = cmd.os.name;
+	}
+
 	if (!parentBuildRenderCommand(0, cmd))
 	{
 		return false;
 	}
 
-	// Clear cmd.cmd
-	cmd.cmd.clear();
-
-	// Map inputs
-	stringlist inputFiles;
-	std::vector<char> parmStreams;
-	std::vector<stringlist> parmCommands;
-	int currentFileID = 0;
-	std::map<std::string, std::vector<int>> fileMaps;
-
+	// Map data for every inputSlot
 	for (int i = 0; i < parmCount(); i++)
 	{
-		RenderCommand cmx;
-		parentBuildRenderCommand(i, cmx);
-
-		//Get every input file and if it already exists, get the ID
-		bool isNewFile = true;
-		for (int j = 0; j <= inputFiles.size(); j++)
+		// Get output stream name
+		if (parentName == "")
 		{
-			if (inputFiles.size() > 0 && cmx.cmd[1] == inputFiles[j])
-			{
-				isNewFile = false;
-				currentFileID = j;
-				break;
-			}
-		}
-		if (isNewFile)
+			cmd.os.name = parmEvalAsString(i).toStdString();
+		} else
 		{
-			inputFiles.push_back(cmx.cmd[1]);
-			currentFileID = i;
+			cmd.os.name = parentName + parmEvalAsString(i).toStdString();
 		}
 
-		//For each input file, every used output stream is stored
-		fileMaps[cmx.cmd[1]].push_back(cmx.map);
+		//Save outputs count for output creation test: if outputsCount != outputs.size(),
+		//then this inputSlot is chained to a MixNode, don't create output for this one.
+		int outputsCount = static_cast<int>(cmd.outputs.size());
 
-		//Get every stream of each input parm
-		parmStreams.push_back(cmx.stream);
+		// Clear settings
+		cmd.os.settings.clear();
 
-		// Keep built command without "-i filename"
-		stringlist currentCommand;
-		for (int c = 2; c < cmx.cmd.size(); c++)
+		// Get informations from intputSlot
+		if (parentBuildRenderCommand(i, cmd) && outputsCount == cmd.outputs.size())
 		{
-			currentCommand.push_back(cmx.cmd[c]);
+			int id = static_cast<int>(cmd.outputs.size());
+			// Creates one output stream with the current stream
+			cmd.outputs[id] = cmd.os;
 		}
-		parmCommands.push_back(currentCommand);
 	}
-
-	//Build RenderCommand
-	//Input files
-	for (int j = 0; j < inputFiles.size(); j++)
-	{
-		cmd.cmd.push_back("-i");
-		cmd.cmd.push_back(inputFiles[j]);
-	}
-
-	//Files' streams mapping
-	currentFileID = 0;
-	for (auto const& m : fileMaps)
-	{
-		for (int i = 0; i < fileMaps[m.first].size(); i++)
-		{
-			//Mapping
-			cmd.cmd.push_back("-map");
-			std::ostringstream ss;
-			ss << currentFileID << ":" << fileMaps[m.first][i];
-			cmd.cmd.push_back(ss.str());
-		}
-		currentFileID++;
-	}
-
-	//Correct RenderCommand parameters depending on the mapping
-	int videoStreamN = 0;
-	int audioStreamN = 0;
-	int subtitleStreamN = 0;
-	int dataStreamN = 0;
-
-	for (int i = 0; i < parmCount(); i++)
-	{
-		//Get the counter for the current stream
-		int* currentStreamN = &videoStreamN;
-		switch (parmStreams[i]) {
-			case 'v':
-				currentStreamN = &videoStreamN;
-				break;
-			case 'a':
-				currentStreamN = &audioStreamN;
-				break;
-			case 's':
-				currentStreamN = &subtitleStreamN;
-				break;
-			case 'd':
-				currentStreamN = &dataStreamN;
-				break;
-		}
-		//Correct name based on mapping
-		for (auto& pc : parmCommands[i])
-		{
-			if (pc == "-c:v" || pc == "-c:b")
-			{
-				pc = pc + ":" + std::to_string(*currentStreamN);
-			}
-		}
-		//Streams Naming
-		std::ostringstream ss;
-		ss << "-metadata:s:" << parmStreams[i] << ":" << *currentStreamN;
-		cmd.cmd.push_back(ss.str());
-		ss.str(std::string());
-		ss << "title=\"" << parmEvalAsString(i).toStdString() << "\"";
-		cmd.cmd.push_back(ss.str());
-
-		*currentStreamN += 1;
-
-		//Final build of RenderCommand
-		cmd.cmd.insert(std::end(cmd.cmd), std::begin(parmCommands[i]), std::end(parmCommands[i]));
-	}
-
 	return true;
 }
 
@@ -226,9 +142,8 @@ void MixNode::write(QDataStream & stream) const
 
 void MixNode::slotConnectEvent(SlotEvent *event)
 {
-	if (event->isInputSlot() && event->slotIndex() == 0)
+	if (event->isInputSlot() && event->slotIndex() == 0 && parmCount() >= 2)
 	{
-		return;
 		newInputSlot();
 		m_streams.push_back("");
 		//emit parmChanged(parmCount() - 1);

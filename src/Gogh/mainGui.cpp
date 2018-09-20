@@ -18,6 +18,8 @@
 #include "Ui/UiContextMenu.h"
 #include "Variant.h"
 
+#include "Nodes/ScaleNode.h"
+
 #include <GLFW/glfw3.h>
 #include <nanovg.h>
 
@@ -63,6 +65,9 @@ int mainGui(const ArgParse & args)
 		param.set(38);
 		graph->addNode(node);
 	}
+
+	ScaleNode *scaleNode = new ScaleNode();
+	graph->addNode(scaleNode);
 
 	UiApp app;
 	UiWindow window(1200, 600, "Gogh");

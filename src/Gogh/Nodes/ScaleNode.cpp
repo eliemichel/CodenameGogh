@@ -1,15 +1,23 @@
 #include "ScaleNode.h"
-
+#include "Parameter.h"
 #include "Logger.h"
 
 #include <sstream>
 
-ScaleNode::ScaleNode()
-	: m_width(1920)
-	, m_height(1080)
-{
-	newInputSlot();
-	newOutputSlot();
+ScaleNode::ScaleNode() {
+	appendInputSlot();
+	appendOutputSlot();
+	appendParams(2);
+
+	Parameter & widthParam = param(0);
+	widthParam.setName("width");
+	widthParam.setType(IntType);
+	widthParam.set(1920);
+
+	Parameter & heightParam = param(1);
+	heightParam.setName("height");
+	heightParam.setType(IntType);
+	heightParam.set(1080);
 }
 
 bool ScaleNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
@@ -25,77 +33,14 @@ bool ScaleNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 
 	//Output smart-renaming
 	std::ostringstream ss;
-	ss << parmEvalAsInt(0) << "x" << parmEvalAsInt(1);
+	ss << param(0).evalAsInt() << "x" << param(1).evalAsInt();
 	cmd.env["scale"] = ss.str();
 
 	//RenderCommand
-	cmd.cmd.push_back("-vf");
+	cmd.os.settings.push_back("-vf");
 	std::ostringstream().swap(ss);
-	ss << "scale=" << parmEvalAsInt(0) << ":" << parmEvalAsInt(1);
-	cmd.cmd.push_back(ss.str());
+	ss << "scale=" << param(0).evalAsInt() << ":" << param(1).evalAsInt();
+	cmd.os.settings.push_back(ss.str());
 
 	return true;
-}
-
-// Data model
-
-int ScaleNode::parmCount() const
-{
-	return 2;
-}
-
-QString ScaleNode::parmName(int parm) const
-{
-	switch (parm)
-	{
-	case 0:
-		return "width";
-	case 1:
-		return "height";
-	default:
-		return QString();
-	}
-}
-
-ParmType ScaleNode::parmType(int parm) const
-{
-	switch (parm)
-	{
-	case 0:
-		return IntType;
-	case 1:
-		return IntType;
-	default:
-		return NoneType;
-	}
-}
-
-QVariant ScaleNode::parmRawValue(int parm) const
-{
-	switch (parm)
-	{
-	case 0:
-		return m_width;
-	case 1:
-		return m_height;
-	default:
-		return QVariant();
-	}
-}
-
-bool ScaleNode::setParm(int parm, QVariant value)
-{
-	switch (parm)
-	{
-	case 0:
-		m_width = value.toInt();
-		//emit parmChanged(parm);
-		return true;
-	case 1:
-		m_height = value.toInt();
-		//emit parmChanged(parm);
-		return true;
-	default:
-		return false;
-	}
 }

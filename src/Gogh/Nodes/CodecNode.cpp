@@ -26,9 +26,17 @@ bool CodecNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	cmd.env["codec"] = parmEvalAsString(0).toStdString();
 
 	//RenderCommand
-	cmd.cmd.push_back("-c:v");
-	cmd.cmd.push_back(parmEvalAsString(0).toStdString());
-	
+	std::ostringstream ss;
+	ss << "-c:" << streamTypeAsChar(cmd.os.stream);
+	cmd.os.settings.push_back(ss.str());
+	cmd.os.settings.push_back(parmEvalAsString(0).toStdString());
+
+	if (parmEvalAsBool(1))
+	{
+		cmd.os.settings.push_back("-movflags");
+		cmd.os.settings.push_back("faststart");
+	}
+
 	return true;
 }
 
@@ -36,7 +44,7 @@ bool CodecNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 
 int CodecNode::parmCount() const
 {
-	return 1;
+	return 2;
 }
 
 QString CodecNode::parmName(int parm) const
@@ -45,6 +53,8 @@ QString CodecNode::parmName(int parm) const
 	{
 	case 0:
 		return "codec";
+	case 1:
+		return "Web Optimized";
 	default:
 		return QString();
 	}
@@ -56,6 +66,8 @@ ParmType CodecNode::parmType(int parm) const
 	{
 	case 0:
 		return EnumType;
+	case 1:
+		return CheckboxType;
 	default:
 		return NoneType;
 	}
@@ -67,6 +79,8 @@ QVariant CodecNode::parmRawValue(int parm) const
 	{
 	case 0:
 		return m_codec;
+	case 1:
+		return bool(m_weboptimized);
 	default:
 		return QVariant();
 	}
@@ -115,6 +129,10 @@ bool CodecNode::setParm(int parm, QVariant value)
 	{
 	case 0:
 		m_codec = value.toInt();
+		//emit parmChanged(parm);
+		return true;
+	case 1:
+		m_weboptimized = value.toBool();
 		//emit parmChanged(parm);
 		return true;
 	default:

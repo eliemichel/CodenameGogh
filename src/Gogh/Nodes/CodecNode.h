@@ -25,6 +25,7 @@ public:
 
 private:
 	int m_codec;
+	bool m_weboptimized;
 };
 
 #endif // H_CODECNODE

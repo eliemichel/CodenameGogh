@@ -31,3 +31,14 @@ std::string toString(stringlist sl)
   }
   return s;
 }
+
+// Overloaders
+std::ostream& operator<<(std::ostream& stream, const stringlist& sl)
+{
+  std::string s = " ";
+  for (int i = 0; i  < sl.size(); i++)
+  {
+    stream << s << sl[i];
+  }
+  return stream;
+}

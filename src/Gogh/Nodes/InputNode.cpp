@@ -50,7 +50,7 @@ bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	if(isImageSequence)
 	{
 		const char *splitedName = firstImageName.c_str();
-		for (int i = firstImageName.length()-1; i >= 0; i--)
+		for (int i = static_cast<int>(firstImageName.length())-1; i >= 0; i--)
 		{
 			if(isdigit(splitedName[i]))
 			{
@@ -74,6 +74,20 @@ bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		delete[] splitedName;
 	}
 
+	//Register the source
+	bool isNewSource = true;
+	for (int i = 0; i < cmd.sources.size(); i++)
+	 {
+		 if (filename.toStdString() == cmd.sources[i])
+		 {
+			 isNewSource = false;
+		 }
+	 }
+	 if (isNewSource)
+	 {
+		 cmd.sources.push_back(filename.toStdString());
+	 }
+
 	//Output smart-renaming
 	cmd.env["path"] = fileinfo.absolutePath().toStdString() + "/";
 	cmd.env["filename"] = fileinfo.baseName().toStdString();
@@ -82,12 +96,8 @@ bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	//TODO: Set default keys from ffprobe file properties, like "codec" or "scale"
 
 	//MixNode mapping
-	cmd.map = outputIndex;
-	cmd.stream = m_probeProcess.streamsAsChar(outputIndex);
-
-	//RenderCommand
-	cmd.cmd.push_back("-i");
-	cmd.cmd.push_back(filename.toStdString());
+	cmd.os.input = std::make_pair(filename.toStdString(), outputIndex);
+	cmd.os.stream = m_probeProcess.streams()[outputIndex];
 
 	return true;
 }

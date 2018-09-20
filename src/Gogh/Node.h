@@ -3,6 +3,8 @@
 
 #include "SlotIndex.h"
 #include "ParameterType.h"
+#include "RenderCommand.h"
+#include "Signal.h"
 
 #include <QObject>
 #include <QString>
@@ -12,10 +14,6 @@
 #include <set>
 #include <vector>
 #include <string>
-#include <utils/stringlist.h>
-#include <utils/strutils.h>
-
-#include "Signal.h"
 
 class EnvModel;
 class NodeGraphModel;
@@ -26,28 +24,6 @@ class UiLayout;
 class Parameter;
 class InputSlot;
 class OutputSlot;
-
-/**
- * This structure is transmitted among the graph nodes while building the
- * render command. Feel free to add any field required to properly build
- * the command.
- */
-struct RenderCommand {
-	// raw command being built
-	std::vector<std::string> cmd;
-
-	// OutputNode's smart renaming : keys (like : "codec", "scale") associated to current nodes values (like : "h264", "1920x1080")
-	std::map<std::string, std::string> env;
-
-	// Map informations for MixNode :
-	int map;
-
-	// StreamType
-	char stream;
-
-	// error message that may be filled when returning false in buildRenderCommand
-	std::string err;
-};
 
 class Node : public QObject
 {
@@ -165,6 +141,29 @@ public:
 	*/
 	void removeOutputSlots(int first, int last);
 
+	// Extra utility inserters
+
+	/**
+	 * Insert new parameters at the end.
+	 * This is a short for insertParams(paramCount(), paramCount() + n - 1).
+	 */
+	void appendParams(int n) { insertParams(paramCount(), paramCount() + n - 1); }
+	void appendParam() { appendParams(1); }
+
+	/**
+	 * Insert new input slots at the end.
+	 * This is a short for insertInputSlots(inputSlotCount(), inputSlotCount() + n - 1).
+	 */
+	void appendInputSlots(int n) { insertInputSlots(inputSlotCount(), inputSlotCount() + n - 1); }
+	void appendInputSlot() { appendInputSlots(1); }
+
+	/**
+	 * Insert new output slots at the end.
+	 * This is a short for insertOutputSlots(outputSlotCount(), outputSlotCount() + n - 1).
+	 */
+	void appendOutputSlots(int n) { insertOutputSlots(outputSlotCount(), outputSlotCount() + n - 1); }
+	void appendOutputSlot() { appendOutputSlots(1); }
+
 
 public:
 	/**
@@ -269,6 +268,10 @@ public:
 	 */
 	void fireSlotConnectEvent(int slotIndex, bool isInput);
 	void fireSlotDisconnectEvent(int slotIndex, bool isInput);
+
+	//Return the StreamType in another type
+	std::string streamTypeAsString(StreamType stream) const;
+	char streamTypeAsChar(StreamType stream) const;
 
 protected:
 	virtual void slotConnectEvent(SlotEvent *event) {}
