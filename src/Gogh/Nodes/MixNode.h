@@ -8,28 +8,14 @@
 
 class MixNode : public Node
 {
-	Q_OBJECT
-
 public:
 	MixNode();
 
 public:
 	bool buildRenderCommand(int outputIndex, RenderCommand & cmd) const override;
 
-	int parmCount() const override;
-	QString parmName(int parm) const override;
-	ParmType parmType(int parm) const;
-	QVariant parmRawValue(int parm) const override;
-	bool setParm(int parm, QVariant value) override;
-
-	void read(QDataStream & stream) override;
-	void write(QDataStream & stream) const override;
-
 protected:
-	void slotConnectEvent(SlotEvent *event) override;
-
-private:
-	std::vector<std::string> m_streams;
+	void inputSlotConnectEvent(SlotEvent *event) override;
 };
 
 #endif // H_MIXNODE

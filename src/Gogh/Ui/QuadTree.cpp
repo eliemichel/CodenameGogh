@@ -138,7 +138,9 @@ void QuadTree::RemoveItems(const std::vector<Accessor> & accessors, bool notify)
 
 	if (notify) {
 		for (Accessor acc : accessors) {
-			acc.item->OnRemove(this);
+			if (acc.isValid) {
+				acc.item->OnRemove(this);
+			}
 		}
 	}
 }

@@ -2,6 +2,7 @@
 #define H_SLOT
 
 #include <set>
+#include "Signal.h"
 
 class Node;
 class InputSlot;
@@ -25,6 +26,9 @@ public:
 	void removeLink(Link *link);
 	/// Delete the link object and remove them
 	void deleteLinks();
+
+public: // signals
+	Signal<> linkAdded;
 
 protected:
 	std::set<Link*> & links() { return m_links; }

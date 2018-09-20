@@ -45,7 +45,12 @@ public:
 		}
 	}
 
-	void AddChild(AbstractNodeAreaItem *child) { m_children.push_back(child); }
+	void AddChild(AbstractNodeAreaItem *child) {
+		m_children.push_back(child);
+		if (Tree()) {
+			Tree()->Insert(child);
+		}
+	}
 	const std::vector<AbstractNodeAreaItem*> & Children() const { return m_children; }
 
 	virtual void Paint(NVGcontext *vg) const {

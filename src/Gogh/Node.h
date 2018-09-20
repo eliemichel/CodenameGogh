@@ -277,6 +277,21 @@ protected:
 	virtual void slotConnectEvent(SlotEvent *event) {}
 	virtual void slotDisconnectEvent(SlotEvent *event) {}
 
+	/// event fired after connecting a link to an input slot
+	virtual void inputSlotConnectEvent(SlotEvent *event) {}
+	/// event fired after disconnecting a link from an input slot
+	virtual void inputSlotDisconnectEvent(SlotEvent *event) {}
+	/// event fired after connecting a link to an output slot
+	virtual void outputSlotConnectEvent(SlotEvent *event) {}
+	/// event fired after disconnecting a link from an output slot
+	virtual void outputSlotDisconnectEvent(SlotEvent *event) {}
+
+private:
+	void fireInputSlotConnectEvent(InputSlot *slot);
+	void fireOutputSlotConnectEvent(OutputSlot *slot);
+
+	// TODO: fire inputSlotDisconnectEvent and outputSlotDisconnectEvent
+
 private:
 	// TODO change Parameter* to Parameter when it will no longer be a qt object
 	std::vector<Parameter*> m_params;

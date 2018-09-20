@@ -1,6 +1,7 @@
 #include "NodeItem.h"
 #include "SlotItem.h"
 #include "Node.h"
+#include "Logger.h"
 
 NodeItem::NodeItem(::Node *node, QuadTree *tree, UiLayout *popupLayout)
 	: AbstractNodeAreaItem({ 0, 0, 200, 100 }, NodeItemType)
@@ -69,8 +70,9 @@ void NodeItem::OnNodeDestroyed() {
 
 void NodeItem::OnInsertedInputSlots(int first, int last) {
 	for (int i = first; i <= last; ++i) {
+		Rect & rect = BBox();
 		InputSlot & slot = Node()->inputSlot(i);
-		InputSlotItem *slotItem = new InputSlotItem(&slot, { -8, 20 + 30 * i, 16, 16 });
+		InputSlotItem *slotItem = new InputSlotItem(&slot, { rect.x - 8, rect.y + 20 + 30 * i, 16, 16 });
 		AddChild(slotItem);
 		m_inputSlotItems.push_back(slotItem);
 	}
@@ -99,8 +101,9 @@ void NodeItem::WhenAboutToRemoveInputSlots(int first, int last) {
 
 void NodeItem::OnInsertedOutputSlots(int first, int last) {
 	for (int i = first; i <= last; ++i) {
+		Rect & rect = BBox();
 		OutputSlot & slot = Node()->outputSlot(i);
-		OutputSlotItem *slotItem = new OutputSlotItem(&slot, { 192, 20 + 30 * i, 16, 16 });
+		OutputSlotItem *slotItem = new OutputSlotItem(&slot, { rect.x + 192, rect.y + 20 + 30 * i, 16, 16 });
 		AddChild(slotItem);
 		m_outputSlotItems.push_back(slotItem);
 	}

@@ -16,9 +16,14 @@ LinkItem::LinkItem(OutputSlotItem *originItem, InputSlotItem *destinationItem, :
 	}
 
 	link->destroyed.connect(this, &LinkItem::OnLinkDestroyed);
-	originItem->moved.connect(this, &LinkItem::UpdateRect);
-	destinationItem->moved.connect(this, &LinkItem::UpdateRect);
+	m_originMovedConnection = originItem->moved.connect(this, &LinkItem::UpdateRect);
+	m_destinationMovedConnection = destinationItem->moved.connect(this, &LinkItem::UpdateRect);
 	UpdateRect();
+}
+
+LinkItem::~LinkItem() {
+	m_originItem->moved.disconnect(m_originMovedConnection);
+	m_destinationItem->moved.disconnect(m_destinationMovedConnection);
 }
 
 void LinkItem::Paint(NVGcontext *vg) const {
@@ -42,6 +47,10 @@ void LinkItem::Paint(NVGcontext *vg) const {
 }
 
 void LinkItem::UpdateRect() {
+	if (!m_link) {
+		return;
+	}
+
 	const ::Rect & o = m_originItem->BBox();
 	const ::Rect & d = m_destinationItem->BBox();
 

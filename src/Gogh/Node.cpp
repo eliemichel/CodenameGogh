@@ -134,7 +134,9 @@ void Node::insertInputSlots(int first, int last)
 
 	m_inputSlots.insert(m_inputSlots.begin() + first, last - first + 1, nullptr);
 	for (auto it = m_inputSlots.begin() + first; it != m_inputSlots.begin() + last + 1; ++it) {
-		*it = new InputSlot(this);
+		InputSlot *slot = new InputSlot(this);
+		slot->linkAdded.connect([this, slot]() { fireInputSlotConnectEvent(slot); });
+		*it = slot;
 	}
 	insertedInputSlots.fire(first, last);
 }
@@ -164,7 +166,9 @@ void Node::insertOutputSlots(int first, int last)
 
 	m_outputSlots.insert(m_outputSlots.begin() + first, last - first + 1, nullptr);
 	for (auto it = m_outputSlots.begin() + first; it != m_outputSlots.begin() + last + 1; ++it) {
-		*it = new OutputSlot(this);
+		OutputSlot *slot = new OutputSlot(this);
+		slot->linkAdded.connect([this, slot]() { fireOutputSlotConnectEvent(slot); });
+		*it = slot;
 	}
 	insertedOutputSlots.fire(first, last);
 }
@@ -430,4 +434,28 @@ char Node::streamTypeAsChar(StreamType stream) const
 	default:
 		return '-';
 	}
+}
+
+void Node::fireInputSlotConnectEvent(InputSlot *slot) {
+	// TODO: not cool to loop over all inputs, but it's ok for now
+	int slotIndex;
+	for (int i = 0; i < inputSlotCount(); ++i) {
+		if (slot == &inputSlot(i)) {
+			slotIndex = i;
+		}
+	}
+	SlotEvent event(slotIndex, true /* isInput */);
+	inputSlotConnectEvent(&event);
+}
+
+void Node::fireOutputSlotConnectEvent(OutputSlot *slot) {
+	// TODO: not cool to loop over all inputs, but it's ok for now
+	int slotIndex;
+	for (int i = 0; i < outputSlotCount(); ++i) {
+		if (slot == &outputSlot(i)) {
+			slotIndex = i;
+		}
+	}
+	SlotEvent event(slotIndex, false /* isInput */);
+	outputSlotConnectEvent(&event);
 }

@@ -10,6 +10,7 @@ AbstractSlot::~AbstractSlot() {
 
 void AbstractSlot::addLink(Link *link) {
 	m_links.insert(link);
+	linkAdded.fire();
 }
 
 void AbstractSlot::removeLink(Link *link) {
