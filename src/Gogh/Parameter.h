@@ -92,15 +92,23 @@ public:
 	void insertMenuItems(int first, int last);
 
 	/**
-	* Remove menu items from <first> to <last> included.
-	* The emits the signal aboutToRemoveMenuItems before changing the underlying data
-	*/
+	 * Remove menu items from <first> to <last> included.
+	 * The emits the signal aboutToRemoveMenuItems before changing the underlying data
+	 */
 	void removeMenuItems(int first, int last);
+
+	/**
+	 * Insert new menu items at the end.
+	 * This is a short for insertMenuItems(menuCount(), menuCount() + n - 1).
+	 */
+	void appendMenuItems(int n) { insertMenuItems(menuCount(), menuCount() + n - 1); }
+	void appendMenuItem() { appendMenuItems(1); }
 
 	// // Evaluators // //
 
 	std::string evalAsString() const;
 	int evalAsInt() const;
+	int evalAsBool() const;
 
 public: // signals
 	/// emitted when the raw value of the parameter changed

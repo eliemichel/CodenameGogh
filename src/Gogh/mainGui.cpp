@@ -19,6 +19,7 @@
 #include "Variant.h"
 
 #include "Nodes/ScaleNode.h"
+#include "Nodes/CodecNode.h"
 
 #include <GLFW/glfw3.h>
 #include <nanovg.h>
@@ -31,43 +32,14 @@ int mainGui(const ArgParse & args)
 	Parameter *pParam;
 	Node *pNode;
 	Graph *graph = new Graph();
-	{
-		Node *node = new Node();
-		node->insertInputSlots(0, 1);
-		node->insertOutputSlots(0, 2);
-		node->insertParams(0, 1);
-		Parameter & param = node->param(0);
-		param.setType(EnumType);
-		param.setName("Enum");
-		param.insertMenuItems(0, 2);
-		param.setMenuLabel(0, "Choice A");
-		param.setMenuLabel(1, "Choice B");
-		param.setMenuLabel(2, "Choice C");
-		param.set(1);
-		Parameter & param2 = node->param(1);
-		param2.setType(StringType);
-		param2.setName("Yo");
-		param2.set("bloum");
-		pParam = &param2;
-		graph->addNode(node);
-
-		pNode = node;
-	}
-
-	{
-		Node *node = new Node();
-		node->insertInputSlots(0, 2);
-		node->insertOutputSlots(0, 1);
-		node->insertParams(0, 0);
-		Parameter & param = node->param(0);
-		param.setType(IntType);
-		param.setName("Coucou");
-		param.set(38);
-		graph->addNode(node);
-	}
-
+	
 	ScaleNode *scaleNode = new ScaleNode();
 	graph->addNode(scaleNode);
+
+	graph->addNode(new CodecNode());
+
+	pNode = scaleNode;
+	pParam = &scaleNode->param(0);
 
 	UiApp app;
 	UiWindow window(1200, 600, "Gogh");

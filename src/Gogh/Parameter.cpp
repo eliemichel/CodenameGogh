@@ -137,3 +137,17 @@ int Parameter::evalAsInt() const {
 		return rawValue().toInt();
 	}
 }
+
+int Parameter::evalAsBool() const {
+	switch (type())
+	{
+	case EnumType:
+	{
+		int menu = rawValue().toBool();
+		return menuValue(menu).toBool();
+		break;
+	}
+	default:
+		return rawValue().toBool();
+	}
+}

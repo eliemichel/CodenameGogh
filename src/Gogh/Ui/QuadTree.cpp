@@ -144,6 +144,10 @@ void QuadTree::RemoveItems(const std::vector<Accessor> & accessors, bool notify)
 }
 
 QuadTree::Accessor QuadTree::UpdateItemBBox(const Accessor & acc, Rect bbox) {
+	if (!acc.isValid) {
+		return acc;
+	}
+
 	Accessor newAcc = acc;
 	newAcc.isValid = false;
 
@@ -153,6 +157,7 @@ QuadTree::Accessor QuadTree::UpdateItemBBox(const Accessor & acc, Rect bbox) {
 		newAcc.path.pop_back();
 
 		if (!IsLeaf()) {
+			newAcc.isValid = true;
 			newAcc = m_branches[branchIndex]->UpdateItemBBox(newAcc, bbox);
 			if (newAcc.isValid) {
 				newAcc.path.push_back(branchIndex);
