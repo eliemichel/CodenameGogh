@@ -27,10 +27,10 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="2.8284271"
-     inkscape:cx="350.67557"
-     inkscape:cy="483.46225"
+     inkscape:cx="389.38967"
+     inkscape:cy="480.28027"
      inkscape:document-units="mm"
-     inkscape:current-layer="layer2"
+     inkscape:current-layer="layer3"
      showgrid="true"
      units="px"
      inkscape:window-width="1280"
@@ -80,13 +80,13 @@
     <image
        sodipodi:absref="C:\Users\fdavid2\Documents\FelixDavid\GIT\Gogh\doc\Mockup\WindowRef.png"
        xlink:href="WindowRef.png"
-       width="253.73541"
-       height="167.21666"
-       preserveAspectRatio="none"
-       id="image4541"
-       x="10.84792"
+       style="display:inline"
        y="59.266666"
-       style="display:inline" />
+       x="10.84792"
+       id="image4541"
+       preserveAspectRatio="none"
+       height="167.21666"
+       width="253.73541" />
   </g>
   <g
      inkscape:label="Node"
@@ -184,7 +184,7 @@
          sodipodi:role="line" /></text>
     <g
        id="g881"
-       transform="translate(2.8849399)">
+       transform="translate(2.3574025)">
       <rect
          style="display:inline;fill:#e3dfd5;fill-opacity:1;stroke:#3d3d3d;stroke-width:0.26458332;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
          id="rect4788-5"
