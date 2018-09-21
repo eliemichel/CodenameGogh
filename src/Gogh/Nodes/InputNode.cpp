@@ -2,8 +2,7 @@
 #include "Ui/NodeDelegate.h"
 #include "Logger.h"
 #include "Parameter.h"
-
-#include <QFileInfo>
+#include "utils/fileutils.h"
 
 #include <sstream>
 
@@ -40,12 +39,11 @@ bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 		return false;
 	}*/
 
-	QString filename = QString::fromStdString(param(0).evalAsString());
-	QFileInfo fileinfo(filename);
-	if (!fileinfo.isFile())
+	std::string filename = param(0).evalAsString();
+	if (!isFile(filename))
 	{
 		std::ostringstream ss;
-		ss << "Input file does not exist: " << filename.toStdString();
+		ss << "Input file does not exist: " << filename;
 		cmd.err = ss.str();
 		return false;
 	}
@@ -87,25 +85,25 @@ bool InputNode::buildRenderCommand(int outputIndex, RenderCommand & cmd) const
 	bool isNewSource = true;
 	for (int i = 0; i < cmd.sources.size(); i++)
 	 {
-		 if (filename.toStdString() == cmd.sources[i])
+		 if (filename == cmd.sources[i])
 		 {
 			 isNewSource = false;
 		 }
 	 }
 	 if (isNewSource)
 	 {
-		 cmd.sources.push_back(filename.toStdString());
+		 cmd.sources.push_back(filename);
 	 }
 
 	//Output smart-renaming
-	cmd.env["path"] = fileinfo.absolutePath().toStdString() + "/";
-	cmd.env["filename"] = fileinfo.baseName().toStdString();
-	cmd.env["ext"] = fileinfo.suffix().toStdString();
-	cmd.env["input"] = filename.toStdString();
+	cmd.env["path"] = baseDir(filename) + "/"; // TODO: make absolute
+	cmd.env["filename"] = shortFileName(filename);
+	cmd.env["ext"] = "TODO";
+	cmd.env["input"] = filename;
 	//TODO: Set default keys from ffprobe file properties, like "codec" or "scale"
 
 	//MixNode mapping
-	cmd.os.input = std::make_pair(filename.toStdString(), outputIndex);
+	cmd.os.input = std::make_pair(filename, outputIndex);
 	if (m_probeProcess.streams().size() > outputIndex) {
 		cmd.os.stream = m_probeProcess.streams()[outputIndex];
 	}

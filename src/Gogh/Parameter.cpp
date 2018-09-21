@@ -1,9 +1,8 @@
 #include "Parameter.h"
 #include "Logger.h"
 
-Parameter::Parameter(QObject *parent)
-	: QObject(parent)
-	, m_type(NoneType)
+Parameter::Parameter()
+	: m_type(NoneType)
 {}
 
 Parameter::~Parameter() {

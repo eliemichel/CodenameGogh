@@ -1,22 +1,21 @@
 #ifndef H_PARAMETER
 #define H_PARAMETER
 
-#include <QObject>
-#include <vector>
-#include <string>
+#include "ParameterType.h"
 #include "Variant.h"
 #include "Signal.h"
-#include "ParameterType.h"
+
+#include <vector>
+#include <string>
+
 
 /**
  * A parameter is a user editable property of a node. They represent properties
  * that are specific to a given node, and not generic properties like node
  * position or name. The latter are rather provided node attributes @see Node.
  */
-class Parameter : public QObject
+class Parameter
 {
-	Q_OBJECT
-
 private:
 	struct MenuItem
 	{
@@ -25,7 +24,7 @@ private:
 	};
 
 public:
-	Parameter(QObject *parent = nullptr);
+	Parameter();
 	~Parameter();
 	
 	// // Getters // //

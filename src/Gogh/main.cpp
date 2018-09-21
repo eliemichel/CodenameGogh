@@ -27,7 +27,6 @@ int main(int argc, char *argv[])
 
 #include "Logger.h"
 #include "Graph.h"
-#include "EnvModel.h"
 #include "Node.h"
 #include "NodeType.h"
 #include "Nodes/OutputNode.h"
@@ -36,11 +35,13 @@ int main(int argc, char *argv[])
 int mainCmd(const ArgParse & args)
 {
 	// Import command line env
+	/*
 	EnvModel envModel;
 	for (auto it = args.env.cbegin(); it != args.env.cend(); ++it)
 	{
 		envModel.at(it->first) = it->second;
 	}
+	*/
 
 	QString filename = args.isGraphFilenameProvided ? QString::fromStdString(args.graphFilename) : QString();
 

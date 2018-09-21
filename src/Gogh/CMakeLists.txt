@@ -38,11 +38,6 @@ set(SRC
 	RenderCommand.h
 	RenderCommand.cpp
 
-	MainWindow.h
-	MainWindow.ui
-	MainWindow.cpp
-	NodeParmListView.h
-	NodeParmListView.cpp
 	RenderProcess.h
 	RenderProcess.cpp
 	FileProbeProcess.h
@@ -60,21 +55,6 @@ set(SRC
 	Nodes/MixNode.cpp
 	Nodes/FramerateNode.h
 	Nodes/FramerateNode.cpp
-
-	Tools/AbstractGraphTool.h
-	Tools/PanTool.h
-	Tools/PanTool.cpp
-	Tools/CutTool.h
-	Tools/CutTool.cpp
-
-	EnvModel.h
-	EnvModel.cpp
-
-	Dialogs/EnvDialog.h
-	Dialogs/EnvDialog.ui
-	Dialogs/EnvDialog.cpp
-	Dialogs/RenderDialog.h
-	Dialogs/RenderDialog.cpp
 
 	Variant.h
 
