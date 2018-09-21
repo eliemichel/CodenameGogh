@@ -3,30 +3,22 @@
 
 #include "ParameterType.h"
 #include "RenderCommand.h"
+#include "utils/FileStream.h"
 #include "Signal.h"
-
-#include <QObject>
-#include <QString>
-#include <QVariant>
-#include <QModelIndex>
 
 #include <set>
 #include <vector>
 #include <string>
 
-class EnvModel;
-class NodeGraphModel;
-class QWidget;
-
 class UiElement;
 class UiLayout;
+
 class Parameter;
 class InputSlot;
 class OutputSlot;
 
-class Node : public QObject
+class Node
 {
-	Q_OBJECT
 public:
 	class SlotEvent
 	{
@@ -35,21 +27,18 @@ public:
 	public:
 		/// index in inputSlots() or outputSlots() of the slot that has been connected
 		int slotIndex() const { return m_slotIndex; };
-		/// true if the connected slot is an input slot, false if it is an output
-		bool isInputSlot() const { return m_isInputSlot; };
 
 	private:
-		SlotEvent(int slotIndex, bool isInputSlot)
-			: m_slotIndex(slotIndex), m_isInputSlot(isInputSlot)
+		SlotEvent(int slotIndex)
+			: m_slotIndex(slotIndex)
 		{}
 
 	private:
 		int m_slotIndex;
-		bool m_isInputSlot;
 	};
 
 public:
-	explicit Node(QObject *parent = nullptr);
+	Node();
 	Node(const Node &) = delete; // signal emitters must not be copied
 	~Node();
 
@@ -61,6 +50,11 @@ public:
 	 * The node type is a number representing its derived class
 	 */
 	int type() const { return m_type; }
+
+	/**
+	 * The display name of the node
+	 */
+	const std::string & name() const { return m_name; }
 
 	/**
 	 * Return the number of parameters in the node
@@ -100,6 +94,8 @@ public:
 
 	// TODO: Type should not be editable
 	void setType(int type) { m_type = type; }
+
+	void setName(const std::string & name) { m_name = name; }
 
 	/**
 	 * Insert new parameters. The inserted params will have indexes from <first>
@@ -172,33 +168,6 @@ public:
 	 */
 	virtual UiElement * createDelegate(UiLayout *popupLayout = nullptr);
 
-	void setEnvModel(EnvModel *envModel) { m_envModel = envModel; }
-	void setGraphModel(NodeGraphModel *model) { m_graphModel = model; }
-
-	// // Setters // //
-
-	int nodeIndex() const { return m_nodeIndex; }
-	void setNodeIndex(int index) { m_nodeIndex = index; }
-
-public:
-	// parm model
-	virtual int parmCount() const { return 0; }
-	virtual QString parmName(int parm) const { return QString(); }
-	virtual ParmType parmType(int parm) const { return NoneType; }
-	virtual QVariant parmRawValue(int parm) const { return QVariant(); }
-
-	// menu items are used for parm of type EnumType
-	virtual int parmMenuCount(int parm) const { return 0; }
-	virtual QString parmMenuLabel(int parm, int menu) const { return QString(); }
-	virtual QVariant parmMenuValue(int parm, int menu) const { return menu; }
-
-	/// When overriding, think about firing parmChanged(int parm) events when parameter change is accepted
-	virtual bool setParm(int parm, QVariant value) { return false; }
-
-	QString parmEvalAsString(int parm) const;
-	int parmEvalAsInt(int parm) const;
-	bool parmEvalAsBool(int parm) const;
-
 public: // signals
 	/// emitted after inserting new parameters from position <first> to <last> included
 	Signal<int, int> insertedParams; // (int first, int last)
@@ -221,10 +190,6 @@ public: // signals
 	/// Signal emitted just after destructing the object
 	Signal<> destroyed;
 
-protected:
-	EnvModel * envModel() const { return m_envModel; }
-	NodeGraphModel *graphModel() const { return m_graphModel; }
-
 public:
 
 	/**
@@ -240,12 +205,8 @@ public:
 	 */
 	bool parentBuildRenderCommand(int inputIndex, RenderCommand & cmd) const;
 
-	virtual void read(QDataStream & stream);
-	virtual void write(QDataStream & stream) const;
-
-	//Return the StreamType in another type
-	std::string streamTypeAsString(StreamType stream) const;
-	char streamTypeAsChar(StreamType stream) const;
+	virtual void read(InputStream & stream);
+	virtual void write(OutputFileStream & stream) const;
 
 protected:
 	/// event fired after connecting a link to an input slot
@@ -277,10 +238,6 @@ private:
 	std::vector<Parameter*> m_params;
 	std::vector<InputSlot*> m_inputSlots;
 	std::vector<OutputSlot*> m_outputSlots;
-
-	EnvModel *m_envModel;
-	NodeGraphModel *m_graphModel;
-	int m_nodeIndex;
 };
 
 #endif // H_NODE

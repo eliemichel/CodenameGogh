@@ -22,6 +22,10 @@ enum StreamType
 	DataStream,
 };
 
+std::string streamTypeAsString(StreamType stream);
+
+char streamTypeAsChar(StreamType stream);
+
 /**
 * This structure constains everything that defines an output stream
 * in the rendered file.

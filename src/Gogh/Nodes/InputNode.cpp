@@ -8,7 +8,6 @@
 #include <sstream>
 
 InputNode::InputNode()
-	: m_probeProcess(this)
 {
 	appendOutputSlot();
 	appendParams(2);

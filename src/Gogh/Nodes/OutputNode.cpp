@@ -1,6 +1,5 @@
 #include "OutputNode.h"
 #include "Ui/NodeDelegate.h"
-#include "OutputNodeEditor.h"
 #include "Parameter.h"
 #include "Logger.h"
 
@@ -182,7 +181,7 @@ void OutputNode::inputSlotConnectEvent(SlotEvent *event)
 					replace(userPattern, "$" + e.first, cmd.env[e.first]);
 				}
 			}
-			setParm(0, QString().fromStdString(userPattern));
+			param(0).set(userPattern);
 		}
 	}
 }

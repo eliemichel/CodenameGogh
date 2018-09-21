@@ -1,6 +1,5 @@
 #include "Node.h"
 #include "EnvModel.h"
-#include "DefaultNodeEditor.h"
 #include "Ui/UiBase.h"
 #include "Ui/NodeDelegate.h"
 #include "Parameter.h"
@@ -10,12 +9,8 @@
 
 #include <cassert>
 
-Node::Node(QObject *parent)
-	: QObject(parent)
-	, m_envModel(nullptr)
-	, m_graphModel(nullptr)
-{
-}
+Node::Node()
+{}
 
 Node::~Node() {
 	removeParams(0, paramCount() - 1);
@@ -227,115 +222,25 @@ bool Node::parentBuildRenderCommand(int inputIndex, RenderCommand & cmd) const
 	return parentNode->buildRenderCommand(link->origin(), cmd);
 }
 
-void Node::read(QDataStream & stream)
+void Node::read(InputStream & stream)
 {
 	int n;
-	QVariant v;
+	Variant v;
 	stream >> n;
-	for (int i = 0; i < std::min(n, parmCount()); ++i)
+	for (int i = 0; i < std::min(n, paramCount()); ++i)
 	{
 		stream >> v;
-		setParm(i, v);
+		param(i).set(v);
 	}
 }
 
-void Node::write(QDataStream & stream) const
+void Node::write(OutputFileStream & stream) const
 {
-	int n = parmCount();
+	int n = paramCount();
 	stream << n;
 	for (int i = 0; i < n; ++i)
 	{
-		stream << parmRawValue(i);
-	}
-}
-
-QString Node::parmEvalAsString(int parm) const
-{
-	QString value;
-	switch (parmType(parm))
-	{
-	case EnumType:
-	{
-		int menu = parmRawValue(parm).toInt();
-		value = parmMenuValue(parm, menu).toString();
-		break;
-	}
-	default:
-		value = parmRawValue(parm).toString();
-	}
-
-	if (EnvModel *env = envModel()) {
-		for (auto it = env->env().cbegin(); it != env->env().cend(); ++it)
-		{
-			value = value.replace(QString::fromStdString("$" + it->first), QString::fromStdString(it->second));
-		}
-	}
-	return value;
-}
-
-int Node::parmEvalAsInt(int parm) const
-{
-	QString value;
-	switch (parmType(parm))
-	{
-	case EnumType:
-	{
-		int menu = parmRawValue(parm).toInt();
-		return parmMenuValue(parm, menu).toInt();
-		break;
-	}
-	default:
-		return parmRawValue(parm).toInt();
-	}
-}
-
-bool Node::parmEvalAsBool(int parm) const
-{
-	QString value;
-	switch (parmType(parm))
-	{
-	case EnumType:
-	{
-		int menu = parmRawValue(parm).toBool();
-		return parmMenuValue(parm, menu).toBool();
-		break;
-	}
-	default:
-		return parmRawValue(parm).toBool();
-	}
-}
-
-std::string Node::streamTypeAsString(StreamType stream) const
-{
-	switch (stream)
-	{
-	case VideoStream:
-		return "VideoStream";
-	case AudioStream:
-		return "AudioStream";
-	case SubtitleStream:
-		return "SubtitleStream";
-	case DataStream:
-		return "DataStream";
-	default:
-	return "No Stream";
-	}
-}
-
-char Node::streamTypeAsChar(StreamType stream) const
-{
-	switch (stream)
-	{
-	case VideoStream:
-		return 'v';
-	case AudioStream:
-		return 'a';
-	case SubtitleStream:
-		return 's';
-	case DataStream:
-		return 'd';
-	default:
-		return '-';
+		stream << param(i).rawValue();
 	}
 }
 
@@ -347,7 +252,7 @@ void Node::fireInputSlotConnectEvent(InputSlot *slot) {
 			slotIndex = i;
 		}
 	}
-	SlotEvent event(slotIndex, true /* isInput */);
+	SlotEvent event(slotIndex);
 	inputSlotConnectEvent(&event);
 }
 
@@ -359,6 +264,6 @@ void Node::fireOutputSlotConnectEvent(OutputSlot *slot) {
 			slotIndex = i;
 		}
 	}
-	SlotEvent event(slotIndex, false /* isInput */);
+	SlotEvent event(slotIndex);
 	outputSlotConnectEvent(&event);
 }

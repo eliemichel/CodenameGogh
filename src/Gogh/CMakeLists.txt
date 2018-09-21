@@ -38,8 +38,6 @@ set(SRC
 	RenderCommand.h
 	RenderCommand.cpp
 
-	DefaultNodeEditor.h
-	DefaultNodeEditor.cpp
 	MainWindow.h
 	MainWindow.ui
 	MainWindow.cpp
@@ -52,8 +50,6 @@ set(SRC
 
 	Nodes/OutputNode.h
 	Nodes/OutputNode.cpp
-	Nodes/OutputNodeEditor.h
-	Nodes/OutputNodeEditor.cpp
 	Nodes/InputNode.h
 	Nodes/InputNode.cpp
 	Nodes/ScaleNode.h
