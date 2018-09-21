@@ -38,7 +38,7 @@
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
       </property>
-      <widget class="NodeGraphView" name="viewport" native="true"/>
+      <widget class="QTreeView" name="viewport" native="true"/>
       <widget class="QWidget" name="text" native="true">
        <layout class="QVBoxLayout" name="verticalLayout_2">
         <item>
@@ -54,7 +54,7 @@
                <bool>true</bool>
               </property>
              </widget>
-             <widget class="NodeParmListView" name="parameters" native="true"/>
+             <widget class="QTreeView" name="parameters" native="true"/>
             </widget>
            </item>
           </layout>
@@ -141,20 +141,6 @@
    </property>
   </action>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>NodeGraphView</class>
-   <extends>QWidget</extends>
-   <header>NodeGraphView.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
-   <class>NodeParmListView</class>
-   <extends>QWidget</extends>
-   <header>NodeParmListView.h</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>

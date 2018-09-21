@@ -8,7 +8,7 @@
 class CutTool : public AbstractGraphTool
 {
 public:
-	CutTool(NodeGraphView *view) : AbstractGraphTool(view) {}
+	CutTool(QGraphicsView *view) : AbstractGraphTool(view) {}
 
 	void start(QPoint position) override;
 	void update(QPoint position) override;

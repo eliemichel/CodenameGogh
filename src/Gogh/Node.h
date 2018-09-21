@@ -1,7 +1,6 @@
 #ifndef H_NODE
 #define H_NODE
 
-#include "SlotIndex.h"
 #include "ParameterType.h"
 #include "RenderCommand.h"
 #include "Signal.h"
@@ -50,14 +49,6 @@ public:
 	};
 
 public:
-	// TODO: make these private and add accessors
-	int type;
-	float x, y;
-	std::string name;
-	std::vector<SlotIndex> inputLinks;
-	std::vector<std::set<SlotIndex>> outputLinks;
-
-public:
 	explicit Node(QObject *parent = nullptr);
 	Node(const Node &) = delete; // signal emitters must not be copied
 	~Node();
@@ -65,6 +56,11 @@ public:
 	// // Getters // //
 
 	// TODO: make some protected
+
+	/**
+	 * The node type is a number representing its derived class
+	 */
+	int type() const { return m_type; }
 
 	/**
 	 * Return the number of parameters in the node
@@ -101,6 +97,9 @@ public:
 	OutputSlot & outputSlot(int i);
 
 	// // Setters // //
+
+	// TODO: Type should not be editable
+	void setType(int type) { m_type = type; }
 
 	/**
 	 * Insert new parameters. The inserted params will have indexes from <first>
@@ -173,12 +172,6 @@ public:
 	 */
 	virtual UiElement * createDelegate(UiLayout *popupLayout = nullptr);
 
-	/**
-	 * Create an editor widget to operate on this node's parms.
-	 * This is the only method that handle graphical objects.
-	 */
-	virtual QWidget *createEditor(QWidget *parent = nullptr);
-
 	void setEnvModel(EnvModel *envModel) { m_envModel = envModel; }
 	void setGraphModel(NodeGraphModel *model) { m_graphModel = model; }
 
@@ -206,10 +199,6 @@ public:
 	int parmEvalAsInt(int parm) const;
 	bool parmEvalAsBool(int parm) const;
 
-	// slot structure read
-	int inputSlotCount_legacy() const { return static_cast<int>(inputLinks.size()); }
-	int outputSlotCount_legacy() const { return static_cast<int>(outputLinks.size()); }
-
 public: // signals
 	/// emitted after inserting new parameters from position <first> to <last> included
 	Signal<int, int> insertedParams; // (int first, int last)
@@ -233,13 +222,6 @@ public: // signals
 	Signal<> destroyed;
 
 protected:
-	// slot structure write
-	void newInputSlot();
-	void newOutputSlot();
-
-	Connection inputConnection(int inputSlotIndex);
-	std::set<Connection> outputConnection(int outputSlotIndex);
-
 	EnvModel * envModel() const { return m_envModel; }
 	NodeGraphModel *graphModel() const { return m_graphModel; }
 
@@ -261,22 +243,11 @@ public:
 	virtual void read(QDataStream & stream);
 	virtual void write(QDataStream & stream) const;
 
-	/**
-	 * This is used in graphics view to initiate slotConnectEvent() propagation.
-	 * This should ultimately be modified so do not use this method anywhere else
-	 * Reserved to NodeGraphModel
-	 */
-	void fireSlotConnectEvent(int slotIndex, bool isInput);
-	void fireSlotDisconnectEvent(int slotIndex, bool isInput);
-
 	//Return the StreamType in another type
 	std::string streamTypeAsString(StreamType stream) const;
 	char streamTypeAsChar(StreamType stream) const;
 
 protected:
-	virtual void slotConnectEvent(SlotEvent *event) {}
-	virtual void slotDisconnectEvent(SlotEvent *event) {}
-
 	/// event fired after connecting a link to an input slot
 	virtual void inputSlotConnectEvent(SlotEvent *event) {}
 	/// event fired after disconnecting a link from an input slot
@@ -287,13 +258,22 @@ protected:
 	virtual void outputSlotDisconnectEvent(SlotEvent *event) {}
 
 private:
+	/**
+	 * This is used in graphics view to initiate slotConnectEvent() propagation.
+	 * This should ultimately be modified so do not use this method anywhere else
+	 * Reserved to NodeGraphModel
+	 */
 	void fireInputSlotConnectEvent(InputSlot *slot);
 	void fireOutputSlotConnectEvent(OutputSlot *slot);
 
 	// TODO: fire inputSlotDisconnectEvent and outputSlotDisconnectEvent
 
 private:
-	// TODO change Parameter* to Parameter when it will no longer be a qt object
+	// TODO: add accessors for these attributes
+	int m_type;
+	float m_x, m_y;
+	std::string m_name;
+
 	std::vector<Parameter*> m_params;
 	std::vector<InputSlot*> m_inputSlots;
 	std::vector<OutputSlot*> m_outputSlots;

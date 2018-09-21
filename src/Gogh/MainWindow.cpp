@@ -2,11 +2,6 @@
 #include "ui_MainWindow.h"
 
 #include "Logger.h"
-#include "NodeGraphModel.h"
-#include "NodeGraphScene.h"
-#include "LinkGraphicsItem.h"
-#include "NodeGraphicsItem.h"
-#include "SlotGraphicsItem.h"
 #include "EnvModel.h"
 #include "Dialogs/EnvDialog.h"
 
@@ -38,11 +33,7 @@ MainWindow::MainWindow(EnvModel *envModel, QString graphFilename, QWidget *paren
 	connect(ui->saveAsAction, &QAction::triggered, this, &MainWindow::showSaveAsFileDialog);
 	connect(ui->envAction, &QAction::triggered, this, &MainWindow::showEnvDialog);
 
-	m_model = new NodeGraphModel();
-	m_model->setEnvModel(m_envModel);
-
-	m_scene = new NodeGraphScene();
-
+	/*
 	if (m_currentFilename.isNull())
 	{
 		m_currentFilename = QDir::tempPath() + "/gogh_sample.gog";
@@ -60,19 +51,16 @@ MainWindow::MainWindow(EnvModel *envModel, QString graphFilename, QWidget *paren
 			m_currentFilename = QString();
 		}
 	}
-
-	m_scene->setGraphModel(m_model);
-	m_scene->setSceneRect(-1000, -1000, 2000, 2000);
+	*/
 
 	ui->splitter->setSizes(QList<int>() << 300 << 10);
 
-	ui->outliner->setModel(m_model);
+	//ui->outliner->setModel(m_model);
 
-	ui->parameters->setModel(m_model);
+	//ui->parameters->setModel(m_model);
 	ui->parameters->setSelectionModel(ui->outliner->selectionModel());
 
-	ui->viewport->setScene(m_scene);
-	ui->viewport->setModel(m_model);
+	//ui->viewport->setModel(m_model);
 	ui->viewport->setSelectionModel(ui->outliner->selectionModel());
 }
 
@@ -85,7 +73,7 @@ MainWindow::~MainWindow()
 void MainWindow::showOpenFileDialog()
 {
 	m_currentFilename = QFileDialog::getOpenFileName(this, tr("Open Gogh Graph"), "", tr("Gogh files (*.gog)"));
-	m_model->LoadGraph(m_currentFilename);
+	//m_model->LoadGraph(m_currentFilename);
 }
 
 void MainWindow::save()
@@ -96,14 +84,14 @@ void MainWindow::save()
 	}
 	else
 	{
-		m_model->SaveGraph(m_currentFilename);
+		//m_model->SaveGraph(m_currentFilename);
 	}
 }
 
 void MainWindow::showSaveAsFileDialog()
 {
 	m_currentFilename = QFileDialog::getSaveFileName(this, tr("Save as Gogh Graph"), m_currentFilename, tr("Gogh files (*.gog)"));
-	m_model->SaveGraph(m_currentFilename);
+	//m_model->SaveGraph(m_currentFilename);
 }
 
 void MainWindow::showEnvDialog()

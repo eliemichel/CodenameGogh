@@ -4,8 +4,6 @@
 #include "LinkGraphicsItem.h"
 #include "SlotGraphicsItem.h"
 #include "NodeGraphicsItem.h"
-#include "NodeGraphModel.h"
-#include "NodeGraphScene.h"
 
 #include <QPainter>
 #include <QMouseEvent>
@@ -37,7 +35,7 @@ NodeGraphView::NodeGraphView(QWidget *parent)
 	createActions();
 }
 
-void NodeGraphView::setModel(NodeGraphModel *model)
+void NodeGraphView::setModel(QAbstractItemModel *model)
 {
 	if (m_model)
 	{
@@ -59,16 +57,6 @@ void NodeGraphView::setSelectionModel(QItemSelectionModel *selectionModel)
 	{
 		connect(m_selectionModel, &QItemSelectionModel::selectionChanged, this, &NodeGraphView::onSelectionChanged);
 	}
-}
-
-NodeGraphScene * NodeGraphView::nodeGraphScene() const
-{
-	return static_cast<NodeGraphScene*>(scene());
-}
-
-void NodeGraphView::setScene(NodeGraphScene * scene)
-{
-	QGraphicsView::setScene(scene);
 }
 
 void NodeGraphView::drawBackground(QPainter *painter, const QRectF &rect)
@@ -144,11 +132,6 @@ void NodeGraphView::mouseMoveEvent(QMouseEvent *event)
 
 void NodeGraphView::mousePressEvent(QMouseEvent *event)
 {
-	if (!nodeGraphScene())
-	{
-		return;
-	}
-
 	if (event->button() == Qt::MiddleButton)
 	{
 		m_panTool.start(event->pos());
@@ -164,13 +147,6 @@ void NodeGraphView::mousePressEvent(QMouseEvent *event)
 				if (!m_selectionModel)
 				{
 					return;
-				}
-
-				const QModelIndex & index = model()->index(nodeItem->node()->nodeIndex(), 0);
-				if (!m_selectionModel->isSelected(index))
-				{
-					bool addToSelection = (event->modifiers() & Qt::ShiftModifier) == Qt::ShiftModifier;
-					m_selectionModel->select(index, addToSelection ? QItemSelectionModel::Select : QItemSelectionModel::ClearAndSelect);
 				}
 
 				startMoveNodes(event->pos());
@@ -321,11 +297,6 @@ void NodeGraphView::dragEnterEvent(QDragEnterEvent *event)
 
 void NodeGraphView::dragMoveEvent(QDragMoveEvent *event)
 {
-	if (!nodeGraphScene())
-	{
-		return;
-	}
-
 	if (event->mimeData()->hasFormat("application/x-gogh-slot") && event->source() == this)
 	{
 		QGraphicsItem *item = itemAt(event->pos());
@@ -367,10 +338,7 @@ void NodeGraphView::dropEvent(QDropEvent *event)
 					SlotGraphicsItem *destinationSlotItem = otherSlotItem->isInput() ? otherSlotItem : slotItem;
 					SlotGraphicsItem *sourceSlotItem = otherSlotItem->isInput() ? slotItem : otherSlotItem;
 
-					// TODO: get rid of cast
-					const SlotIndex & origin = sourceSlotItem->slotIndex();
-					const SlotIndex & destination = destinationSlotItem->slotIndex();
-					static_cast<NodeGraphModel*>(model())->addLink(origin, destination);
+					// TODO: add link
 				}
 			}
 
@@ -410,6 +378,8 @@ void NodeGraphView::createActions()
 	}
 	m_addNodeActions.clear();
 
+	// TODO NodeType::availableTypes()
+	/*
 	for (NodeType type : NodeType::availableTypes())
 	{
 		QAction *action = new QAction(tr("Add ") + QString::fromStdString(type.name()) + tr(" Node"), this);
@@ -422,6 +392,7 @@ void NodeGraphView::createActions()
 		});
 		m_addNodeActions.push_back(action);
 	}
+	*/
 }
 
 void NodeGraphView::startMoveNodes(QPoint position)
@@ -434,10 +405,7 @@ void NodeGraphView::startMoveNodes(QPoint position)
 	m_nodeMoveData.clear();
 	for (const QModelIndex & index : selectionModel()->selectedIndexes())
 	{
-		const QModelIndex & colX = model()->index(index.row(), NodeGraphModel::PosXColumn, index.parent());
-		const QModelIndex & colY = model()->index(index.row(), NodeGraphModel::PosYColumn, index.parent());
-		QPointF startPos = QPointF(model()->data(colX).toFloat(), model()->data(colY).toFloat());
-		m_nodeMoveData.push_back(NodeMoveData(colX, colY, startPos));
+		// TODO
 		m_moveStartPos = position;
 		m_isMovingNodes = true;
 	}

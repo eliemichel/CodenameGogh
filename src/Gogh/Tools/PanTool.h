@@ -8,7 +8,7 @@
 class PanTool : public AbstractGraphTool
 {
 public:
-	PanTool(NodeGraphView *view) : AbstractGraphTool(view) {}
+	PanTool(QGraphicsView *view) : AbstractGraphTool(view) {}
 
 	void start(QPoint position) override;
 	void update(QPoint position) override;

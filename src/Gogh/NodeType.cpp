@@ -131,7 +131,7 @@ Node * NodeType::create() const
 
 	if (node)
 	{
-		node->type = m_typeId;
+		node->setType(m_typeId);
 	}
 	return node;
 }

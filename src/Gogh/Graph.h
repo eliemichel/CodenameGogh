@@ -3,6 +3,7 @@
 
 #include "Signal.h"
 #include <set>
+#include <string>
 
 class Node;
 class Link;
@@ -12,6 +13,9 @@ class OutputSlot;
 class Graph {
 public:
 	~Graph();
+
+	bool load(std::string filename) { return false; } // TODO
+	Node * findNodeByName(std::string name) { return nullptr; } // TODO
 
 	void addNode(Node *node);
 	void addLink(Link *link);

@@ -1,12 +1,7 @@
 #include "CutTool.h"
-
-#include "NodeGraphView.h"
-#include "NodeGraphScene.h"
-#include "SlotGraphicsItem.h"
-#include "LinkGraphicsItem.h"
-#include "NodeGraphModel.h"
 #include "Logger.h"
 
+#include <QGraphicsView>
 #include <cmath>
 
 void CutTool::start(QPoint position)
@@ -32,19 +27,7 @@ void CutTool::update(QPoint position)
 	QList<QGraphicsItem*> items = view()->scene()->items(edge);
 	for (QGraphicsItem *item : items)
 	{
-		if (LinkGraphicsItem *linkItem = view()->nodeGraphScene()->toLinkItem(item))
-		{
-			if (SlotGraphicsItem *slotItem = linkItem->endSlotItem())
-			{
-				NodeGraphModel *model = static_cast<NodeGraphModel*>(view()->model());
-				model->removeLink(slotItem->slotIndex());
-			}
-			else
-			{
-				view()->scene()->removeItem(item);
-				delete item;
-			}
-		}
+		
 	}
 }
 

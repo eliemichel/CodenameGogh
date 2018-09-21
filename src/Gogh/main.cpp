@@ -3,7 +3,6 @@
 
 #include <iostream>
 
-int oldMainGui(const ArgParse & args);
 int mainCmd(const ArgParse & args);
 
 int main(int argc, char *argv[])
@@ -27,9 +26,10 @@ int main(int argc, char *argv[])
 }
 
 #include "Logger.h"
+#include "Graph.h"
 #include "EnvModel.h"
-#include "NodeGraphModel.h"
 #include "Node.h"
+#include "NodeType.h"
 #include "Nodes/OutputNode.h"
 #include "RenderProcess.h"
 
@@ -44,8 +44,7 @@ int mainCmd(const ArgParse & args)
 
 	QString filename = args.isGraphFilenameProvided ? QString::fromStdString(args.graphFilename) : QString();
 
-	NodeGraphModel model;
-	model.setEnvModel(&envModel);
+	Graph graph;
 
 	if (filename.isNull())
 	{
@@ -53,21 +52,20 @@ int mainCmd(const ArgParse & args)
 		return EXIT_FAILURE;
 	}
 
-	if (!model.LoadGraph(filename))
+	if (!graph.load(filename.toStdString()))
 	{
 		return EXIT_FAILURE;
 	}
 
-	const QModelIndex & outputIndex = model.findByName(args.renderNodename);
-	if (!outputIndex.isValid())
+	Node * node = graph.findNodeByName(args.renderNodename);
+	if (!node)
 	{
 		ERR_LOG << "Output node not found: " << args.renderNodename;
 		return EXIT_FAILURE;
 	}
 
-	Node *node = model.node(outputIndex.row());
 	// TODO: move this cast to a method in model
-	OutputNode *outputNode = node->type == NodeType::NODE_OUTPUT ? static_cast<OutputNode*>(node) : nullptr;
+	OutputNode *outputNode = node->type() == NodeType::NODE_OUTPUT ? static_cast<OutputNode*>(node) : nullptr;
 	if (!outputNode)
 	{
 		ERR_LOG << "Node '" << args.renderNodename << "' is not an output node";
@@ -90,42 +88,4 @@ int mainCmd(const ArgParse & args)
 	}
 
 	return EXIT_SUCCESS;
-}
-
-#include "MainWindow.h"
-
-#include <QApplication>
-#include <QFile>
-#include <QDebug>
-
-static QString loadCss(const QString & filename)
-{
-	QFile file(filename);
-	file.open(QIODevice::ReadOnly);
-	QTextStream in(&file);
-	QString s = in.readAll();
-	file.close();
-	return s;
-}
-
-int oldMainGui(const ArgParse & args)
-{
-	// Import command line env
-	EnvModel envModel;
-	for (auto it = args.env.cbegin(); it != args.env.cend(); ++it)
-	{
-		envModel.at(it->first) = it->second;
-	}
-
-	QString filename = args.isGraphFilenameProvided ? QString::fromStdString(args.graphFilename) : QString();
-
-	int argc = args.argc;
-	QApplication a(argc, args.argv);
-	//a.setStyleSheet(loadCss(":styles/default.css"));
-
-	MainWindow w(&envModel, filename);
-
-	w.show();
-
-	return a.exec();
 }

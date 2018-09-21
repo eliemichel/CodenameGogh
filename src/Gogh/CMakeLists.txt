@@ -43,26 +43,12 @@ set(SRC
 	MainWindow.h
 	MainWindow.ui
 	MainWindow.cpp
-	NodeGraphView.h
-	NodeGraphView.cpp
-	NodeGraphModel.h
-	NodeGraphModel.cpp
-	NodeGraphScene.h
-	NodeGraphScene.cpp
 	NodeParmListView.h
 	NodeParmListView.cpp
 	RenderProcess.h
 	RenderProcess.cpp
 	FileProbeProcess.h
 	FileProbeProcess.cpp
-
-	LinkGraphicsItem.h
-	LinkGraphicsItem.cpp
-	NodeGraphicsItem.h
-	NodeGraphicsItem.cpp
-	SlotGraphicsItem.h
-	SlotGraphicsItem.cpp
-	SlotIndex.h
 
 	Nodes/OutputNode.h
 	Nodes/OutputNode.cpp

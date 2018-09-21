@@ -1,6 +1,6 @@
 #include "PanTool.h"
 
-#include "NodeGraphView.h"
+#include <QGraphicsView>
 
 void PanTool::start(QPoint position)
 {

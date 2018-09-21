@@ -1,6 +1,5 @@
 #include "Node.h"
 #include "EnvModel.h"
-#include "NodeGraphModel.h"
 #include "DefaultNodeEditor.h"
 #include "Ui/UiBase.h"
 #include "Ui/NodeDelegate.h"
@@ -194,13 +193,6 @@ UiElement * Node::createDelegate(UiLayout *popupLayout)
 	return new NodeDelegate(this, popupLayout);
 }
 
-// // Legacy // //
-
-QWidget *Node::createEditor(QWidget *parent)
-{
-	return new DefaultNodeEditor(this, parent);
-}
-
 bool Node::buildRenderCommand(OutputSlot *slot, RenderCommand & cmd) const {
 	for (int i = 0; i < outputSlotCount(); ++i) {
 		if (slot == &outputSlot(i)) {
@@ -257,18 +249,6 @@ void Node::write(QDataStream & stream) const
 	}
 }
 
-void Node::fireSlotConnectEvent(int slotIndex, bool isInput)
-{
-	SlotEvent event(slotIndex, isInput);
-	slotConnectEvent(&event);
-}
-
-void Node::fireSlotDisconnectEvent(int slotIndex, bool isInput)
-{
-	SlotEvent event(slotIndex, isInput);
-	slotDisconnectEvent(&event);
-}
-
 QString Node::parmEvalAsString(int parm) const
 {
 	QString value;
@@ -322,65 +302,6 @@ bool Node::parmEvalAsBool(int parm) const
 	}
 	default:
 		return parmRawValue(parm).toBool();
-	}
-}
-
-void Node::newInputSlot()
-{
-	inputLinks.resize(inputLinks.size() + 1);
-	if (graphModel())
-	{
-		graphModel()->broadcastNodeChange(nodeIndex());
-	}
-}
-
-void Node::newOutputSlot()
-{
-	outputLinks.resize(outputLinks.size() + 1);
-	if (graphModel())
-	{
-		graphModel()->broadcastNodeChange(nodeIndex());
-	}
-}
-
-Connection Node::inputConnection(int inputSlotIndex)
-{
-	if (inputSlotIndex < 0 || inputSlotIndex > inputSlotCount_legacy())
-	{
-		ERR_LOG << "Invalid input slot index: #" << inputSlotIndex;
-		return Connection();
-	}
-	const SlotIndex & sid = inputLinks[inputSlotIndex];
-	if (graphModel() && sid.isValid())
-	{
-		return Connection(graphModel()->node(sid.node), sid.slot);
-	}
-	else
-	{
-		return Connection();
-	}
-}
-
-std::set<Connection> Node::outputConnection(int outputSlotIndex)
-{
-	if (outputSlotIndex < 0 || outputSlotIndex > outputSlotCount_legacy())
-	{
-		ERR_LOG << "Invalid output slot index: #" << outputSlotIndex;
-		return std::set<Connection>();
-	}
-	const std::set<SlotIndex> & slotSet = outputLinks[outputSlotIndex];
-	if (graphModel())
-	{
-		std::set<Connection> connectionSet;
-		for (auto sid : slotSet)
-		{
-			connectionSet.insert(sid.isValid() ? Connection(graphModel()->node(sid.node), sid.slot) : Connection());
-		}
-		return connectionSet;
-	}
-	else
-	{
-		return std::set<Connection>();
 	}
 }
 

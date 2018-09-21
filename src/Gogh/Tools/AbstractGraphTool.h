@@ -3,12 +3,12 @@
 
 #include <QPoint>
 
-class NodeGraphView;
+class QGraphicsView;
 
 class AbstractGraphTool
 {
 public:
-	AbstractGraphTool(NodeGraphView *view) : m_view(view) {}
+	AbstractGraphTool(QGraphicsView *view) : m_view(view) {}
 
 	virtual void start(QPoint position) = 0;
 	virtual void update(QPoint position) = 0;
@@ -18,11 +18,11 @@ public:
 
 protected:
 	void setActive(bool isActive) { m_isActive = isActive; }
-	NodeGraphView *view() { return m_view; }
+	QGraphicsView *view() { return m_view; }
 
 private:
 	bool m_isActive = false;
-	NodeGraphView *m_view;
+	QGraphicsView *m_view;
 };
 
 #endif // H_ABSTRACTGRAPHTOOL
