@@ -20,3 +20,6 @@ add_library(nanovg ${nanovg_SRC})
 target_include_directories(nanovg PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/nanovg/src")
 set_property(TARGET nanovg PROPERTY FOLDER "External")
 
+# tiny-process-library
+add_subdirectory(tiny-process-library)
+set_property(TARGET tiny-process-library PROPERTY FOLDER "External")

@@ -1,5 +1,4 @@
 #include "Node.h"
-#include "EnvModel.h"
 #include "Ui/UiBase.h"
 #include "Ui/NodeDelegate.h"
 #include "Parameter.h"

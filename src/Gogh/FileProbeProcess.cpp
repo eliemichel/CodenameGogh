@@ -1,47 +1,60 @@
 #include "FileProbeProcess.h"
 #include "Logger.h"
 
-#include <QTextStream>
+#include <iostream>
+#include <string>
 
-QString FileProbeProcess::locateFfprobe()
+std::string FileProbeProcess::locateFfprobe()
 {
 	return "ffprobe";
 }
 
-FileProbeProcess::FileProbeProcess(QObject *parent)
-	: QProcess(parent)
-	, m_wasCanceled(true)
+FileProbeProcess::FileProbeProcess()
+	: m_wasCanceled(true)
 	, m_isRunning(false)
 	, m_mustRetry(false)
 {
-	connect(this, QOverload<int>::of(&QProcess::finished), this, &FileProbeProcess::onProcessFinished);
-	connect(this, &QProcess::readyReadStandardOutput, this, &FileProbeProcess::readStdout);
-	connect(this, &QProcess::readyReadStandardError, this, &FileProbeProcess::readStderr);
-
-	setReadChannel(StandardOutput);
+	processFinished.connect(this, &FileProbeProcess::onProcessFinished);
 }
 
 void FileProbeProcess::probe(std::string filename)
 {
-	m_filename = QString::fromStdString(filename);
+	m_filename = filename;
 	if (m_isRunning)
 	{
 		m_mustRetry = true;
 		cancel();
+		return;
 	}
-
-	QString program = FileProbeProcess::locateFfprobe();
-	QStringList arguments = QStringList()
-		<< "-v" << "error"
-		<< "-show_entries" << "stream=codec_type"
-		<< "-print_format" << "default=noprint_wrappers=1:nokey=1"
-		<< m_filename;
-
-	DEBUG_LOG << program.toStdString() << " " << arguments.join(" ").toStdString();
 
 	m_wasCanceled = false;
 	m_isRunning = true;
 	m_mustRetry = false;
+
+	std::string cmd =
+		locateFfprobe()
+		+ "-v error"
+		+ "-show_entries stream=codec_type"
+		+ "-print_format"
+		+ "default=noprint_wrappers=1:nokey=1"
+		+ m_filename;
+
+	DEBUG_LOG << cmd;
+
+	delete m_process;
+
+	m_process = make_shared<TinyProcessLib::Process>("ffmpeg -version", "", [](const char *bytes, size_t n) {
+		std::cout << "Output from stdout: " << std::string(bytes, n);
+	}, [](const char *bytes, size_t n) {
+		WARN_LOG << std::string(bytes, n);
+	});
+
+	std::thread th([]() {
+		int exit_status = m_process.get_exit_status();
+		std::cout << "Example 3 process returned: " << exit_status << " (" << (exit_status == 0 ? "success" : "failure") << ")" << std::endl;
+		processFinished.fire();
+	});
+	th.detach();
 
 	QProcess::start(program, arguments);
 }
@@ -49,7 +62,7 @@ void FileProbeProcess::probe(std::string filename)
 void FileProbeProcess::cancel()
 {
 	m_wasCanceled = false;
-	kill();
+	m_process->kill();
 }
 
 void FileProbeProcess::onProcessFinished()
@@ -66,11 +79,11 @@ void FileProbeProcess::onProcessFinished()
 
 	// Parse output
 	m_streams.clear();
-	QTextStream stream(this);
-	QString line;
+	//QTextStream stream(this);
+	std::string line;
 	do
 	{
-		line = stream.readLine();
+		line = "TODO";
 		if (line.isEmpty())
 		{
 			continue;
@@ -93,12 +106,4 @@ void FileProbeProcess::onProcessFinished()
 		}
 	} while (!line.isNull());
 	probed.fire();
-}
-
-void FileProbeProcess::readStdout()
-{}
-
-void FileProbeProcess::readStderr()
-{
-	WARN_LOG << readAllStandardError().toStdString();
 }

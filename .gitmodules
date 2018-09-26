@@ -7,3 +7,6 @@
 [submodule "src/external/nanovg"]
 	path = src/external/nanovg
 	url = https://github.com/memononen/nanovg
+[submodule "src/external/tiny-process-library"]
+	path = src/external/tiny-process-library
+	url = https://gitlab.com/eidheim/tiny-process-library

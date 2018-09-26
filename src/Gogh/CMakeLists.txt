@@ -110,6 +110,7 @@ target_link_libraries_and_dll(Gogh Qt5::Widgets)
 target_link_libraries(Gogh glad)
 target_link_libraries(Gogh glfw)
 target_link_libraries(Gogh nanovg)
+target_link_libraries(Gogh tiny-process-library)
 
 # For IDE projects
 group_source_by_folder(${SRC})

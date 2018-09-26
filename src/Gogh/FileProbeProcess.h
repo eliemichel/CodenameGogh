@@ -1,21 +1,21 @@
 #ifndef H_FILEPROBEPROCESS
 #define H_FILEPROBEPROCESS
 
-#include <QProcess>
+#include "Node.h"
+#include "Signal.h"
+#include "process.hpp"
+
+#include <thread>
 #include <vector>
 #include <string>
-#include <node.h>
-#include "Signal.h"
 
-class FileProbeProcess : public QProcess
+class FileProbeProcess
 {
-	Q_OBJECT
+public:
+	static std::string locateFfprobe();
 
 public:
-	static QString locateFfprobe();
-
-public:
-	FileProbeProcess(QObject *parent = nullptr);
+	FileProbeProcess();
 
 	// If a job is running, this will interupt it
 	void probe(std::string filename);
@@ -26,17 +26,20 @@ public:
 public: // signals
 	Signal<> probed;
 
-private slots:
+private: // signals
+	Signal<> processFinished;
+
+private: // slots
 	void onProcessFinished();
-	void readStdout();
-	void readStderr();
 
 private:
+	std::shared_ptr<TinyProcessLib::Process> m_process;
+
 	std::vector<StreamType> m_streams;
 	bool m_wasCanceled;
 	bool m_isRunning;
 	bool m_mustRetry;
-	QString m_filename;
+	std::string m_filename;
 };
 
 #endif // H_FILEPROBEPROCESS
