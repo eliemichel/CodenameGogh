@@ -23,8 +23,8 @@ Gogh was born.
 Build
 -----
 ### Dependencies
->- C++ 11
->- Qt 5.9
+
+Gogh only requires a C++11 ready compiler. Every dependencies are included in [src/external](src/external).
 
 ### Windows 64bit with Visual Studio 15 (2017)
 
