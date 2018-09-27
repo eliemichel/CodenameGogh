@@ -2,6 +2,8 @@
 #include "Ui/NodeDelegate.h"
 #include "Parameter.h"
 #include "Logger.h"
+#include "RenderProcess.h"
+#include "MainEventLoop.h"
 
 OutputNode::OutputNode()
 	: m_isFilenameUserDefined(false)
@@ -195,7 +197,9 @@ void OutputNode::onButtonClicked(int parm)
 		RenderCommand cmd;
 		if (buildRenderCommand(-1, cmd))
 		{
-			DEBUG_LOG << cmd.cmd;
+			RenderProcess *job = new RenderProcess(cmd.cmd);
+			job->start();
+			job->rendered.connect([job] { MainEventLoop::GetInstance().DeleteLater(job); });
 		}
 		break;
 	}

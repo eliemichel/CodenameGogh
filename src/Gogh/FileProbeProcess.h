@@ -8,6 +8,8 @@
 #include <thread>
 #include <vector>
 #include <string>
+#include <memory>
+#include <sstream>
 
 class FileProbeProcess
 {
@@ -27,13 +29,15 @@ public: // signals
 	Signal<> probed;
 
 private: // signals
-	Signal<> processFinished;
+	Signal<int> processFinished; // (int exit_status)
 
 private: // slots
-	void onProcessFinished();
+	void onProcessFinished(int exit_status);
 
 private:
 	std::shared_ptr<TinyProcessLib::Process> m_process;
+	int m_exit_status; // written in process only
+	std::stringstream m_stdin;
 
 	std::vector<StreamType> m_streams;
 	bool m_wasCanceled;

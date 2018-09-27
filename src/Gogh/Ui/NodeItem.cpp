@@ -19,7 +19,6 @@ NodeItem::NodeItem(::Node *node, QuadTree *tree, UiLayout *popupLayout)
 		tree->Insert(this);
 	}
 
-	// TODO: connect nodes addslots/removeslots
 	node->destroyed.connect(this, &NodeItem::OnNodeDestroyed);
 	node->insertedInputSlots.connect(this, &NodeItem::OnInsertedInputSlots);
 	node->aboutToRemoveInputSlots.connect(this, &NodeItem::WhenAboutToRemoveInputSlots);
@@ -39,6 +38,10 @@ void NodeItem::SetContent(UiElement *element) {
 }
 
 void NodeItem::Paint(NVGcontext *vg) const {
+	if (!m_node) {
+		return;
+	}
+	
 	const Rect & r = BBox();
 
 	nvgBeginPath(vg);
@@ -87,14 +90,16 @@ void NodeItem::OnInsertedInputSlots(int first, int last) {
 void NodeItem::WhenAboutToRemoveInputSlots(int first, int last) {
 	// Shift the next slots
 	int count = last - first + 1;
-	for (int i = last; i < Node()->inputSlotCount(); ++i) {
+	for (int i = last + 1; i < Node()->inputSlotCount(); ++i) {
 		Rect rect(-8, 20 + 30 * (i - count), 16, 16);
 		Tree()->UpdateItemBBox(Tree()->Find(m_inputSlotItems[i]), rect);
 	}
 
 	auto it = m_inputSlotItems.begin() + first;
 	for (int i = first; i <= last; ++i) {
-		delete *it;
+		InputSlotItem *slotItem = *it;
+		RemoveChild(slotItem);
+		delete slotItem;
 		it = m_inputSlotItems.erase(it);
 	}
 }
@@ -118,14 +123,16 @@ void NodeItem::OnInsertedOutputSlots(int first, int last) {
 void NodeItem::WhenAboutToRemoveOutputSlots(int first, int last) {
 	// Shift the next slots
 	int count = last - first + 1;
-	for (int i = last; i < Node()->outputSlotCount(); ++i) {
+	for (int i = last + 1; i < Node()->outputSlotCount(); ++i) {
 		Rect rect(-8, 20 + 30 * (i - count), 16, 16);
 		Tree()->UpdateItemBBox(Tree()->Find(m_outputSlotItems[i]), rect);
 	}
 
 	auto it = m_outputSlotItems.begin() + first;
 	for (int i = first; i <= last; ++i) {
-		delete *it;
+		OutputSlotItem *slotItem = *it;
+		RemoveChild(slotItem);
+		delete slotItem;
 		it = m_outputSlotItems.erase(it);
 	}
 }

@@ -51,6 +51,15 @@ public:
 			Tree()->Insert(child);
 		}
 	}
+	void RemoveChild(AbstractNodeAreaItem *child) {
+		for (auto it = m_children.begin(); it != m_children.end();) {
+			if (*it == child) {
+				it = m_children.erase(it);
+			} else {
+				++it;
+			}
+		}
+	}
 	const std::vector<AbstractNodeAreaItem*> & Children() const { return m_children; }
 
 	virtual void Paint(NVGcontext *vg) const {

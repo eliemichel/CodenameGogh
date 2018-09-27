@@ -17,6 +17,7 @@
 #include "Ui/UiButton.h"
 #include "Ui/UiContextMenu.h"
 #include "Variant.h"
+#include "MainEventLoop.h"
 
 #include "Nodes/ScaleNode.h"
 #include "Nodes/CodecNode.h"
@@ -164,6 +165,7 @@ int mainGui(const ArgParse & args)
 
 	while (!window.ShouldClose())
 	{
+		MainEventLoop::GetInstance().Process();
 		window.Render();
 		window.Poll();
 	}

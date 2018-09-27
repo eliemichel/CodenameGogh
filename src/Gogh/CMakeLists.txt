@@ -1,11 +1,3 @@
-# Automatically generate moc files for Qt
-set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTOUIC ON)
-set(CMAKE_AUTORCC ON)
-find_package(Qt5 COMPONENTS Core Gui Widgets REQUIRED CONFIG)
-if(Qt5Widgets_FOUND)
-	message("Using Qt ${Qt5Widgets_VERSION} from ${Qt5Widgets_INCLUDE_DIRS}")
-endif()
 
 add_compile_definitions(SHARE_DIR="${GOGH_SHARE_DIR}")
 
@@ -37,7 +29,10 @@ set(SRC
 	Parameter.cpp
 	RenderCommand.h
 	RenderCommand.cpp
+	MainEventLoop.h
+	MainEventLoop.cpp
 
+	Object.h
 	RenderProcess.h
 	RenderProcess.cpp
 	FileProbeProcess.h
@@ -102,10 +97,6 @@ add_executable(
 )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
-
-target_link_libraries_and_dll(Gogh Qt5::Core)
-target_link_libraries_and_dll(Gogh Qt5::Gui)
-target_link_libraries_and_dll(Gogh Qt5::Widgets)
 
 target_link_libraries(Gogh glad)
 target_link_libraries(Gogh glfw)

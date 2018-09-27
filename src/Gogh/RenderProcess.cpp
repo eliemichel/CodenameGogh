@@ -1,51 +1,52 @@
 #include "RenderProcess.h"
 #include "Logger.h"
+#include "MainEventLoop.h"
 
 #include <iostream>
+#include <thread>
+#include <future>
 
 std::string RenderProcess::locateFfmpeg()
 {
 	return "ffmpeg";
 }
 
-RenderProcess::RenderProcess(const std::vector<std::string> & args, QObject *parent)
-	: QProcess(parent)
-	, m_args(args)
+RenderProcess::RenderProcess(const std::vector<std::string> & args)
+	: m_args(args)
 {
-	connect(this, QOverload<int>::of(&QProcess::finished), this, &RenderProcess::onProcessFinished);
-	connect(this, &QProcess::readyReadStandardOutput, this, &RenderProcess::readStdout);
-	connect(this, &QProcess::readyReadStandardError, this, &RenderProcess::readStderr);
-
-	setInputChannelMode(ForwardedInputChannel);
+	processFinished.connect(this, &RenderProcess::onProcessFinished);
 }
 
 void RenderProcess::start()
 {
-	QString program = QString::fromStdString(RenderProcess::locateFfmpeg());
-	QStringList arguments;
-	for (const std::string & arg : m_args)
-	{
-		arguments << QString::fromStdString(arg);
+	std::string cmd = locateFfmpeg();
+	for (const std::string & arg : m_args) {
+		cmd += " " + arg;
 	}
 
-	//Prompts the command sent to ffmpeg right before
-	DEBUG_LOG << program.toStdString() << " " << arguments.join(" ").toStdString();
+	DEBUG_LOG << cmd;
+	
+	m_process = std::make_shared<TinyProcessLib::Process>(cmd, "", [this](const char *bytes, size_t n) {
+		std::cout << std::string(bytes, n);
+	}, [](const char *bytes, size_t n) {
+		WARN_LOG << std::string(bytes, n);
+	});
 
-	QProcess::start(program, arguments);
+	std::packaged_task<int()> task([this]() {
+		return m_process->get_exit_status();
+	});
+	std::future<int> future = task.get_future();
+	std::thread(std::move(task)).detach();
+	MainEventLoop::GetInstance().Add(std::move(future), &processFinished);
 }
 
-void RenderProcess::onProcessFinished()
+bool RenderProcess::waitForFinished()
 {
-	LOG << "render finished with code " << exitCode();
+	return m_process->get_exit_status() == 0;
 }
 
-void RenderProcess::readStdout()
+void RenderProcess::onProcessFinished(int exit_status)
 {
-	std::cout << readAllStandardOutput().toStdString() << std::flush;
+	LOG << "render finished with code " << exit_status;
+	rendered.fire();
 }
-
-void RenderProcess::readStderr()
-{
-	std::cerr << readAllStandardError().toStdString() << std::flush;
-}
-

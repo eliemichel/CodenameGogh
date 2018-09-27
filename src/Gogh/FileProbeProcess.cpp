@@ -1,8 +1,13 @@
 #include "FileProbeProcess.h"
 #include "Logger.h"
+#include "MainEventLoop.h"
+
+#include "utils/strutils.h"
 
 #include <iostream>
 #include <string>
+#include <thread>
+#include <future>
 
 std::string FileProbeProcess::locateFfprobe()
 {
@@ -33,58 +38,57 @@ void FileProbeProcess::probe(std::string filename)
 
 	std::string cmd =
 		locateFfprobe()
-		+ "-v error"
-		+ "-show_entries stream=codec_type"
-		+ "-print_format"
-		+ "default=noprint_wrappers=1:nokey=1"
-		+ m_filename;
+		+ " -v error"
+		+ " -show_entries stream=codec_type"
+		+ " -print_format"
+		+ " default=noprint_wrappers=1:nokey=1"
+		+ " " + m_filename;
 
 	DEBUG_LOG << cmd;
 
-	delete m_process;
-
-	m_process = make_shared<TinyProcessLib::Process>("ffmpeg -version", "", [](const char *bytes, size_t n) {
-		std::cout << "Output from stdout: " << std::string(bytes, n);
+	m_process = std::make_shared<TinyProcessLib::Process>(cmd, "", [this](const char *bytes, size_t n) {
+		m_stdin << std::string(bytes, n);
 	}, [](const char *bytes, size_t n) {
 		WARN_LOG << std::string(bytes, n);
 	});
 
-	std::thread th([]() {
-		int exit_status = m_process.get_exit_status();
-		std::cout << "Example 3 process returned: " << exit_status << " (" << (exit_status == 0 ? "success" : "failure") << ")" << std::endl;
-		processFinished.fire();
+	std::packaged_task<int()> task([this]() {
+		return m_process->get_exit_status();
 	});
-	th.detach();
-
-	QProcess::start(program, arguments);
+	std::future<int> future = task.get_future();
+	std::thread(std::move(task)).detach();
+	MainEventLoop::GetInstance().Add(std::move(future), &processFinished);
 }
 
 void FileProbeProcess::cancel()
 {
 	m_wasCanceled = false;
-	m_process->kill();
+	if (m_process) {
+		m_process->kill();
+	}
 }
 
-void FileProbeProcess::onProcessFinished()
+void FileProbeProcess::onProcessFinished(int exit_status)
 {
+	m_exit_status = exit_status;
 	m_isRunning = false;
-	LOG << "probe finished with code " << exitCode();
+	LOG << "probe finished with code " << m_exit_status << " (" << (m_exit_status == 0 ? "success" : "failure") << ")";
 	if (m_wasCanceled)
 	{
 		if (m_mustRetry)
 		{
-			probe(m_filename.toStdString());
+			probe(m_filename);
 		}
 	}
 
 	// Parse output
 	m_streams.clear();
-	//QTextStream stream(this);
 	std::string line;
 	do
 	{
-		line = "TODO";
-		if (line.isEmpty())
+		std::getline(m_stdin, line);
+		trim(line);
+		if (line.empty())
 		{
 			continue;
 		}
@@ -104,6 +108,7 @@ void FileProbeProcess::onProcessFinished()
 		{
 			m_streams.push_back(DataStream);
 		}
-	} while (!line.isNull());
+	} while (!m_stdin.eof());
+
 	probed.fire();
 }

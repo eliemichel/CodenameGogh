@@ -1,4 +1,5 @@
 #include "ArgParse.h"
+#include "MainEventLoop.h"
 #include "mainGui.h"
 
 #include <iostream>
@@ -32,6 +33,8 @@ int main(int argc, char *argv[])
 #include "Nodes/OutputNode.h"
 #include "RenderProcess.h"
 
+#include <string>
+
 int mainCmd(const ArgParse & args)
 {
 	// Import command line env
@@ -43,17 +46,17 @@ int mainCmd(const ArgParse & args)
 	}
 	*/
 
-	QString filename = args.isGraphFilenameProvided ? QString::fromStdString(args.graphFilename) : QString();
+	std::string filename = args.isGraphFilenameProvided ? args.graphFilename : "";
 
 	Graph graph;
 
-	if (filename.isNull())
+	if (filename.empty())
 	{
 		ERR_LOG << "You must provide a graph file when running non interactive";
 		return EXIT_FAILURE;
 	}
 
-	if (!graph.load(filename.toStdString()))
+	if (!graph.load(filename))
 	{
 		return EXIT_FAILURE;
 	}
