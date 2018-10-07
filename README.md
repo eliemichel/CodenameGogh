@@ -32,6 +32,12 @@ Run `build-msvc15.bat`, then open `build-msvc15/RayStep.sln`.
 
 ### Other
 
+After cloning this repository, you must first ensure that you also checked out the submodules:
+
+        git submodule update --init --recursive --remote
+
+Then:
+
 	mkdir build
 	cd build
 	cmake .. # or e.g. cmake .. -G "MinGW" to use mingw
