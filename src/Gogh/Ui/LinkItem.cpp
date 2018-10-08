@@ -59,7 +59,7 @@ void LinkItem::UpdateRect() {
 	float dx = d.xf() + d.wf() / 2.f;
 	float dy = d.yf() + d.hf() / 2.f;
 
-	const Rect rect(std::min(ox, dx), std::min(oy, dy), abs(ox - dx), abs(oy - dy));
+	const Rect rect(std::min(ox, dx), std::min(oy, dy), std::abs(ox - dx), std::abs(oy - dy));
 	Tree()->UpdateItemBBox(Tree()->Find(this), rect);
 }
 

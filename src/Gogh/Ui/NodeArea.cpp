@@ -141,10 +141,10 @@ void NodeArea::Paint(NVGcontext *vg) const {
 	}
 
 	if (m_pendingLink.origin || m_pendingLink.destination) {
-		const ::Rect & or = m_pendingLink.origin ? m_pendingLink.origin->BBox() : ::Rect(MouseX(), MouseY(), 0, 0);
+		const ::Rect & originRect = m_pendingLink.origin ? m_pendingLink.origin->BBox() : ::Rect(MouseX(), MouseY(), 0, 0);
 		const ::Rect & dr = m_pendingLink.destination ? m_pendingLink.destination->BBox() : ::Rect(MouseX(), MouseY(), 0, 0);
-		float ox = or.xf() + or.wf() / 2.f;
-		float oy = or.yf() + or.hf() / 2.f;
+		float ox = originRect.xf() + originRect.wf() / 2.f;
+		float oy = originRect.yf() + originRect.hf() / 2.f;
 		float dx = dr.xf() + dr.wf() / 2.f;
 		float dy = dr.yf() + dr.hf() / 2.f;
 		nvgBeginPath(vg);
@@ -169,7 +169,7 @@ void NodeArea::OnMouseOver(int x, int y) {
 	for (MovingItem & movingNode : m_movingNodes) {
 		AbstractNodeAreaItem *nodeItem = AbstractNodeAreaItem::fromRawItem(movingNode.acc.item);
 		assert(nodeItem);
-		::Rect & bbox = nodeItem->BBox();
+		::Rect bbox = nodeItem->BBox();
 		::Rect oldBbox = bbox;
 		bbox.x = movingNode.startX + deltaX;
 		bbox.y = movingNode.startY + deltaY;
@@ -286,7 +286,7 @@ UiElement * NodeArea::ItemAt(int x, int y) {
 	if (!acc.isValid || acc.item->Type() != NodeItemType) {
 		return nullptr;
 	}
-	
+
 	NodeItem *nodeItem = NodeItem::fromRawItem(acc.item);
 	return nodeItem->Content();
 }

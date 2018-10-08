@@ -48,7 +48,7 @@ public:
 	}
 
 	Signal& operator=(Signal const& other) {
-		disconnect_all();
+		disconnectAll();
 	}
 
 private:

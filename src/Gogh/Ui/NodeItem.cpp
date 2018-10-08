@@ -41,7 +41,7 @@ void NodeItem::Paint(NVGcontext *vg) const {
 	if (!m_node) {
 		return;
 	}
-	
+
 	const Rect & r = BBox();
 
 	nvgBeginPath(vg);
@@ -73,7 +73,7 @@ void NodeItem::OnNodeDestroyed() {
 
 void NodeItem::OnInsertedInputSlots(int first, int last) {
 	for (int i = first; i <= last; ++i) {
-		Rect & rect = BBox();
+		Rect rect = BBox();
 		InputSlot & slot = Node()->inputSlot(i);
 		InputSlotItem *slotItem = new InputSlotItem(&slot, { rect.x - 8, rect.y + 20 + 30 * i, 16, 16 });
 		AddChild(slotItem);
@@ -106,7 +106,7 @@ void NodeItem::WhenAboutToRemoveInputSlots(int first, int last) {
 
 void NodeItem::OnInsertedOutputSlots(int first, int last) {
 	for (int i = first; i <= last; ++i) {
-		Rect & rect = BBox();
+		Rect rect = BBox();
 		OutputSlot & slot = Node()->outputSlot(i);
 		OutputSlotItem *slotItem = new OutputSlotItem(&slot, { rect.x + 192, rect.y + 20 + 30 * i, 16, 16 });
 		AddChild(slotItem);

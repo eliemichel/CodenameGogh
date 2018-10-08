@@ -16,6 +16,8 @@
 #define Ui_BoxLayout UiVBoxLayout
 #endif
 
+#include <cmath>
+
 class Ui_BoxLayout : public UiLayout {
 public:
 	Ui_BoxLayout()
@@ -57,7 +59,7 @@ public:
 public:
 	void Update() override {
 		/* for constant sized items
-		int itemHeight = floor(Rect().h / m_items.size());
+		int itemHeight = std::floor(Rect().h / m_items.size());
 		// Prevent rounding issues
 		int lastItemHeight = Rect().h - (m_items.size() - 1) * itemHeight;
 
@@ -85,9 +87,9 @@ public:
 #else
 		int remainingHeight = InnerRect().h - sumVHints;
 #endif
-		int itemHeight = nullHints == 0 ? 0 : std::max(0, (int)floor(remainingHeight / nullHints));
+		int itemHeight = nullHints == 0 ? 0 : std::max(0, (int)std::floor(remainingHeight / nullHints));
 		int lastItemHeight = std::max(0, remainingHeight) - (nullHints - 1) * itemHeight;
-		int hintedItemHeightDelta = nonNullHints == 0 ? 0 : std::min((int)floor(remainingHeight / nonNullHints), 0);
+		int hintedItemHeightDelta = nonNullHints == 0 ? 0 : std::min((int)std::floor(remainingHeight / nonNullHints), 0);
 		// The last height might be a bit different to prevent rounding issues
 		int lastHintedItemHeightDelta = -std::max(0, -remainingHeight) + (nonNullHints - 1) * hintedItemHeightDelta;
 
@@ -129,7 +131,7 @@ protected:
 	UiElement * ItemAt(int x, int y) override {
 		/* for regular items
 		int itemHeight = Rect().h / m_items.size();
-		size_t i = std::min((size_t)(floor((y - Rect().y) / itemHeight)), m_items.size() - 1);
+		size_t i = std::min((size_t)(std::floor((y - Rect().y) / itemHeight)), m_items.size() - 1);
 		m_items[i]->QueryAt(x, y);
 		*/
 

@@ -16,6 +16,7 @@
 #include <string>
 #include <vector>
 #include <algorithm>
+#include <cmath>
 
 class UiElement {
 public:
@@ -234,7 +235,7 @@ private:
  * cleared and keeps track of the lastly clicked item to forward it key events.
  * An extra "press focus" is used to ensure that mouse release is dispatched to
  * elements where mouse press was sent.
- */ 
+ */
 class UiLayout : public UiElement {
 public:
 	UiLayout()
@@ -513,8 +514,8 @@ protected:
 		int itemWidth = (r.w - ColSpacing() * (ColCount() - 1)) / ColCount() + ColSpacing();
 		int itemHeight = (r.h - RowSpacing() * (RowCount() - 1)) / RowCount() + RowSpacing();
 
-		size_t colIndex = std::min((int)(floor(relativeX / itemWidth)), ColCount() - 1);
-		size_t rowIndex = std::min((int)(floor(relativeY / itemHeight)), RowCount() - 1);
+		size_t colIndex = std::min((int)(std::floor(relativeX / itemWidth)), ColCount() - 1);
+		size_t rowIndex = std::min((int)(std::floor(relativeY / itemHeight)), RowCount() - 1);
 
 		bool isInColSpacing = (colIndex + 1) * itemWidth - relativeX <= ColSpacing();
 		bool isInRowSpacing = (rowIndex + 1) * itemHeight - relativeY <= RowSpacing();

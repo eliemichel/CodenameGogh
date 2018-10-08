@@ -1,5 +1,7 @@
 #include "RenderCommand.h"
 
+#include <iostream>
+
 // Overloaders
 std::ostream& operator<<(std::ostream& stream, const filestream& fs)
 {
