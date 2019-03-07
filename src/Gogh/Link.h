@@ -12,11 +12,13 @@ class OutputSlot;
 class Link
 {
 public:
+	// TODO [Elie] Why do we allow to build link with no source/dest?
 	Link()
 		: m_origin(nullptr), m_destination(nullptr)
 	{}
 	Link(OutputSlot *origin, InputSlot *destination);
 	Link(const Link &) = delete; // signal emitters must not be copied
+	Link & operator=(Link &) = delete;
 
 	~Link();
 
@@ -24,6 +26,7 @@ public:
 	InputSlot* destination() const { return m_destination; }
 
 private:
+	// TODO [Elie] What? Why is this still here?
 	void setOrigin(OutputSlot *origin);
 	void setDestination(InputSlot *destination);
 

@@ -135,7 +135,6 @@ public:
 	* The emits the signal aboutToRemoveOutputSlots before changing the underlying data
 	*/
 	void removeOutputSlots(int first, int last);
-	void removeOutputSlots() { removeOutputSlots(0, outputSlotCount() - 1); }
 
 	// Extra utility inserters
 
@@ -159,12 +158,14 @@ public:
 	 */
 	void appendOutputSlots(int n) { insertOutputSlots(outputSlotCount(), outputSlotCount() + n - 1); }
 	void appendOutputSlot() { appendOutputSlots(1); }
+	void removeOutputSlots() { removeOutputSlots(0, outputSlotCount() - 1); }
 
 
 public:
 	/**
 	 * Create an editor widget to operate on this node's parms.
 	 * This is the only method that handle graphical objects.
+	 * [Elie] Why do we need this? It is likely to be removed if there is no good reason to keep it
 	 */
 	virtual UiElement * createDelegate(UiLayout *popupLayout = nullptr);
 
@@ -230,7 +231,6 @@ private:
 	// TODO: fire inputSlotDisconnectEvent and outputSlotDisconnectEvent
 
 private:
-	// TODO: add accessors for these attributes
 	int m_type;
 	float m_x, m_y;
 	std::string m_name;
