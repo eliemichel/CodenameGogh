@@ -1,7 +1,7 @@
 import QtQuick 2.12
+import QtQml.Models 2.12
 import QtQuick.Controls 2.5
 import QtQuick.Layouts 1.0
-import QtQml.Models 2.12
 
 ApplicationWindow
 {
@@ -9,6 +9,17 @@ ApplicationWindow
     width: 640
     height: 480
     title: qsTr("Gogh - DEVELOPMENT VERSION")
+
+    // <MODELS> //
+    NodeModel {
+        id: nodeModel
+    }
+
+    ItemSelectionModel {
+        id: nodeSelectionModel
+        model: nodeModel
+    }
+    // </MODELS> //
 
     menuBar: MenuBar {
         Menu {
@@ -46,14 +57,19 @@ ApplicationWindow
             Layout.preferredWidth: rowLayout.sliderPixels
         }
 
-        Rectangle {
+        VerticalHandleDelegate {
             id: slider
             Layout.fillWidth: true
             Layout.fillHeight: true
-            Layout.minimumWidth: 4
-            Layout.maximumWidth: 4
-            color: "red"
+            Layout.minimumWidth: 2
+            Layout.maximumWidth: 2
+            QtObject {
+                id: styleData
+                property bool pressed: mouseArea.held
+                property bool hovered: false
+            }
             MouseArea {
+                id: mouseArea
                 property bool held;
                 property real deltaX;
 
