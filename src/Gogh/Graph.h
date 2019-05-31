@@ -21,6 +21,8 @@ struct Slot {
 		return node.expired();
 	}
 };
+struct NodeInput : public Slot {};
+struct NodeOutput : public Slot {};
 
 struct Node : public std::enable_shared_from_this<Node> {
 	Node() { DEBUG_LOG << "Node ctor"; }
@@ -28,23 +30,23 @@ struct Node : public std::enable_shared_from_this<Node> {
 
 	int payload;
 	std::vector<std::unique_ptr<Gogh::Parameter>> parameters;
-	std::vector<std::shared_ptr<Slot>> inputs;
-	std::vector<std::shared_ptr<Slot>> outputs;
+	std::vector<std::shared_ptr<NodeInput>> inputs;
+	std::vector<std::shared_ptr<NodeOutput>> outputs;
 
-	std::shared_ptr<Slot> addInput() noexcept {
-		std::shared_ptr<Slot> s = std::make_shared<Slot>();
+	std::shared_ptr<NodeInput> addInput() noexcept {
+		std::shared_ptr<NodeInput> s = std::make_shared<NodeInput>();
 		inputs.push_back(s);
 		return s;
 	}
 
-	std::shared_ptr<Slot> addOutput() noexcept {
-		std::shared_ptr<Slot> s = std::make_shared<Slot>();
+	std::shared_ptr<NodeOutput> addOutput() noexcept {
+		std::shared_ptr<NodeOutput> s = std::make_shared<NodeOutput>();
 		s->node = weak_from_this();
 		outputs.push_back(s);
 		return s;
 	}
 
-	std::shared_ptr<Slot> getInput(int index) noexcept {
+	std::shared_ptr<NodeInput> getInput(int index) noexcept {
 		if (index < 0 || index >= inputs.size())
 		{
 			WARN_LOG << "Invalid input index: " << index << " (node has " << inputs.size() << " inputs)";
@@ -53,7 +55,7 @@ struct Node : public std::enable_shared_from_this<Node> {
 		return inputs[index];
 	}
 
-	std::shared_ptr<Slot> getOutput(int index) noexcept {
+	std::shared_ptr<NodeOutput> getOutput(int index) noexcept {
 		if (index < 0 || index >= outputs.size())
 		{
 			WARN_LOG << "Invalid output index: " << index << " (node has " << outputs.size() << " outputs)";
@@ -67,13 +69,13 @@ struct Edge {
 	Edge() { DEBUG_LOG << "Edge ctor"; }
 	~Edge() { DEBUG_LOG << "Edge dtor"; }
 
-	std::weak_ptr<Slot> origin;
-	std::weak_ptr<Slot> destination;
+	std::weak_ptr<NodeOutput> origin;
+	std::weak_ptr<NodeInput> destination;
 
-	std::shared_ptr<Slot> getOrigin() const noexcept {
+	std::shared_ptr<NodeOutput> getOrigin() const noexcept {
 		return origin.lock();
 	}
-	std::shared_ptr<Slot> getDestination() const noexcept {
+	std::shared_ptr<NodeInput> getDestination() const noexcept {
 		return destination.lock();
 	}
 
@@ -121,7 +123,7 @@ struct Graph {
 		nodes.erase(std::find(nodes.begin(), nodes.end(), node));
 	}
 
-	std::shared_ptr<Edge> addEdge(std::shared_ptr<Slot> origin, std::shared_ptr<Slot> destination) noexcept {
+	std::shared_ptr<Edge> addEdge(std::shared_ptr<NodeOutput> origin, std::shared_ptr<NodeInput> destination) noexcept {
 		if (!origin)
 		{
 			WARN_LOG << "Null origin slot";
@@ -159,6 +161,11 @@ struct Graph {
 		edges.erase(std::find(edges.begin(), edges.end(), edge));
 	}
 };
+
+typedef std::shared_ptr<Node> NodePtr;
+typedef std::shared_ptr<NodeInput> NodeInputPtr;
+typedef std::shared_ptr<NodeOutput> NodeOutputPtr;
+typedef std::shared_ptr<Edge> EdgePtr;
 
 } // namespace Gogh
 

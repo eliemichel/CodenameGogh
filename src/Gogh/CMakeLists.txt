@@ -2,11 +2,11 @@
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
-find_package(Qt5 COMPONENTS Core Gui Widgets Qml Quick REQUIRED CONFIG)
+find_package(Qt5 COMPONENTS Core Gui Widgets Qml Quick QuickWidgets QuickControls2 REQUIRED CONFIG)
 if(Qt5Widgets_FOUND)
-	message("Using Qt ${Qt5Widgets_VERSION} from ${Qt5Widgets_INCLUDE_DIRS}")
-endif()
+	message("Using Qt ${Qt5Widgets_VERSION} from ${Qt5Core_DIR}")
 
+endif()
 add_compile_definitions(SHARE_DIR="${GOGH_SHARE_DIR}")
 
 set(SRC
@@ -39,9 +39,12 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries_and_dll(Gogh Qt5::Core)
 target_link_libraries_and_dll(Gogh Qt5::Gui)
 target_link_libraries_and_dll(Gogh Qt5::Widgets)
+target_link_libraries_and_dll(Gogh Qt5::Network)
 target_link_libraries_and_dll(Gogh Qt5::Qml)
 target_link_libraries_and_dll(Gogh Qt5::Quick)
-target_link_libraries_and_dll(Gogh Qt5::Network)
+target_link_libraries_and_dll(Gogh Qt5::QuickWidgets)
+target_link_libraries_and_dll(Gogh Qt5::QuickTemplates2)
+target_link_libraries_and_dll(Gogh Qt5::QuickControls2)
 
 # For IDE projects
 group_source_by_folder(${SRC})
