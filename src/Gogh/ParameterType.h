@@ -1,5 +1,7 @@
-#ifndef H_PARAMETERTYPE
-#define H_PARAMETERTYPE
+#ifndef H_GOGH_PARAMETERTYPE
+#define H_GOGH_PARAMETERTYPE
+
+namespace Gogh {
 
 enum ParmType
 {
@@ -11,4 +13,6 @@ enum ParmType
 	CheckboxType,
 };
 
-#endif // H_PARAMETERTYPE
+} // namespace Gogh
+
+#endif // H_GOGH_PARAMETERTYPE

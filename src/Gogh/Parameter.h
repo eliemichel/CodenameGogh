@@ -1,5 +1,5 @@
-#ifndef H_PARAMETER
-#define H_PARAMETER
+#ifndef H_GOGH_PARAMETER
+#define H_GOGH_PARAMETER
 
 #include "ParameterType.h"
 #include "Variant.h"
@@ -8,6 +8,7 @@
 #include <vector>
 #include <string>
 
+namespace Gogh {
 
 /**
  * A parameter is a user editable property of a node. They represent properties
@@ -141,4 +142,6 @@ private:
 	std::vector<MenuItem> m_menu;
 };
 
-#endif // H_PARAMETER
+} // namespace Gogh
+
+#endif // H_GOGH_PARAMETER

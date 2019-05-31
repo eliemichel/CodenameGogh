@@ -1,5 +1,6 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource>
 	<file alias="styles/default.css">../../share/styles/default.css</file>
+  <file alias="main.qml">qml/main.qml</file>
 </qresource>
 </RCC>

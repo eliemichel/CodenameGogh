@@ -9,6 +9,7 @@ option(GOGH_BUILD_DOCS "Build the Gogh developper documentation" ON)
 
 set(GOGH_SHARE_DIR "${Gogh_SOURCE_DIR}/share")
 
+guess_qt5_dir()
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 # Gogh binary

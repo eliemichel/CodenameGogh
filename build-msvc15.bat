@@ -9,7 +9,8 @@ mkdir build-msvc15
 cd build-msvc15
 
 :: Call cmake to generate the all configured Visual Studio solution
-cmake .. -G "Visual Studio 15 2017 Win64"
+:: If Qt is not found, you can specify its location using e.g. -DQt5_DIR=E:/Qt/5.9.2/msvc2017_64/lib/cmake/Qt5
+cmake .. -G "Visual Studio 15 2017 Win64" -DQt5_DIR=E:/Qt/5.12.1/5.12.1/msvc2017_64/lib/cmake/Qt5
 
 @echo off
 :: Check that it run all right

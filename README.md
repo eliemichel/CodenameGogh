@@ -24,7 +24,7 @@ Build
 -----
 ### Dependencies
 
-Gogh only requires a C++11 ready compiler. Every dependencies are included in [src/external](src/external).
+Gogh requires a C++11 ready compiler and Qt 5.9 or above. Other dependencies are included in [src/external](src/external).
 
 ### Windows 64bit with Visual Studio 15 (2017)
 

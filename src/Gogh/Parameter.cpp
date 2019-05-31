@@ -1,6 +1,8 @@
 #include "Parameter.h"
 #include "Logger.h"
 
+using namespace Gogh;
+
 Parameter::Parameter()
 	: m_type(NoneType)
 {}

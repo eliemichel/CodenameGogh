@@ -32,8 +32,26 @@
 #include <algorithm>
 #include <cassert>
 
+#include <QGuiApplication>
+#include <QQmlApplicationEngine>
+
 int mainGui(const ArgParse & args)
 {
+	QCoreApplication::addLibraryPath("E:\\SourceCode\\Gogh\\build-msvc15\\src\\Gogh\\Debug\\plugins");
+
+	int argc = args.argc;
+	QGuiApplication app0(argc, args.argv);
+
+	QQmlApplicationEngine engine;
+	engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
+	if (engine.rootObjects().isEmpty())
+	{
+		return -1;
+	}
+
+	return app0.exec();
+
+
 	Parameter *pParam;
 	Node *pNode;
 	Graph *graph = new Graph();
