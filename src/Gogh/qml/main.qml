@@ -1,6 +1,7 @@
 import QtQuick 2.12
 import QtQuick.Controls 2.5
 import QtQuick.Layouts 1.0
+import QtQml.Models 2.12
 
 ApplicationWindow
 {
@@ -9,23 +10,16 @@ ApplicationWindow
     height: 480
     title: qsTr("Gogh - DEVELOPMENT VERSION")
 
-    menuBar: ToolBar {
-        RowLayout {
-            anchors.fill: parent
-            ToolButton {
-                text: qsTr("‹")
-                onClicked: stack.pop()
+    menuBar: MenuBar {
+        Menu {
+            title: qsTr("File")
+            MenuItem {
+                text: qsTr("&Open")
+                onTriggered: console.log("Open action triggered");
             }
-            Label {
-                text: "Title"
-                elide: Label.ElideRight
-                horizontalAlignment: Qt.AlignHCenter
-                verticalAlignment: Qt.AlignVCenter
-                Layout.fillWidth: true
-            }
-            ToolButton {
-                text: qsTr("⋮")
-                onClicked: menu.open()
+            MenuItem {
+                text: qsTr("Exit")
+                onTriggered: Qt.quit();
             }
         }
     }
@@ -35,51 +29,60 @@ ApplicationWindow
         anchors.fill: parent
     }
 
-    Item {
-        id: root
+    RowLayout {
+        id: rowLayout
         anchors.fill: parent
+        spacing: 0
 
-        Repeater {
-            model: 3
+        property real sliderPercentage: 50
+        property real sliderPixels: Math.min(Math.max(20, sliderPercentage/100.0*width), width - 20)
 
-            Rectangle {
-                id: node
-                color: "#272822"
-                width: 200
-                height: 100
+        NodeView{
+            id: nodeView
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.minimumWidth: rowLayout.sliderPixels
+            Layout.maximumWidth: rowLayout.sliderPixels
+            Layout.preferredWidth: rowLayout.sliderPixels
+        }
 
+        Rectangle {
+            id: slider
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.minimumWidth: 4
+            Layout.maximumWidth: 4
+            color: "red"
+            MouseArea {
+                property bool held;
+                property real deltaX;
 
-                Rectangle {
-                    id: nodeDragHandle
-                    color: "#472822"
-                    width: 200
-                    height: 25
-
-                    MouseArea {
-                        anchors.fill: parent
-                        cursorShape: Qt.OpenHandCursor
-
-                        drag.target: node
-                        drag.axis: Drag.XAndYAxis
-
-                        onPressed: {
-                            Qt.ClosedHandCursor
-                        }
-                        onReleased: {
-                            Qt.OpenHandCursor
-                        }
-                    }
-
-                    Text {
-                        text: "Input Node"
-                        anchors.fill: parent
-                        leftPadding: 5
-                        rightPadding: 5
-                        verticalAlignment: Text.AlignVCenter
-                        color: "white"
+                anchors.fill: parent
+                cursorShape: Qt.SizeHorCursor
+                onPressed: {
+                    held = true;
+                    deltaX = rowLayout.sliderPixels - mapToItem(rowLayout, mouseX, 0).x;
+                }
+                onPositionChanged: {
+                    if (held) {
+                        rowLayout.sliderPercentage = (mapToItem(rowLayout, mouseX, 0).x + deltaX) / rowLayout.width * 100.
                     }
                 }
+                onReleased: held = false
             }
         }
+
+        Rectangle {
+            color: 'plum'
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            Layout.minimumWidth: 20
+            Text {
+                anchors.centerIn: parent
+                text: rowLayout.sliderPercentage + 'x' + rowLayout.sliderPixels
+            }
+        }
+
     }
+
 }
