@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 11)
 include(cmake/utils.cmake)
 
 option(GOGH_BUILD_DOCS "Build the Gogh developper documentation" ON)
+option(GOGH_RUN_TESTS "Run the unit tests" ON)
 
 set(GOGH_SHARE_DIR "${Gogh_SOURCE_DIR}/share")
 
@@ -15,6 +16,13 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 # Gogh binary
 
 add_subdirectory(src)
+
+# Testing
+
+if (GOGH_RUN_TESTS)
+	enable_testing()
+	add_subdirectory(test)
+endif()
 
 # Documentation
 

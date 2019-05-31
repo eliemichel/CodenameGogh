@@ -4,4 +4,4 @@ Win32/
 x64/
 *.DS_Store
 doc/doxygen
-
+/.vs/
