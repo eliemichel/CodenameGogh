@@ -95,7 +95,7 @@ ApplicationWindow
             Layout.minimumWidth: 20
             Text {
                 anchors.centerIn: parent
-                text: rowLayout.sliderPercentage + 'x' + rowLayout.sliderPixels
+                text: nodeModel.get(1).inputs.get(0).x + "x" + nodeModel.get(1).inputs.get(0).y
             }
         }
 

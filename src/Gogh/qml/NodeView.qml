@@ -1,6 +1,7 @@
 import QtQuick 2.12
 import QtQuick.Layouts 1.12
 import QtQml.Models 2.12
+import QtQuick.Shapes 1.12
 
 Rectangle {
     id: nodeView
@@ -11,23 +12,27 @@ Rectangle {
 
         Rectangle {
             id: node
+            property int modelIndex: index
             color: "#272822"
             border.width: 1
             border.color: index == nodeSelectionModel.currentIndex.row ? "blue" : "black"
             width: 200
             height: 100
 
-            MouseArea {
-                anchors.fill: parent
-                onClicked: nodeSelectionModel.setCurrentIndex(nodeModel.index(index, 0), ItemSelectionModel.Current)
-            }
+            // Hack to detect in slots that the node has moved
+            property bool movedBit
+            onXChanged: { movedBit = !movedBit; }
+            onYChanged: { movedBit = !movedBit; }
 
             ColumnLayout {
+                anchors.fill: parent
+                spacing: 0
+
                 // Header of the node, with the node name and that is used for dragging
                 Rectangle {
                     id: nodeDragHandle
                     color: "#472822"
-                    width: 200
+                    Layout.fillWidth: true
                     height: 25
 
                     MouseArea {
@@ -58,10 +63,30 @@ Rectangle {
                 }
 
                 // Reminder of the node, for i/o and params
-                Rectangle {
-                    color: "green"
+                Item {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
+
+                    // Parameters
+                    Item {
+                        anchors.fill: parent
+
+                        ListView {
+                            anchors.fill: parent
+                            model: parameters
+                            delegate: Text {
+                                text: "- " + name
+                            }
+                        }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: {
+                                nodeSelectionModel.setCurrentIndex(nodeModel.index(node.modelIndex, 0), ItemSelectionModel.Current)
+                            }
+                        }
+
+                    }
 
                     // Inputs
                     Column {
@@ -78,6 +103,22 @@ Rectangle {
                                     text: name
                                     anchors.fill: parent
                                     color: "white"
+                                }
+                                Binding {
+                                    target : model
+                                    property : "x"
+                                    value : {
+                                        node.movedBit = node.movedBit; // force dependency
+                                        mapToItem(nodeViewRoot, width/2, height/2).x
+                                    }
+                                }
+                                Binding {
+                                    target : model
+                                    property : "y"
+                                    value : {
+                                        node.movedBit = node.movedBit; // force dependency
+                                        mapToItem(nodeViewRoot, width/2, height/2).y
+                                    }
                                 }
                             }
                         }
@@ -99,6 +140,22 @@ Rectangle {
                                     anchors.right: parent.right
                                     color: "white"
                                 }
+                                Binding {
+                                    target : model
+                                    property : "x"
+                                    value : {
+                                        node.movedBit = node.movedBit; // force dependency
+                                        mapToItem(nodeViewRoot, width/2, height/2).x
+                                    }
+                                }
+                                Binding {
+                                    target : model
+                                    property : "y"
+                                    value : {
+                                        node.movedBit = node.movedBit; // force dependency
+                                        mapToItem(nodeViewRoot, width/2, height/2).y
+                                    }
+                                }
                             }
                         }
                     }
@@ -108,7 +165,7 @@ Rectangle {
     }
 
     Item {
-        id: root
+        id: nodeViewRoot
         anchors.fill: parent
 
         DelegateModel {
@@ -119,6 +176,21 @@ Rectangle {
 
         Repeater {
             model: nodeDelegateModel
+        }
+
+        Shape {
+            anchors.fill: parent
+            
+            ShapePath {
+                id: myPath
+                strokeWidth: 4
+                startX: nodeModel.get(0).outputs.get(0).x
+                startY: nodeModel.get(0).outputs.get(0).y
+                PathLine {
+                    x: nodeModel.get(1).inputs.get(0).x
+                    y: nodeModel.get(1).inputs.get(0).y
+                }
+            }
         }
     }
 }

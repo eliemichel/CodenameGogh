@@ -12,6 +12,7 @@ set(GOGH_SHARE_DIR "${Gogh_SOURCE_DIR}/share")
 
 guess_qt5_dir()
 include(cmake/Qt5QuickTemplates2Config.cmake)
+include(cmake/Qt5QuickShapesConfig.cmake)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 # Gogh binary

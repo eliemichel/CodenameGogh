@@ -45,6 +45,7 @@ target_link_libraries_and_dll(Gogh Qt5::Quick)
 target_link_libraries_and_dll(Gogh Qt5::QuickWidgets)
 target_link_libraries_and_dll(Gogh Qt5::QuickTemplates2)
 target_link_libraries_and_dll(Gogh Qt5::QuickControls2)
+target_link_libraries_and_dll(Gogh Qt5::QuickShapes)
 
 # For IDE projects
 group_source_by_folder(${SRC})
