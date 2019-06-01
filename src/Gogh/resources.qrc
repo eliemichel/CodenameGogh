@@ -5,5 +5,10 @@
   	<file>qml/NodeGraphView.qml</file>
   	<file>qml/NodeGraphModel.qml</file>
   	<file>qml/VerticalHandleDelegate.qml</file>
+  	<file>qml/ParameterListView.qml</file>
+  	<file>qml/EdgeDelegate.qml</file>
+  	<file>qml/NodeDelegate.qml</file>
+  	<file>qml/NodeDelegate/NodeHeader.qml</file>
+  	<file>qml/NodeDelegate/Slot.qml</file>
 </qresource>
 </RCC>
