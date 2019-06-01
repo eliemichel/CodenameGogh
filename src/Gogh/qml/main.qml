@@ -11,13 +11,13 @@ ApplicationWindow
     title: qsTr("Gogh - DEVELOPMENT VERSION")
 
     // <MODELS> //
-    NodeModel {
-        id: nodeModel
+    NodeGraphModel {
+        id: nodeGraphModel
     }
 
     ItemSelectionModel {
         id: nodeSelectionModel
-        model: nodeModel
+        model: nodeGraphModel.nodes
     }
     // </MODELS> //
 
@@ -48,7 +48,7 @@ ApplicationWindow
         property real sliderPercentage: 50
         property real sliderPixels: Math.min(Math.max(20, sliderPercentage/100.0*width), width - 20)
 
-        NodeView{
+        NodeGraphView{
             id: nodeView
             Layout.fillWidth: true
             Layout.fillHeight: true
@@ -95,7 +95,7 @@ ApplicationWindow
             Layout.minimumWidth: 20
             Text {
                 anchors.centerIn: parent
-                text: nodeModel.get(1).inputs.get(0).x + "x" + nodeModel.get(1).inputs.get(0).y
+                text: nodeGraphModel.nodes.get(1).inputs.get(0).x + "x" + nodeGraphModel.nodes.get(1).inputs.get(0).y
             }
         }
 

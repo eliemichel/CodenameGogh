@@ -2,8 +2,8 @@
 <qresource>
 	<file alias="styles/default.css">../../share/styles/default.css</file>
   	<file>qml/main.qml</file>
-  	<file>qml/NodeView.qml</file>
-  	<file>qml/NodeModel.qml</file>
+  	<file>qml/NodeGraphView.qml</file>
+  	<file>qml/NodeGraphModel.qml</file>
   	<file>qml/VerticalHandleDelegate.qml</file>
 </qresource>
 </RCC>
