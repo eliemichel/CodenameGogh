@@ -96,6 +96,7 @@ Rectangle {
                             model: inputs
 
                             Rectangle {
+                                id: inputSlot
                                 width: 15
                                 height: 15
                                 color: "red";
@@ -122,14 +123,50 @@ Rectangle {
                                 }
                                 MouseArea {
                                     anchors.fill: parent
+                                    drag.target: pendingEdgeEnd
+                                    drag.smoothed: false
                                     onPressed: {
-                                        console.log("pressed input #" + index + " of node #" + node.modelIndex);
-                                        nodeGraphModel.pendingEdges.insert(nodeGraphModel.pendingEdges.count, {
+                                        pendingEdgeEnd.x = model.x
+                                        pendingEdgeEnd.y = model.y
+                                        pendingEdgeEnd.typeKey = "output"
+                                        nodeGraphModel.pendingEdges.append({
                                             originNode: -1,
                                             originOutput: -1,
                                             destinationNode: node.modelIndex,
                                             destinationInput: index,
                                         })
+                                    }
+                                    onReleased: {
+                                        if (pendingEdgeEnd.targetNode != -1
+                                            && pendingEdgeEnd.targetNode != node.modelIndex) // TODO: check for cycles
+                                        {
+                                            for (var i = 0, n = nodeGraphModel.pendingEdges.count ; i < n ; ++i) {
+                                                var edge = nodeGraphModel.pendingEdges.get(i);
+                                                nodeGraphModel.edges.append({
+                                                    originNode: pendingEdgeEnd.targetNode,
+                                                    originOutput: pendingEdgeEnd.targetSlot,
+                                                    destinationNode: edge.destinationNode,
+                                                    destinationInput: edge.destinationInput,
+                                                })
+                                            }
+                                        }
+                                        pendingEdgeEnd.targetNode = -1
+                                        pendingEdgeEnd.targetSlot = -1
+                                        nodeGraphModel.pendingEdges.clear()
+                                    }
+                                }
+                                DropArea {
+                                    anchors.fill: parent
+                                    keys: [ "input" ]
+                                    onEntered: {
+                                        inputSlot.color = "green"
+                                        pendingEdgeEnd.targetNode = node.modelIndex
+                                        pendingEdgeEnd.targetSlot = index
+                                    }
+                                    onExited: {
+                                        inputSlot.color = "red"
+                                        pendingEdgeEnd.targetNode = -1
+                                        pendingEdgeEnd.targetSlot = -1
                                     }
                                 }
                             }
@@ -144,6 +181,7 @@ Rectangle {
                             model: outputs
 
                             Rectangle {
+                                id: outputSlot
                                 width: 15
                                 height: 15
                                 color: "red";
@@ -170,14 +208,50 @@ Rectangle {
                                 }
                                 MouseArea {
                                     anchors.fill: parent
+                                    drag.target: pendingEdgeEnd
+                                    drag.smoothed: false
                                     onPressed: {
-                                        console.log("pressed output #" + index + " of node #" + node.modelIndex);
-                                        nodeGraphModel.pendingEdges.insert(nodeGraphModel.pendingEdges.count, {
+                                        pendingEdgeEnd.x = model.x
+                                        pendingEdgeEnd.y = model.y
+                                        pendingEdgeEnd.typeKey = "input"
+                                        nodeGraphModel.pendingEdges.append({
                                             originNode: node.modelIndex,
                                             originOutput: index,
                                             destinationNode: -1,
                                             destinationInput: -1,
                                         })
+                                    }
+                                    onReleased: {
+                                        if (pendingEdgeEnd.targetNode != -1
+                                            && pendingEdgeEnd.targetNode != node.modelIndex) // TODO: check for cycles
+                                        {
+                                            for (var i = 0, n = nodeGraphModel.pendingEdges.count ; i < n ; ++i) {
+                                                var edge = nodeGraphModel.pendingEdges.get(i);
+                                                nodeGraphModel.edges.append({
+                                                    originNode: edge.originNode,
+                                                    originOutput: edge.originOutput,
+                                                    destinationNode: pendingEdgeEnd.targetNode,
+                                                    destinationInput: pendingEdgeEnd.targetSlot,
+                                                })
+                                            }
+                                        }
+                                        pendingEdgeEnd.targetNode = -1
+                                        pendingEdgeEnd.targetSlot = -1
+                                        nodeGraphModel.pendingEdges.clear()
+                                    }
+                                }
+                                DropArea {
+                                    anchors.fill: parent
+                                    keys: [ "output" ]
+                                    onEntered: {
+                                        outputSlot.color = "green"
+                                        pendingEdgeEnd.targetNode = node.modelIndex
+                                        pendingEdgeEnd.targetSlot = index
+                                    }
+                                    onExited: {
+                                        outputSlot.color = "red"
+                                        pendingEdgeEnd.targetNode = -1
+                                        pendingEdgeEnd.targetSlot = -1
                                     }
                                 }
                             }
@@ -194,14 +268,14 @@ Rectangle {
         Shape {
             function getOutputPosition(nodeIndex, outputIndex) {
                 if (nodeIndex == -1) {
-                    return Qt.point(globalMousePosition.mouseX, globalMousePosition.mouseY);
+                    return Qt.point(pendingEdgeEnd.x, pendingEdgeEnd.y);
                 } else {
                     return nodeGraphModel.nodes.get(nodeIndex).outputs.get(outputIndex);
                 }
             }
             function getInputPosition(nodeIndex, inputIndex) {
                 if (nodeIndex == -1) {
-                    return Qt.point(globalMousePosition.mouseX, globalMousePosition.mouseY);
+                    return Qt.point(pendingEdgeEnd.x, pendingEdgeEnd.y);
                 } else {
                     return nodeGraphModel.nodes.get(nodeIndex).inputs.get(inputIndex);
                 }
@@ -253,12 +327,18 @@ Rectangle {
             Repeater { model: pendingEdgeDelegateModel }
         }
 
-        MouseArea { // TODO: this design causes a problem with cursorShape
-            id: globalMousePosition
-            anchors.fill: parent
-            hoverEnabled: true
-            propagateComposedEvents: true
-            onPressed: { mouse.accepted = false }
+        Rectangle {
+            id: pendingEdgeEnd
+            property string typeKey: "output"
+            property int targetNode: -1
+            property int targetSlot: -1
+
+            width: 10
+            height: 10
+            color: "blue"
+
+            Drag.keys: [ typeKey ]
+            Drag.active: true
         }
     }
 }
