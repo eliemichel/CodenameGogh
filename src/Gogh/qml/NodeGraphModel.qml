@@ -4,6 +4,7 @@ Item {
     id: nodeGraphModel
     property alias nodes: nodeGraphModel_nodes
     property alias edges: nodeGraphModel_edges
+    property alias pendingEdges: nodeGraphModel_pendingEdges
 
     // NODES
     ListModel {
@@ -105,5 +106,9 @@ Item {
             destinationNode: 2
             destinationInput: 1
         }
+    }
+
+    ListModel {
+        id: nodeGraphModel_pendingEdges
     }
 }

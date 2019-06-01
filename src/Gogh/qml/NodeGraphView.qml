@@ -82,7 +82,7 @@ Rectangle {
                         MouseArea {
                             anchors.fill: parent
                             onClicked: {
-                                nodeSelectionModel.setCurrentIndex(nodeModel.index(node.modelIndex, 0), ItemSelectionModel.Current)
+                                nodeSelectionModel.setCurrentIndex(nodeGraphModel.nodes.index(node.modelIndex, 0), ItemSelectionModel.Current)
                             }
                         }
 
@@ -118,6 +118,18 @@ Rectangle {
                                     value : {
                                         node.movedBit = node.movedBit; // force dependency
                                         mapToItem(nodeGraphViewRoot, width/2, height/2).y
+                                    }
+                                }
+                                MouseArea {
+                                    anchors.fill: parent
+                                    onPressed: {
+                                        console.log("pressed input #" + index + " of node #" + node.modelIndex);
+                                        nodeGraphModel.pendingEdges.insert(nodeGraphModel.pendingEdges.count, {
+                                            originNode: -1,
+                                            originOutput: -1,
+                                            destinationNode: node.modelIndex,
+                                            destinationInput: index,
+                                        })
                                     }
                                 }
                             }
@@ -156,6 +168,18 @@ Rectangle {
                                         mapToItem(nodeGraphViewRoot, width/2, height/2).y
                                     }
                                 }
+                                MouseArea {
+                                    anchors.fill: parent
+                                    onPressed: {
+                                        console.log("pressed output #" + index + " of node #" + node.modelIndex);
+                                        nodeGraphModel.pendingEdges.insert(nodeGraphModel.pendingEdges.count, {
+                                            originNode: node.modelIndex,
+                                            originOutput: index,
+                                            destinationNode: -1,
+                                            destinationInput: -1,
+                                        })
+                                    }
+                                }
                             }
                         }
                     }
@@ -168,15 +192,30 @@ Rectangle {
         id: edgeDelegate
 
         Shape {
+            function getOutputPosition(nodeIndex, outputIndex) {
+                if (nodeIndex == -1) {
+                    return Qt.point(globalMousePosition.mouseX, globalMousePosition.mouseY);
+                } else {
+                    return nodeGraphModel.nodes.get(nodeIndex).outputs.get(outputIndex);
+                }
+            }
+            function getInputPosition(nodeIndex, inputIndex) {
+                if (nodeIndex == -1) {
+                    return Qt.point(globalMousePosition.mouseX, globalMousePosition.mouseY);
+                } else {
+                    return nodeGraphModel.nodes.get(nodeIndex).inputs.get(inputIndex);
+                }
+            }
+
             anchors.fill: parent
             ShapePath {
                 strokeWidth: 2
                 strokeColor: "black"
-                startX: nodeGraphModel.nodes.get(originNode).outputs.get(originOutput).x
-                startY: nodeGraphModel.nodes.get(originNode).outputs.get(originOutput).y
+                startX: getOutputPosition(originNode, originOutput).x
+                startY: getOutputPosition(originNode, originOutput).y
                 PathLine {
-                    x: nodeGraphModel.nodes.get(destinationNode).inputs.get(destinationInput).x
-                    y: nodeGraphModel.nodes.get(destinationNode).inputs.get(destinationInput).y
+                    x: getInputPosition(destinationNode, destinationInput).x
+                    y: getInputPosition(destinationNode, destinationInput).y
                 }
             }
         }
@@ -198,6 +237,12 @@ Rectangle {
             delegate: edgeDelegate
         }
 
+        DelegateModel {
+            id: pendingEdgeDelegateModel
+            model: nodeGraphModel.pendingEdges
+            delegate: edgeDelegate
+        }
+
         Repeater { model: nodeDelegateModel }
         Item {
             id: edgesLayer // Layer for antialiasing
@@ -205,6 +250,15 @@ Rectangle {
             layer.enabled: true
             layer.samples: 4
             Repeater { model: edgeDelegateModel }
+            Repeater { model: pendingEdgeDelegateModel }
+        }
+
+        MouseArea { // TODO: this design causes a problem with cursorShape
+            id: globalMousePosition
+            anchors.fill: parent
+            hoverEnabled: true
+            propagateComposedEvents: true
+            onPressed: { mouse.accepted = false }
         }
     }
 }
