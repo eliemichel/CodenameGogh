@@ -32,6 +32,7 @@
 #include "Graph.h"
 #include "ParameterListModel.h"
 #include "NodeInputListModel.h"
+#include "NodeOutputListModel.h"
 
 namespace Gogh {
 namespace Gui {
@@ -83,6 +84,7 @@ public:
 		NodePtrRole = Qt::UserRole,
 		ParameterModelRole,
 		InputModelRole,
+		OutputModelRole,
 	};
 
 private:
@@ -93,16 +95,19 @@ private:
 	 */
 	struct ModelEntry {
 		NodePtr node;
-		std::shared_ptr<ParameterListModel> parameters;
-		std::shared_ptr<NodeInputListModel> inputs;
+		std::shared_ptr<ParameterListModel> parametersModel;
+		std::shared_ptr<NodeInputListModel> inputsModel;
+		std::shared_ptr<NodeOutputListModel> outputsModel;
 
 		ModelEntry(NodePtr _node)
 		{
 			node = _node;
-			parameters = std::make_shared<ParameterListModel>();
-			parameters->setNode(node);
-			inputs = std::make_shared<NodeInputListModel>();
-			inputs->setNode(node);
+			parametersModel = std::make_shared<ParameterListModel>();
+			parametersModel->setNode(node);
+			inputsModel = std::make_shared<NodeInputListModel>();
+			inputsModel->setNode(node);
+			outputsModel = std::make_shared<NodeOutputListModel>();
+			outputsModel->setNode(node);
 		}
 	};
 	std::vector<ModelEntry> m_entries;

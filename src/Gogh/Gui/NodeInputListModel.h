@@ -26,7 +26,9 @@
 #ifndef H_GOGH_NODEINPUTLISTMODEL
 #define H_GOGH_NODEINPUTLISTMODEL
 
-#include "AbstractSlotListModel.h"
+#include <QAbstractItemModel>
+#include <QModelIndex>
+
 #include "Graph.h"
 #include "ParameterListModel.h"
 
@@ -36,14 +38,31 @@ namespace Gui {
 /**
 * List of inputs attached to a node
 */
-class NodeInputListModel : public AbstractSlotListModel
+class NodeInputListModel : public QAbstractTableModel
 {
 	Q_OBJECT
-protected:
-	// Implement AbstractSLotListModel virtual methods
-	virtual std::vector<NodeInputPtr> & slotList();
-	virtual const std::vector<NodeInputPtr> & slotList() const;
-	virtual NodeInputPtr makeSlot() const;
+public:
+	void setNode(NodePtr node);
+
+public:
+	// Basic QAbstractTableModel implementation
+	int rowCount(const QModelIndex &parent = QModelIndex()) const override;
+	int columnCount(const QModelIndex &parent = QModelIndex()) const override;
+	QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+
+	// Editable QAbstractTableModel implementation
+	bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
+	Qt::ItemFlags flags(const QModelIndex &index) const override;
+
+	// Headers QAbstractItemModel implementation
+	QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
+
+	// Resizable QAbstractTableModel implementation
+	bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
+	bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
+
+	// Drag and drop
+	Qt::DropActions supportedDropActions() const override;
 
 public:
 	enum Columns {

@@ -105,11 +105,15 @@ QVariant NodeListModel::data(const QModelIndex &index, int role) const
 		}
 		else if (role == ParameterModelRole)
 		{
-			return QVariant::fromValue(m_entries[index.row()].parameters);
+			return QVariant::fromValue(m_entries[index.row()].parametersModel);
 		}
 		else if (role == InputModelRole)
 		{
-			return QVariant::fromValue(m_entries[index.row()].inputs);
+			return QVariant::fromValue(m_entries[index.row()].inputsModel);
+		}
+		else if (role == OutputModelRole)
+		{
+			return QVariant::fromValue(m_entries[index.row()].outputsModel);
 		}
 	}
 	return QVariant();

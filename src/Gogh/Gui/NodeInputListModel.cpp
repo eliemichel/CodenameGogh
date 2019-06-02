@@ -29,19 +29,141 @@
 
 using namespace Gogh::Gui;
 
+
+void NodeInputListModel::setNode(Gogh::NodePtr node)
+{
+	beginResetModel();
+	m_node = node;
+	endResetModel();
+}
+
 ///////////////////////////////////////////////////////////////////////////////
-// Implement AbstractSLotListModel virtual methods
-std::vector<Gogh::NodeInputPtr> & NodeInputListModel::slotList()
+// Basic QAbstractTableModel implementation
+
+int NodeInputListModel::rowCount(const QModelIndex &parent) const
 {
-	return modelNode()->inputs;
+	if (parent.isValid()) return 0; // Children don't have sub-children
+	return m_node ? static_cast<int>(m_node->inputs.size()) : 0;
 }
 
-const std::vector<Gogh::NodeInputPtr> & NodeInputListModel::slotList() const
+int NodeInputListModel::columnCount(const QModelIndex &parent) const
 {
-	return modelNode()->inputs;
+	return _ColumnCount;
 }
 
-Gogh::NodeInputPtr NodeInputListModel::makeSlot() const
+QVariant NodeInputListModel::data(const QModelIndex &index, int role) const
 {
-	return std::make_shared<Gogh::NodeInput>();
+	if (!index.isValid()) return QVariant();
+
+	if (role == Qt::DisplayRole || role == Qt::EditRole)
+	{
+		switch (index.column())
+		{
+		case NameColumn:
+			return QString::fromStdString(m_node->inputs[index.row()]->name);
+		case TypeColumn:
+		{
+			return QVariant(); // TODO
+		}
+		default:
+			return QVariant();
+		}
+	}
+
+	return QVariant();
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Editable QAbstractTableModel implementation
+
+bool NodeInputListModel::setData(const QModelIndex &index, const QVariant &value, int role)
+{
+	if (!index.isValid()) return false;
+	if (role == Qt::EditRole)
+	{
+		switch (index.column())
+		{
+		case NameColumn:
+			m_node->inputs[index.row()]->name = value.toString().toStdString();
+			dataChanged(index, index);
+			return true;
+		case TypeColumn:
+			// TODO
+			return false;
+		default:
+			return false;
+		}
+	}
+	return false;
+}
+
+Qt::ItemFlags NodeInputListModel::flags(const QModelIndex &index) const
+{
+	Qt::ItemFlags itemFlags = QAbstractItemModel::flags(index);
+
+	if (index.isValid())
+	{
+		itemFlags |= Qt::ItemIsEditable;
+		itemFlags |= Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
+	}
+
+	return itemFlags;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Headers QAbstractItemModel implementation
+
+QVariant NodeInputListModel::headerData(int section, Qt::Orientation orientation, int role) const
+{
+	if (role != Qt::DisplayRole) return QVariant();
+
+	switch (section)
+	{
+	case NameColumn:
+		return "Name";
+	case TypeColumn:
+		return "Type";
+	default:
+		return QVariant();
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Resizable QAbstractTableModel implementation
+
+bool NodeInputListModel::insertRows(int row, int count, const QModelIndex &parent)
+{
+	if (parent.isValid()) return false; // Only insert rows at root
+	if (row < 0 || row > rowCount(parent)) return false;
+
+	beginInsertRows(parent, row, row + count - 1);
+	std::vector<NodeInputPtr> & l = m_node->inputs;
+	l.insert(l.begin() + row, count, nullptr);
+	for (int i = row; i < row + count; ++i)
+	{
+		l[i] = std::make_shared<Gogh::NodeInput>();
+	}
+	endInsertRows();
+	return true;
+}
+
+bool NodeInputListModel::removeRows(int row, int count, const QModelIndex &parent)
+{
+	if (parent.isValid()) return false; // Only remove rows from root
+	int startRow = std::max(row, 0);
+	int endRow = std::min(row + count, rowCount(parent) - 1);
+	if (endRow <= startRow) return false; // Nothing to remove
+	beginRemoveRows(parent, startRow, endRow);
+	std::vector<NodeInputPtr> & l = m_node->inputs;
+	l.erase(l.begin() + startRow, l.begin() + endRow);
+	endRemoveRows();
+	return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Drag and drop
+
+Qt::DropActions NodeInputListModel::supportedDropActions() const
+{
+	return Qt::MoveAction;
 }

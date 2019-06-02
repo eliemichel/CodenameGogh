@@ -23,14 +23,14 @@
 * in the Software.
 */
 
-#include "AbstractSlotListModel.h"
+#include "NodeOutputListModel.h"
 #include "Logger.h"
 #include "GraphMetaTypes.h"
 
 using namespace Gogh::Gui;
 
 
-void AbstractSlotListModel::setNode(Gogh::NodePtr node)
+void NodeOutputListModel::setNode(Gogh::NodePtr node)
 {
 	beginResetModel();
 	m_node = node;
@@ -40,18 +40,18 @@ void AbstractSlotListModel::setNode(Gogh::NodePtr node)
 ///////////////////////////////////////////////////////////////////////////////
 // Basic QAbstractTableModel implementation
 
-int AbstractSlotListModel::rowCount(const QModelIndex &parent) const
+int NodeOutputListModel::rowCount(const QModelIndex &parent) const
 {
 	if (parent.isValid()) return 0; // Children don't have sub-children
-	return m_node ? static_cast<int>(slotList().size()) : 0;
+	return m_node ? static_cast<int>(m_node->outputs.size()) : 0;
 }
 
-int AbstractSlotListModel::columnCount(const QModelIndex &parent) const
+int NodeOutputListModel::columnCount(const QModelIndex &parent) const
 {
 	return _ColumnCount;
 }
 
-QVariant AbstractSlotListModel::data(const QModelIndex &index, int role) const
+QVariant NodeOutputListModel::data(const QModelIndex &index, int role) const
 {
 	if (!index.isValid()) return QVariant();
 
@@ -60,7 +60,7 @@ QVariant AbstractSlotListModel::data(const QModelIndex &index, int role) const
 		switch (index.column())
 		{
 		case NameColumn:
-			return QString::fromStdString(slotList()[index.row()]->name);
+			return QString::fromStdString(m_node->outputs[index.row()]->name);
 		case TypeColumn:
 		{
 			return QVariant(); // TODO
@@ -76,7 +76,7 @@ QVariant AbstractSlotListModel::data(const QModelIndex &index, int role) const
 ///////////////////////////////////////////////////////////////////////////////
 // Editable QAbstractTableModel implementation
 
-bool AbstractSlotListModel::setData(const QModelIndex &index, const QVariant &value, int role)
+bool NodeOutputListModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
 	if (!index.isValid()) return false;
 	if (role == Qt::EditRole)
@@ -84,7 +84,7 @@ bool AbstractSlotListModel::setData(const QModelIndex &index, const QVariant &va
 		switch (index.column())
 		{
 		case NameColumn:
-			slotList()[index.row()]->name = value.toString().toStdString();
+			m_node->outputs[index.row()]->name = value.toString().toStdString();
 			dataChanged(index, index);
 			return true;
 		case TypeColumn:
@@ -97,7 +97,7 @@ bool AbstractSlotListModel::setData(const QModelIndex &index, const QVariant &va
 	return false;
 }
 
-Qt::ItemFlags AbstractSlotListModel::flags(const QModelIndex &index) const
+Qt::ItemFlags NodeOutputListModel::flags(const QModelIndex &index) const
 {
 	Qt::ItemFlags itemFlags = QAbstractItemModel::flags(index);
 
@@ -113,7 +113,7 @@ Qt::ItemFlags AbstractSlotListModel::flags(const QModelIndex &index) const
 ///////////////////////////////////////////////////////////////////////////////
 // Headers QAbstractItemModel implementation
 
-QVariant AbstractSlotListModel::headerData(int section, Qt::Orientation orientation, int role) const
+QVariant NodeOutputListModel::headerData(int section, Qt::Orientation orientation, int role) const
 {
 	if (role != Qt::DisplayRole) return QVariant();
 
@@ -131,30 +131,30 @@ QVariant AbstractSlotListModel::headerData(int section, Qt::Orientation orientat
 ///////////////////////////////////////////////////////////////////////////////
 // Resizable QAbstractTableModel implementation
 
-bool AbstractSlotListModel::insertRows(int row, int count, const QModelIndex &parent)
+bool NodeOutputListModel::insertRows(int row, int count, const QModelIndex &parent)
 {
 	if (parent.isValid()) return false; // Only insert rows at root
 	if (row < 0 || row > rowCount(parent)) return false;
 
 	beginInsertRows(parent, row, row + count - 1);
-	std::vector<NodeInputPtr> & l = slotList();
+	std::vector<NodeOutputPtr> & l = m_node->outputs;
 	l.insert(l.begin() + row, count, nullptr);
 	for (int i = row; i < row + count; ++i)
 	{
-		l[i] = makeSlot();
+		l[i] = std::make_shared<Gogh::NodeOutput>();
 	}
 	endInsertRows();
 	return true;
 }
 
-bool AbstractSlotListModel::removeRows(int row, int count, const QModelIndex &parent)
+bool NodeOutputListModel::removeRows(int row, int count, const QModelIndex &parent)
 {
 	if (parent.isValid()) return false; // Only remove rows from root
 	int startRow = std::max(row, 0);
 	int endRow = std::min(row + count, rowCount(parent) - 1);
 	if (endRow <= startRow) return false; // Nothing to remove
 	beginRemoveRows(parent, startRow, endRow);
-	std::vector<NodeInputPtr> & l = slotList();
+	std::vector<NodeOutputPtr> & l = m_node->outputs;
 	l.erase(l.begin() + startRow, l.begin() + endRow);
 	endRemoveRows();
 	return true;
@@ -163,7 +163,7 @@ bool AbstractSlotListModel::removeRows(int row, int count, const QModelIndex &pa
 ///////////////////////////////////////////////////////////////////////////////
 // Drag and drop
 
-Qt::DropActions AbstractSlotListModel::supportedDropActions() const
+Qt::DropActions NodeOutputListModel::supportedDropActions() const
 {
 	return Qt::MoveAction;
 }

@@ -49,6 +49,7 @@ private slots:
 private:
 	ParameterListView * paramView;
 	ParameterListView * inputView;
+	ParameterListView * outputView;
 	ParameterListModel * paramModel;
 };
 

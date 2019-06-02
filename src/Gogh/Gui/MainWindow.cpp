@@ -65,6 +65,7 @@ MainWindow::MainWindow(QWidget *parent)
 	paramView = new ParameterListView();
 	//paramView->setModel(paramModel);
 	inputView = new ParameterListView();
+	outputView = new ParameterListView();
 
 	connect(nodeView->selectionModel(), SIGNAL(currentChanged(const QModelIndex &, const QModelIndex &)),
 		this, SLOT(onCurrentNodeChanged(const QModelIndex &, const QModelIndex &)));
@@ -72,8 +73,10 @@ MainWindow::MainWindow(QWidget *parent)
 	QSplitter *splitter = new QSplitter();
 	splitter->addWidget(nodeView);
 	QSplitter *vsplitter = new QSplitter();
+	vsplitter->setOrientation(Qt::Vertical);
 	vsplitter->addWidget(paramView);
 	vsplitter->addWidget(inputView);
+	vsplitter->addWidget(outputView);
 	splitter->addWidget(vsplitter);
 
 	setCentralWidget(splitter);
@@ -90,4 +93,6 @@ void MainWindow::onCurrentNodeChanged(const QModelIndex & current, const QModelI
 	paramView->setModel(pParamModel.get());
 	auto pInputModel = current.data(NodeListModel::InputModelRole).value<std::shared_ptr<NodeInputListModel>>();
 	inputView->setModel(pInputModel.get());
+	auto pOutputModel = current.data(NodeListModel::OutputModelRole).value<std::shared_ptr<NodeOutputListModel>>();
+	outputView->setModel(pOutputModel.get());
 }

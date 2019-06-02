@@ -36,10 +36,10 @@ set(SRC
 	Gui/ParameterTypeDelegate.cpp
 	Gui/NodeListModel.h
 	Gui/NodeListModel.cpp
-	Gui/AbstractSlotListModel.h
-	Gui/AbstractSlotListModel.cpp
 	Gui/NodeInputListModel.h
 	Gui/NodeInputListModel.cpp
+	Gui/NodeOutputListModel.h
+	Gui/NodeOutputListModel.cpp
 
 	main.cpp
 )

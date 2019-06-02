@@ -23,8 +23,8 @@
 * in the Software.
 */
 
-#ifndef H_GOGH_ABSTRACTSLOTLISTMODEL
-#define H_GOGH_ABSTRACTSLOTLISTMODEL
+#ifndef H_GOGH_NODEOUTPUTLISTMODEL
+#define H_GOGH_NODEOUTPUTLISTMODEL
 
 #include <QAbstractItemModel>
 #include <QModelIndex>
@@ -38,7 +38,7 @@ namespace Gui {
 /**
 * List of inputs attached to a node
 */
-class AbstractSlotListModel : public QAbstractTableModel
+class NodeOutputListModel : public QAbstractTableModel
 {
 	Q_OBJECT
 public:
@@ -64,16 +64,6 @@ public:
 	// Drag and drop
 	Qt::DropActions supportedDropActions() const override;
 
-protected:
-	// Methods to be implemented in subclasses, to make the difference between
-	// input and output slots
-	virtual std::vector<NodeInputPtr> & slotList() = 0;
-	virtual const std::vector<NodeInputPtr> & slotList() const = 0;
-	virtual NodeInputPtr makeSlot() const = 0;
-
-	// Utility accessor to help implementing virtual methods
-	inline NodePtr modelNode() const { return m_node; }
-
 public:
 	enum Columns {
 		NameColumn = 0,
@@ -88,6 +78,6 @@ private:
 } // namespace Gui
 } // namespace Gogh
 
-Q_DECLARE_METATYPE(std::shared_ptr<Gogh::Gui::AbstractSlotListModel>)
+Q_DECLARE_METATYPE(std::shared_ptr<Gogh::Gui::NodeOutputListModel>)
 
-#endif // H_GOGH_ABSTRACTSLOTLISTMODEL
+#endif // H_GOGH_NODEOUTPUTLISTMODEL
