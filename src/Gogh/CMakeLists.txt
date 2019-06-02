@@ -24,6 +24,7 @@ set(SRC
 	Parameter.cpp
 
 	# Gui files
+	Gui/GraphMetaTypes.h
 	Gui/MainWindow.h
 	Gui/MainWindow.cpp
 	Gui/ParameterListView.h

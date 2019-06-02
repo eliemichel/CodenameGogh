@@ -28,15 +28,11 @@
 
 using namespace Gogh::Gui;
 
-ParameterListModel::ParameterListModel()
+void ParameterListModel::setNode(Gogh::NodePtr node)
 {
-	// DEBUG
-	auto p = std::make_shared<Parameter>();
-	p->setName("Param_1");
-	m_parameters.push_back(p);
-	p = std::make_shared<Parameter>();
-	p->setName("Param_2");
-	m_parameters.push_back(p);
+	beginResetModel();
+	m_node = node;
+	endResetModel();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -58,7 +54,8 @@ QModelIndex ParameterListModel::parent(const QModelIndex &index) const
 int ParameterListModel::rowCount(const QModelIndex &parent) const
 {
 	if (parent.isValid()) return 0; // Children don't have subchildren
-	return static_cast<int>(m_parameters.size());
+	if (!m_node) return 0;
+	return static_cast<int>(m_node->parameters.size());
 }
 
 int ParameterListModel::columnCount(const QModelIndex &parent) const
@@ -76,10 +73,10 @@ QVariant ParameterListModel::data(const QModelIndex &index, int role) const
 		switch (index.column())
 		{
 		case NameColumn:
-			return QString::fromStdString(m_parameters[index.row()]->name());
+			return QString::fromStdString(m_node->parameters[index.row()]->name());
 		case TypeColumn:
 		{
-			ParameterType type = m_parameters[index.row()]->type();
+			ParameterType type = m_node->parameters[index.row()]->type();
 			return role == Qt::EditRole
 				? QVariant(type)
 				: QVariant(QString::fromStdString(ParameterTypeUtils::parameterTypeName(type)));
@@ -87,7 +84,7 @@ QVariant ParameterListModel::data(const QModelIndex &index, int role) const
 		case ValueColumn:
 			if (role == Qt::EditRole)
 			{
-				std::shared_ptr<Parameter> param = m_parameters[index.row()];
+				std::shared_ptr<Parameter> param = m_node->parameters[index.row()];
 				switch (param->type()) {
 				case NoneType:
 					return QVariant();
@@ -101,7 +98,7 @@ QVariant ParameterListModel::data(const QModelIndex &index, int role) const
 					return param->rawValue().toBool();
 				}
 			}
-			return QString::fromStdString(m_parameters[index.row()]->evalAsString());
+			return QString::fromStdString(m_node->parameters[index.row()]->evalAsString());
 		default:
 			return QVariant();
 		}
@@ -121,12 +118,12 @@ bool ParameterListModel::setData(const QModelIndex &index, const QVariant &value
 		switch (index.column())
 		{
 		case NameColumn:
-			m_parameters[index.row()]->setName(value.toString().toStdString());
+			m_node->parameters[index.row()]->setName(value.toString().toStdString());
 			dataChanged(index, index);
 			return true;
 		case TypeColumn:
 		{
-			std::shared_ptr<Parameter> param = m_parameters[index.row()];
+			std::shared_ptr<Parameter> param = m_node->parameters[index.row()];
 			const QModelIndex & valueIndex = index.siblingAtColumn(ValueColumn);
 			// Get value before changing type, then write it to the new typed param
 			QVariant prevValue = valueIndex.data(Qt::EditRole);
@@ -137,7 +134,7 @@ bool ParameterListModel::setData(const QModelIndex &index, const QVariant &value
 		}
 		case ValueColumn:
 		{
-			if (setParamFromQVariant(m_parameters[index.row()], value)) {
+			if (setParamFromQVariant(m_node->parameters[index.row()], value)) {
 				dataChanged(index, index);
 				return true;
 			}
@@ -160,7 +157,7 @@ Qt::ItemFlags ParameterListModel::flags(const QModelIndex &index) const
 		if (index.column() == ValueColumn
 			&& index.column() >= 0 && index.column() < columnCount(index.parent())
 			&& index.row() >= 0 && index.row() < rowCount(index.parent())
-			&& m_parameters[index.row()]->type() == NoneType
+			&& m_node->parameters[index.row()]->type() == NoneType
 		)
 		{
 			// Value is not editable if type is NoneType
@@ -204,14 +201,15 @@ QVariant ParameterListModel::headerData(int section, Qt::Orientation orientation
 
 bool ParameterListModel::insertRows(int row, int count, const QModelIndex &parent)
 {
+	if (!m_node) return false;
 	if (parent.isValid()) return false; // Only insert rows at root
 	if (row < 0 || row > rowCount(parent)) return false;
 
 	beginInsertRows(parent, row, row + count - 1);
-	m_parameters.insert(m_parameters.begin() + row, count, nullptr);
+	m_node->parameters.insert(m_node->parameters.begin() + row, count, nullptr);
 	for (int i = row; i < row + count; ++i)
 	{
-		m_parameters[i] = std::make_shared<Parameter>();
+		m_node->parameters[i] = std::make_shared<Parameter>();
 	}
 	endInsertRows();
 	return true;
@@ -224,7 +222,7 @@ bool ParameterListModel::removeRows(int row, int count, const QModelIndex &paren
 	int endRow = std::min(row + count, rowCount(parent) - 1);
 	if (endRow <= startRow) return false; // Nothing to remove
 	beginRemoveRows(parent, startRow, endRow);
-	m_parameters.erase(m_parameters.begin() + startRow, m_parameters.begin() + endRow);
+	m_node->parameters.erase(m_node->parameters.begin() + startRow, m_node->parameters.begin() + endRow);
 	endRemoveRows();
 	return true;
 }

@@ -25,18 +25,20 @@
 
 #include "NodeListModel.h"
 #include "Logger.h"
+#include "GraphMetaTypes.h"
 
 using namespace Gogh::Gui;
 
 NodeListModel::NodeListModel()
 {
 	// DEBUG
+	m_entries.resize(2);
 	auto p = std::make_shared<Node>();
 	p->name = "Node_1";
-	m_nodes.push_back(p);
+	m_entries[0].setNode(p);
 	p = std::make_shared<Node>();
 	p->name = "Node_2";
-	m_nodes.push_back(p);
+	m_entries[1].setNode(p);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -45,9 +47,16 @@ NodeListModel::NodeListModel()
 QModelIndex NodeListModel::index(int row, int column, const QModelIndex &parent) const
 {
 	if (column < 0 || column >= columnCount(parent)) return QModelIndex();
-	if (parent.isValid()) return QModelIndex(); // Children don't have sub-children
 	if (row < 0 || row >= rowCount(parent)) return QModelIndex(); // out of bounds
-	return createIndex(row, column, nullptr);
+
+	if (isRoot(parent))
+	{
+		return createIndex(row, column, nullptr);
+	}
+	else
+	{
+		return QModelIndex();
+	}
 }
 
 QModelIndex NodeListModel::parent(const QModelIndex &index) const
@@ -58,7 +67,7 @@ QModelIndex NodeListModel::parent(const QModelIndex &index) const
 int NodeListModel::rowCount(const QModelIndex &parent) const
 {
 	if (parent.isValid()) return 0; // Children don't have subchildren
-	return static_cast<int>(m_nodes.size());
+	return static_cast<int>(m_entries.size());
 }
 
 int NodeListModel::columnCount(const QModelIndex &parent) const
@@ -69,24 +78,35 @@ int NodeListModel::columnCount(const QModelIndex &parent) const
 
 QVariant NodeListModel::data(const QModelIndex &index, int role) const
 {
-	if ((role == Qt::DisplayRole || role == Qt::EditRole) && index.isValid()
+	if (index.isValid()
 		&& index.column() >= 0 && index.column() < columnCount(index.parent())
 		&& index.row() >= 0 && index.row() < rowCount(index.parent()))
 	{
-		switch (index.column())
+		if (role == Qt::DisplayRole || role == Qt::EditRole)
 		{
-		case NameColumn:
-			return QString::fromStdString(m_nodes[index.row()]->name);
-		case XPosColumn:
-		{
-			return m_nodes[index.row()]->x;
+			switch (index.column())
+			{
+			case NameColumn:
+				return QString::fromStdString(m_entries[index.row()].node->name);
+			case XPosColumn:
+			{
+				return m_entries[index.row()].node->x;
+			}
+			case YPosColumn:
+			{
+				return m_entries[index.row()].node->y;
+			}
+			default:
+				return QVariant();
+			}
 		}
-		case YPosColumn:
+		else if (role == NodePtrRole)
 		{
-			return m_nodes[index.row()]->y;
+			return QVariant::fromValue(m_entries[index.row()].node);
 		}
-		default:
-			return QVariant();
+		else if (role == ParameterModelRole)
+		{
+			return QVariant::fromValue(m_entries[index.row()].parameters);
 		}
 	}
 	return QVariant();
@@ -104,15 +124,15 @@ bool NodeListModel::setData(const QModelIndex &index, const QVariant &value, int
 		switch (index.column())
 		{
 		case NameColumn:
-			m_nodes[index.row()]->name = value.toString().toStdString();
+			m_entries[index.row()].node->name = value.toString().toStdString();
 			dataChanged(index, index);
 			return true;
 		case XPosColumn:
-			m_nodes[index.row()]->x = value.toFloat();
+			m_entries[index.row()].node->x = value.toFloat();
 			dataChanged(index, index);
 			return true;
 		case YPosColumn:
-			m_nodes[index.row()]->y = value.toFloat();
+			m_entries[index.row()].node->y = value.toFloat();
 			dataChanged(index, index);
 			return true;
 		default:
@@ -164,10 +184,10 @@ bool NodeListModel::insertRows(int row, int count, const QModelIndex &parent)
 	if (row < 0 || row > rowCount(parent)) return false;
 
 	beginInsertRows(parent, row, row + count - 1);
-	m_nodes.insert(m_nodes.begin() + row, count, nullptr);
+	m_entries.insert(m_entries.begin() + row, count, ModelEntry());
 	for (int i = row; i < row + count; ++i)
 	{
-		m_nodes[i] = std::make_shared<Node>();
+		m_entries[i].setNode(std::make_shared<Node>());
 	}
 	endInsertRows();
 	return true;
@@ -180,7 +200,7 @@ bool NodeListModel::removeRows(int row, int count, const QModelIndex &parent)
 	int endRow = std::min(row + count, rowCount(parent) - 1);
 	if (endRow <= startRow) return false; // Nothing to remove
 	beginRemoveRows(parent, startRow, endRow);
-	m_nodes.erase(m_nodes.begin() + startRow, m_nodes.begin() + endRow);
+	m_entries.erase(m_entries.begin() + startRow, m_entries.begin() + endRow);
 	endRemoveRows();
 	return true;
 }

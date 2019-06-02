@@ -60,7 +60,7 @@ struct Node : public std::enable_shared_from_this<Node> {
 	int payload;
 	float x;
 	float y;
-	std::vector<std::unique_ptr<Gogh::Parameter>> parameters;
+	std::vector<std::shared_ptr<Gogh::Parameter>> parameters;
 	std::vector<std::shared_ptr<NodeInput>> inputs;
 	std::vector<std::shared_ptr<NodeOutput>> outputs;
 

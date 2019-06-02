@@ -25,20 +25,63 @@
 
 #include <QTreeView>
 #include <QMenu>
+#include <QSplitter>
 
 #include "MainWindow.h"
 #include "ParameterListView.h"
 #include "ParameterListModel.h"
 #include "NodeListModel.h"
+#include "Graph.h"
+#include "GraphMetaTypes.h"
 
 using namespace Gogh::Gui;
 
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
 {
-	ParameterListView *view = new ParameterListView();
-	//ParameterListModel *model = new ParameterListModel();
-	NodeListModel *model = new NodeListModel();
-	view->setModel(model);
-	setCentralWidget(view);
+	NodeListModel *nodeModel = new NodeListModel();
+	ParameterListView *nodeView = new ParameterListView();
+	nodeView->setModel(nodeModel);
+
+	/*
+	NodePtr node = std::make_shared<Node>();
+	auto p = std::make_shared<Parameter>();
+	p->setName("Param_1");
+	node->parameters.push_back(p);
+	p = std::make_shared<Parameter>();
+	p->setName("Param_2");
+	node->parameters.push_back(p);
+	*/
+
+	paramModel = new ParameterListModel();
+	NodePtr node = nodeModel->index(0, 0).data(NodeListModel::NodePtrRole).value<Gogh::NodePtr>();
+	auto p = std::make_shared<Parameter>();
+	p->setName("Param_1");
+	node->parameters.push_back(p);
+	p = std::make_shared<Parameter>();
+	p->setName("Param_2");
+	node->parameters.push_back(p);
+
+	paramView = new ParameterListView();
+	paramView->setModel(paramModel);
+
+	connect(nodeView->selectionModel(), SIGNAL(currentChanged(const QModelIndex &, const QModelIndex &)),
+		this, SLOT(onCurrentNodeChanged(const QModelIndex &, const QModelIndex &)));
+
+	QSplitter *splitter = new QSplitter();
+	splitter->addWidget(nodeView);
+	splitter->addWidget(paramView);
+
+	setCentralWidget(splitter);
+}
+
+void MainWindow::onCurrentNodeChanged(const QModelIndex & current, const QModelIndex & previous)
+{
+	// Option A
+	//Gogh::NodePtr node = current.data(NodeListModel::NodePtrRole).value<Gogh::NodePtr>();
+	//paramModel->setNode(node);
+
+	// Option B
+	auto m = current.data(NodeListModel::ParameterModelRole).value<std::shared_ptr<ParameterListModel>>();
+	paramView->setModel(m.get());
 }

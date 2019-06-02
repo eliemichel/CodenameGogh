@@ -30,6 +30,7 @@
 #include <QModelIndex>
 
 #include "Parameter.h"
+#include "Graph.h"
 
 namespace Gogh {
 namespace Gui {
@@ -39,8 +40,9 @@ namespace Gui {
  */
 class ParameterListModel : public QAbstractItemModel
 {
+	Q_OBJECT
 public:
-	ParameterListModel();
+	void setNode(NodePtr node);
 
 public:
 	// Basic QAbstractItemModel implementation
@@ -78,10 +80,12 @@ private:
 	static bool setParamFromQVariant(std::shared_ptr<Parameter> param, const QVariant &value);
 
 private:
-	std::vector<std::shared_ptr<Parameter>> m_parameters;
+	NodePtr m_node;
 };
 
 } // namespace Gui
 } // namespace Gogh
+
+Q_DECLARE_METATYPE(std::shared_ptr<Gogh::Gui::ParameterListModel>)
 
 #endif // H_GOGH_PARAMETERLISTMODEL

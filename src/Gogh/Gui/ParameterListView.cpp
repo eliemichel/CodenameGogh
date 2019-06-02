@@ -57,10 +57,10 @@ ParameterListView::ParameterListView(QWidget *parent)
 void ParameterListView::onContextMenu(const QPoint & point) // DEBUG
 {
 	QModelIndex index = indexAt(point);
-	if (index.isValid()) {
-		m_contextMenuParameterIndex = index;
-		m_contextMenu->exec(viewport()->mapToGlobal(point));
-	}
+	m_contextMenuParameterIndex = index;
+	m_contextMenu->actions().at(0)->setEnabled(index.isValid());
+	m_contextMenu->actions().at(1)->setEnabled(index.isValid());
+	m_contextMenu->exec(viewport()->mapToGlobal(point));
 }
 
 void ParameterListView::removeParameter() // DEBUG
@@ -85,5 +85,9 @@ void ParameterListView::insertParameterBellow() // DEBUG
 	if (m_contextMenuParameterIndex.isValid())
 	{
 		model()->insertRow(m_contextMenuParameterIndex.row() + 1, m_contextMenuParameterIndex.parent());
+	}
+	else
+	{
+		model()->insertRow(0, m_contextMenuParameterIndex.parent());
 	}
 }

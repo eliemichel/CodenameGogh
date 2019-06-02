@@ -30,6 +30,7 @@
 #include <QModelIndex>
 
 #include "Graph.h"
+#include "ParameterListModel.h"
 
 namespace Gogh {
 namespace Gui {
@@ -64,6 +65,11 @@ public:
 	// Drag and drop
 	Qt::DropActions supportedDropActions() const override;
 
+private:
+	// Utils
+	/// This is an alias to "is not valid" used for clearer reading
+	static inline bool isRoot(const QModelIndex & index) { return !index.isValid(); }
+
 public:
 	enum Columns {
 		NameColumn = 0,
@@ -72,8 +78,29 @@ public:
 		_ColumnCount,
 	};
 
+	enum Roles {
+		NodePtrRole = Qt::UserRole,
+		ParameterModelRole,
+	};
+
 private:
-	std::vector<NodePtr> m_nodes;
+	/**
+	 * Structure holding the node pointer together with the qmodels for its
+	 * parameters, inputs and outputs. This is used to avoid populating the
+	 * core graph structures with qt-related (so ui-related) attributes.
+	 */
+	struct ModelEntry {
+		NodePtr node;
+		std::shared_ptr<ParameterListModel> parameters;
+
+		void setNode(NodePtr node)
+		{
+			this->node = node;
+			this->parameters = std::make_shared<ParameterListModel>();
+			this->parameters->setNode(node);
+		}
+	};
+	std::vector<ModelEntry> m_entries;
 };
 
 } // namespace Gui
