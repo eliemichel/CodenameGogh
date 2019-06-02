@@ -68,10 +68,24 @@ public:
 	enum Columns {
 		NameColumn = 0,
 		TypeColumn,
+		ViewXColumn,
+		ViewYColumn,
 		_ColumnCount,
 	};
 
 private:
+	/**
+	* Data related to the view, so not serialized and not stored in the
+	* backend object.
+	* Beware to keep it in sync with the backend outputs
+	*/
+	struct ViewDataEntry {
+		// Position of the slot, written by the node delegates, read by the
+		// edge delegates
+		float x;
+		float y;
+	};
+	std::vector<ViewDataEntry> m_viewData;
 	NodePtr m_node;
 };
 

@@ -31,6 +31,7 @@
 #include "ParameterListView.h"
 #include "ParameterListModel.h"
 #include "NodeListModel.h"
+#include "EdgeListModel.h"
 #include "Graph.h"
 #include "GraphMetaTypes.h"
 
@@ -39,38 +40,57 @@ using namespace Gogh::Gui;
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
 {
+	// DEBUG Mock graph
+	GraphPtr graph = std::make_shared<Graph>();
+
+	NodePtr n1 = graph->addNode();
+	n1->name = "Node_1";
+	NodeOutputPtr o1 = n1->addOutput();
+	o1->name = "Video Out";
+	NodeOutputPtr o2 = n1->addOutput();
+	o2->name = "Audio Out";
+
+	NodePtr n2 = graph->addNode();
+	n2->name = "Node_2";
+	NodeInputPtr i1 = n2->addInput();
+	i1->name = "Video In";
+	NodeInputPtr i2 = n2->addInput();
+	i2->name = "Audio In";
+
+	auto p = std::make_shared<Parameter>();
+	p->setName("Param_1");
+	n1->parameters.push_back(p);
+	p = std::make_shared<Parameter>();
+	p->setName("Param_2");
+	n1->parameters.push_back(p);
+
+	graph->addEdge(o1, i1);
+	graph->addEdge(o2, i2);
+
+	// Models
+	EdgeListModel *edgeModel = new EdgeListModel();
+	edgeModel->setGraph(graph);
+
 	NodeListModel *nodeModel = new NodeListModel();
+	nodeModel->setGraph(graph);
+
+	// Views
+	ParameterListView *edgeView = new ParameterListView();
+	edgeView->setModel(edgeModel);
+
 	ParameterListView *nodeView = new ParameterListView();
 	nodeView->setModel(nodeModel);
 
-	/*
-	NodePtr node = std::make_shared<Node>();
-	auto p = std::make_shared<Parameter>();
-	p->setName("Param_1");
-	node->parameters.push_back(p);
-	p = std::make_shared<Parameter>();
-	p->setName("Param_2");
-	node->parameters.push_back(p);
-	*/
-
-	//paramModel = new ParameterListModel();
-	NodePtr node = nodeModel->index(0, 0).data(NodeListModel::NodePtrRole).value<Gogh::NodePtr>();
-	auto p = std::make_shared<Parameter>();
-	p->setName("Param_1");
-	node->parameters.push_back(p);
-	p = std::make_shared<Parameter>();
-	p->setName("Param_2");
-	node->parameters.push_back(p);
-
 	paramView = new ParameterListView();
-	//paramView->setModel(paramModel);
 	inputView = new ParameterListView();
 	outputView = new ParameterListView();
 
 	connect(nodeView->selectionModel(), SIGNAL(currentChanged(const QModelIndex &, const QModelIndex &)),
 		this, SLOT(onCurrentNodeChanged(const QModelIndex &, const QModelIndex &)));
 
+	// Layout
 	QSplitter *splitter = new QSplitter();
+	splitter->addWidget(edgeView);
 	splitter->addWidget(nodeView);
 	QSplitter *vsplitter = new QSplitter();
 	vsplitter->setOrientation(Qt::Vertical);
@@ -84,11 +104,6 @@ MainWindow::MainWindow(QWidget *parent)
 
 void MainWindow::onCurrentNodeChanged(const QModelIndex & current, const QModelIndex & previous)
 {
-	// Option A
-	//Gogh::NodePtr node = current.data(NodeListModel::NodePtrRole).value<Gogh::NodePtr>();
-	//paramModel->setNode(node);
-
-	// Option B
 	auto pParamModel = current.data(NodeListModel::ParameterModelRole).value<std::shared_ptr<ParameterListModel>>();
 	paramView->setModel(pParamModel.get());
 	auto pInputModel = current.data(NodeListModel::InputModelRole).value<std::shared_ptr<NodeInputListModel>>();

@@ -40,6 +40,8 @@ set(SRC
 	Gui/NodeInputListModel.cpp
 	Gui/NodeOutputListModel.h
 	Gui/NodeOutputListModel.cpp
+	Gui/EdgeListModel.h
+	Gui/EdgeListModel.cpp
 
 	main.cpp
 )

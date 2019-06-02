@@ -36,8 +36,11 @@ namespace Gogh {
 namespace Gui {
 
 /**
-* List of inputs attached to a node
-*/
+ * List of outputs attached to a node
+ * A lot of code duplication with the very similar NodeInputListModel, but I
+ * could not find a clean way of factorizing it, especially because Q_OBJECT
+ * do not support templating
+ */
 class NodeOutputListModel : public QAbstractTableModel
 {
 	Q_OBJECT
@@ -68,10 +71,24 @@ public:
 	enum Columns {
 		NameColumn = 0,
 		TypeColumn,
+		ViewXColumn,
+		ViewYColumn,
 		_ColumnCount,
 	};
 
 private:
+	/**
+	 * Data related to the view, so not serialized and not stored in the
+	 * backend object.
+	 * Beware to keep it in sync with the backend outputs
+	 */
+	struct ViewDataEntry {
+		// Position of the slot, written by the node delegates, read by the
+		// edge delegates
+		float x;
+		float y;
+	};
+	std::vector<ViewDataEntry> m_viewData;
 	NodePtr m_node;
 };
 

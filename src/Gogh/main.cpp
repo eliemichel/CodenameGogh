@@ -37,21 +37,23 @@
 
 int main(int argc, char *argv[])
 {
-	//QGuiApplication app(argc, argv);
-	QApplication app(argc, argv);
-
 	/*
+	QGuiApplication app(argc, argv);
+
 	QQmlApplicationEngine engine;
 	engine.load(QUrl(QStringLiteral("qrc:/qml/main.qml")));
 	if (engine.rootObjects().isEmpty())
 	{
 		return -1;
 	}
-	*/
+	return app.exec();
+	/*/
+	QApplication app(argc, argv);
 
 	Gogh::Gui::MainWindow window;
 	window.resize(800, 600);
 	window.show();
 
 	return app.exec();
+	//*/
 }

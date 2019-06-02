@@ -67,6 +67,7 @@ struct Node : public std::enable_shared_from_this<Node> {
 
 	std::shared_ptr<NodeInput> addInput() noexcept {
 		std::shared_ptr<NodeInput> s = std::make_shared<NodeInput>();
+		s->node = weak_from_this();
 		inputs.push_back(s);
 		return s;
 	}
@@ -126,6 +127,17 @@ struct Graph {
 	std::shared_ptr<Node> addNode() noexcept {
 		std::shared_ptr<Node> n = std::make_shared<Node>();
 		nodes.push_back(n);
+		return n;
+	}
+
+	std::shared_ptr<Node> insertNode(int location) noexcept {
+		if (location < 0 || location > nodes.size())
+		{
+			WARN_LOG << "Inserting node at invalid location: " << location << " (must be less or equal to " << nodes.size() << ")";
+			return nullptr;
+		}
+		std::shared_ptr<Node> n = std::make_shared<Node>();
+		nodes.insert(nodes.begin() + location, n);
 		return n;
 	}
 
@@ -199,6 +211,7 @@ typedef std::shared_ptr<Slot> SlotPtr;
 typedef std::shared_ptr<NodeInput> NodeInputPtr;
 typedef std::shared_ptr<NodeOutput> NodeOutputPtr;
 typedef std::shared_ptr<Edge> EdgePtr;
+typedef std::shared_ptr<Graph> GraphPtr;
 
 } // namespace Gogh
 

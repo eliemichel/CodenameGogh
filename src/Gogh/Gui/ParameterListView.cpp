@@ -88,6 +88,6 @@ void ParameterListView::insertParameterBellow() // DEBUG
 	}
 	else
 	{
-		model()->insertRow(0, m_contextMenuParameterIndex.parent());
+		model()->insertRow(model()->rowCount(), m_contextMenuParameterIndex.parent());
 	}
 }

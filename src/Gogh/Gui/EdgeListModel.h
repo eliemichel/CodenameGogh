@@ -23,10 +23,10 @@
 * in the Software.
 */
 
-#ifndef H_GOGH_NODELISTMODEL
-#define H_GOGH_NODELISTMODEL
+#ifndef H_GOGH_EDGEISTMODEL
+#define H_GOGH_EDGEISTMODEL
 
-#include <QAbstractItemModel>
+#include <QAbstractTableModel>
 #include <QModelIndex>
 
 #include "Graph.h"
@@ -40,27 +40,25 @@ namespace Gui {
 /**
  * List of nodes in a graph
  */
-class NodeListModel : public QAbstractItemModel
+class EdgeListModel : public QAbstractTableModel
 {
 public:
 	void setGraph(GraphPtr graph);
 
 public:
-	// Basic QAbstractItemModel implementation
-	QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
-	QModelIndex parent(const QModelIndex &index) const override;
+	// Basic QAbstractTableModel implementation
 	int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 	int columnCount(const QModelIndex &parent = QModelIndex()) const override;
 	QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
 
-	// Editable QAbstractItemModel implementation
+	// Editable QAbstractTableModel implementation
 	bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
 	Qt::ItemFlags flags(const QModelIndex &index) const override;
 
-	// Headers QAbstractItemModel implementation
+	// Headers QAbstractTableModel implementation
 	QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 
-	// Resizable QAbstractItemModel implementation
+	// Resizable QAbstractTableModel implementation
 	bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
 	bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
 
@@ -74,47 +72,30 @@ private:
 
 public:
 	enum Columns {
-		NameColumn = 0,
-		XPosColumn,
-		YPosColumn,
+		OriginNodeColumn = 0,
+		OriginOutputColumn,
+		DestinationNodeColumn,
+		DestinationInputColumn,
 		_ColumnCount,
-	};
-
-	enum Roles {
-		NodePtrRole = Qt::UserRole,
-		ParameterModelRole,
-		InputModelRole,
-		OutputModelRole,
 	};
 
 private:
 	/**
-	 * Structure holding the node pointer together with the qmodels for its
-	 * parameters, inputs and outputs. This is used to avoid populating the
-	 * core graph structures with qt-related (so ui-related) attributes.
+	 * Structure holding the edge pointer together with some cached data
+	 * like index based origin/destination (rather than pointer-based)
 	 */
 	struct ModelEntry {
-		NodePtr node;
-		std::shared_ptr<ParameterListModel> parametersModel;
-		std::shared_ptr<NodeInputListModel> inputsModel;
-		std::shared_ptr<NodeOutputListModel> outputsModel;
-
-		ModelEntry(NodePtr _node)
-		{
-			node = _node;
-			parametersModel = std::make_shared<ParameterListModel>();
-			parametersModel->setNode(node);
-			inputsModel = std::make_shared<NodeInputListModel>();
-			inputsModel->setNode(node);
-			outputsModel = std::make_shared<NodeOutputListModel>();
-			outputsModel->setNode(node);
-		}
+		EdgePtr edge;
+		int originNode = -1;
+		int originOutput = -1;
+		int destinationNode = -1;
+		int destinationInput = -1;
 	};
 
 	/**
-	* Load the ModelEntries from the current m_graph
-	* You are likely to need to wrap this inside a beginResetModel() block
-	*/
+	 * Load the ModelEntries from the current m_graph
+	 * You are likely to need to wrap this inside a beginResetModel() block
+	 */
 	void reloadFromGraph() noexcept;
 
 private:
@@ -125,4 +106,4 @@ private:
 } // namespace Gui
 } // namespace Gogh
 
-#endif // H_GOGH_NODELISTMODEL
+#endif // H_GOGH_EDGEISTMODEL

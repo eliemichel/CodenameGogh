@@ -34,6 +34,10 @@ void NodeOutputListModel::setNode(Gogh::NodePtr node)
 {
 	beginResetModel();
 	m_node = node;
+	m_viewData.clear();
+	if (node) {
+		m_viewData.resize(node->outputs.size());
+	}
 	endResetModel();
 }
 
@@ -62,9 +66,11 @@ QVariant NodeOutputListModel::data(const QModelIndex &index, int role) const
 		case NameColumn:
 			return QString::fromStdString(m_node->outputs[index.row()]->name);
 		case TypeColumn:
-		{
 			return QVariant(); // TODO
-		}
+		case ViewXColumn:
+			return m_viewData[index.row()].x;
+		case ViewYColumn:
+			return m_viewData[index.row()].y;
 		default:
 			return QVariant();
 		}
@@ -90,6 +96,12 @@ bool NodeOutputListModel::setData(const QModelIndex &index, const QVariant &valu
 		case TypeColumn:
 			// TODO
 			return false;
+		case ViewXColumn:
+			m_viewData[index.row()].x = value.toFloat();
+			return true;
+		case ViewYColumn:
+			m_viewData[index.row()].y = value.toFloat();
+			return true;
 		default:
 			return false;
 		}
@@ -104,7 +116,7 @@ Qt::ItemFlags NodeOutputListModel::flags(const QModelIndex &index) const
 	if (index.isValid())
 	{
 		itemFlags |= Qt::ItemIsEditable;
-		itemFlags |= Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
+		//itemFlags |= Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
 	}
 
 	return itemFlags;
@@ -123,6 +135,10 @@ QVariant NodeOutputListModel::headerData(int section, Qt::Orientation orientatio
 		return "Name";
 	case TypeColumn:
 		return "Type";
+	case ViewXColumn:
+		return "View X";
+	case ViewYColumn:
+		return "View Y";
 	default:
 		return QVariant();
 	}
@@ -139,6 +155,7 @@ bool NodeOutputListModel::insertRows(int row, int count, const QModelIndex &pare
 	beginInsertRows(parent, row, row + count - 1);
 	std::vector<NodeOutputPtr> & l = m_node->outputs;
 	l.insert(l.begin() + row, count, nullptr);
+	m_viewData.insert(m_viewData.begin() + row, count, ViewDataEntry());
 	for (int i = row; i < row + count; ++i)
 	{
 		l[i] = std::make_shared<Gogh::NodeOutput>();
@@ -156,6 +173,7 @@ bool NodeOutputListModel::removeRows(int row, int count, const QModelIndex &pare
 	beginRemoveRows(parent, startRow, endRow);
 	std::vector<NodeOutputPtr> & l = m_node->outputs;
 	l.erase(l.begin() + startRow, l.begin() + endRow);
+	m_viewData.erase(m_viewData.begin() + startRow, m_viewData.begin() + endRow);
 	endRemoveRows();
 	return true;
 }
