@@ -53,7 +53,7 @@ MainWindow::MainWindow(QWidget *parent)
 	node->parameters.push_back(p);
 	*/
 
-	paramModel = new ParameterListModel();
+	//paramModel = new ParameterListModel();
 	NodePtr node = nodeModel->index(0, 0).data(NodeListModel::NodePtrRole).value<Gogh::NodePtr>();
 	auto p = std::make_shared<Parameter>();
 	p->setName("Param_1");
@@ -63,14 +63,18 @@ MainWindow::MainWindow(QWidget *parent)
 	node->parameters.push_back(p);
 
 	paramView = new ParameterListView();
-	paramView->setModel(paramModel);
+	//paramView->setModel(paramModel);
+	inputView = new ParameterListView();
 
 	connect(nodeView->selectionModel(), SIGNAL(currentChanged(const QModelIndex &, const QModelIndex &)),
 		this, SLOT(onCurrentNodeChanged(const QModelIndex &, const QModelIndex &)));
 
 	QSplitter *splitter = new QSplitter();
 	splitter->addWidget(nodeView);
-	splitter->addWidget(paramView);
+	QSplitter *vsplitter = new QSplitter();
+	vsplitter->addWidget(paramView);
+	vsplitter->addWidget(inputView);
+	splitter->addWidget(vsplitter);
 
 	setCentralWidget(splitter);
 }
@@ -82,6 +86,8 @@ void MainWindow::onCurrentNodeChanged(const QModelIndex & current, const QModelI
 	//paramModel->setNode(node);
 
 	// Option B
-	auto m = current.data(NodeListModel::ParameterModelRole).value<std::shared_ptr<ParameterListModel>>();
-	paramView->setModel(m.get());
+	auto pParamModel = current.data(NodeListModel::ParameterModelRole).value<std::shared_ptr<ParameterListModel>>();
+	paramView->setModel(pParamModel.get());
+	auto pInputModel = current.data(NodeListModel::InputModelRole).value<std::shared_ptr<NodeInputListModel>>();
+	inputView->setModel(pInputModel.get());
 }

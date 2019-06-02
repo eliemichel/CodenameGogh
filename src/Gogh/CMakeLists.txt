@@ -22,6 +22,7 @@ set(SRC
 	ParameterType.cpp
 	Parameter.h
 	Parameter.cpp
+	Graph.h
 
 	# Gui files
 	Gui/GraphMetaTypes.h
@@ -35,6 +36,10 @@ set(SRC
 	Gui/ParameterTypeDelegate.cpp
 	Gui/NodeListModel.h
 	Gui/NodeListModel.cpp
+	Gui/AbstractSlotListModel.h
+	Gui/AbstractSlotListModel.cpp
+	Gui/NodeInputListModel.h
+	Gui/NodeInputListModel.cpp
 
 	main.cpp
 )

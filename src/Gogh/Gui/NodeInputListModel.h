@@ -23,36 +23,42 @@
 * in the Software.
 */
 
-#ifndef H_GOGH_MAINWINDOW
+#ifndef H_GOGH_NODEINPUTLISTMODEL
+#define H_GOGH_NODEINPUTLISTMODEL
 
-#include <QMainWindow>
-#include <QModelIndex>
-
-class QTreeView;
-class QMenu;
+#include "AbstractSlotListModel.h"
+#include "Graph.h"
+#include "ParameterListModel.h"
 
 namespace Gogh {
 namespace Gui {
 
-class ParameterListView;
-class ParameterListModel;
-
-class MainWindow : public QMainWindow
+/**
+* List of inputs attached to a node
+*/
+class NodeInputListModel : public AbstractSlotListModel
 {
 	Q_OBJECT
-public:
-	MainWindow(QWidget *parent = nullptr);
+protected:
+	// Implement AbstractSLotListModel virtual methods
+	virtual std::vector<NodeInputPtr> & slotList();
+	virtual const std::vector<NodeInputPtr> & slotList() const;
+	virtual NodeInputPtr makeSlot() const;
 
-private slots:
-	void onCurrentNodeChanged(const QModelIndex & current, const QModelIndex & previous);
+public:
+	enum Columns {
+		NameColumn = 0,
+		TypeColumn,
+		_ColumnCount,
+	};
 
 private:
-	ParameterListView * paramView;
-	ParameterListView * inputView;
-	ParameterListModel * paramModel;
+	NodePtr m_node;
 };
 
 } // namespace Gui
 } // namespace Gogh
 
-#endif // H_GOGH_MAINWINDOW
+Q_DECLARE_METATYPE(std::shared_ptr<Gogh::Gui::NodeInputListModel>)
+
+#endif // H_GOGH_NODEINPUTLISTMODEL

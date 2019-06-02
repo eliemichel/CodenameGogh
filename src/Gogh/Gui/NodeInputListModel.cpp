@@ -23,36 +23,25 @@
 * in the Software.
 */
 
-#ifndef H_GOGH_MAINWINDOW
+#include "NodeInputListModel.h"
+#include "Logger.h"
+#include "GraphMetaTypes.h"
 
-#include <QMainWindow>
-#include <QModelIndex>
+using namespace Gogh::Gui;
 
-class QTreeView;
-class QMenu;
-
-namespace Gogh {
-namespace Gui {
-
-class ParameterListView;
-class ParameterListModel;
-
-class MainWindow : public QMainWindow
+///////////////////////////////////////////////////////////////////////////////
+// Implement AbstractSLotListModel virtual methods
+std::vector<Gogh::NodeInputPtr> & NodeInputListModel::slotList()
 {
-	Q_OBJECT
-public:
-	MainWindow(QWidget *parent = nullptr);
+	return modelNode()->inputs;
+}
 
-private slots:
-	void onCurrentNodeChanged(const QModelIndex & current, const QModelIndex & previous);
+const std::vector<Gogh::NodeInputPtr> & NodeInputListModel::slotList() const
+{
+	return modelNode()->inputs;
+}
 
-private:
-	ParameterListView * paramView;
-	ParameterListView * inputView;
-	ParameterListModel * paramModel;
-};
-
-} // namespace Gui
-} // namespace Gogh
-
-#endif // H_GOGH_MAINWINDOW
+Gogh::NodeInputPtr NodeInputListModel::makeSlot() const
+{
+	return std::make_shared<Gogh::NodeInput>();
+}

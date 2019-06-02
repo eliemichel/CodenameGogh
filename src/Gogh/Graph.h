@@ -38,6 +38,7 @@ struct Slot {
 	Slot() { DEBUG_LOG << "Slot ctor"; }
 	~Slot() { DEBUG_LOG << "Slot dtor"; }
 
+	std::string name;
 	std::weak_ptr<Edge> edge; // null iff the slot is not connected
 	std::weak_ptr<Node> node;
 
@@ -194,6 +195,7 @@ struct Graph {
 };
 
 typedef std::shared_ptr<Node> NodePtr;
+typedef std::shared_ptr<Slot> SlotPtr;
 typedef std::shared_ptr<NodeInput> NodeInputPtr;
 typedef std::shared_ptr<NodeOutput> NodeOutputPtr;
 typedef std::shared_ptr<Edge> EdgePtr;

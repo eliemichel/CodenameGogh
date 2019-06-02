@@ -32,13 +32,12 @@ using namespace Gogh::Gui;
 NodeListModel::NodeListModel()
 {
 	// DEBUG
-	m_entries.resize(2);
 	auto p = std::make_shared<Node>();
 	p->name = "Node_1";
-	m_entries[0].setNode(p);
+	m_entries.push_back(ModelEntry(p));
 	p = std::make_shared<Node>();
 	p->name = "Node_2";
-	m_entries[1].setNode(p);
+	m_entries.push_back(ModelEntry(p));
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -107,6 +106,10 @@ QVariant NodeListModel::data(const QModelIndex &index, int role) const
 		else if (role == ParameterModelRole)
 		{
 			return QVariant::fromValue(m_entries[index.row()].parameters);
+		}
+		else if (role == InputModelRole)
+		{
+			return QVariant::fromValue(m_entries[index.row()].inputs);
 		}
 	}
 	return QVariant();
@@ -184,10 +187,9 @@ bool NodeListModel::insertRows(int row, int count, const QModelIndex &parent)
 	if (row < 0 || row > rowCount(parent)) return false;
 
 	beginInsertRows(parent, row, row + count - 1);
-	m_entries.insert(m_entries.begin() + row, count, ModelEntry());
-	for (int i = row; i < row + count; ++i)
+	for (int i = 0; i < count; ++i)
 	{
-		m_entries[i].setNode(std::make_shared<Node>());
+		m_entries.insert(m_entries.begin() + row, ModelEntry(std::make_shared<Node>()));
 	}
 	endInsertRows();
 	return true;

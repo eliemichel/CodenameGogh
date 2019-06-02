@@ -23,92 +23,71 @@
 * in the Software.
 */
 
-#ifndef H_GOGH_NODELISTMODEL
-#define H_GOGH_NODELISTMODEL
+#ifndef H_GOGH_ABSTRACTSLOTLISTMODEL
+#define H_GOGH_ABSTRACTSLOTLISTMODEL
 
 #include <QAbstractItemModel>
 #include <QModelIndex>
 
 #include "Graph.h"
 #include "ParameterListModel.h"
-#include "NodeInputListModel.h"
 
 namespace Gogh {
 namespace Gui {
 
 /**
- * List of nodes in a graph
- */
-class NodeListModel : public QAbstractItemModel
+* List of inputs attached to a node
+*/
+class AbstractSlotListModel : public QAbstractTableModel
 {
+	Q_OBJECT
 public:
-	NodeListModel();
+	void setNode(NodePtr node);
 
 public:
-	// Basic QAbstractItemModel implementation
-	QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
-	QModelIndex parent(const QModelIndex &index) const override;
+	// Basic QAbstractTableModel implementation
 	int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 	int columnCount(const QModelIndex &parent = QModelIndex()) const override;
 	QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
 
-	// Editable QAbstractItemModel implementation
+	// Editable QAbstractTableModel implementation
 	bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
 	Qt::ItemFlags flags(const QModelIndex &index) const override;
 
 	// Headers QAbstractItemModel implementation
 	QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 
-	// Resizable QAbstractItemModel implementation
+	// Resizable QAbstractTableModel implementation
 	bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
 	bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
 
 	// Drag and drop
 	Qt::DropActions supportedDropActions() const override;
 
-private:
-	// Utils
-	/// This is an alias to "is not valid" used for clearer reading
-	static inline bool isRoot(const QModelIndex & index) { return !index.isValid(); }
+protected:
+	// Methods to be implemented in subclasses, to make the difference between
+	// input and output slots
+	virtual std::vector<NodeInputPtr> & slotList() = 0;
+	virtual const std::vector<NodeInputPtr> & slotList() const = 0;
+	virtual NodeInputPtr makeSlot() const = 0;
+
+	// Utility accessor to help implementing virtual methods
+	inline NodePtr modelNode() const { return m_node; }
 
 public:
 	enum Columns {
 		NameColumn = 0,
-		XPosColumn,
-		YPosColumn,
+		TypeColumn,
 		_ColumnCount,
 	};
 
-	enum Roles {
-		NodePtrRole = Qt::UserRole,
-		ParameterModelRole,
-		InputModelRole,
-	};
-
 private:
-	/**
-	 * Structure holding the node pointer together with the qmodels for its
-	 * parameters, inputs and outputs. This is used to avoid populating the
-	 * core graph structures with qt-related (so ui-related) attributes.
-	 */
-	struct ModelEntry {
-		NodePtr node;
-		std::shared_ptr<ParameterListModel> parameters;
-		std::shared_ptr<NodeInputListModel> inputs;
-
-		ModelEntry(NodePtr _node)
-		{
-			node = _node;
-			parameters = std::make_shared<ParameterListModel>();
-			parameters->setNode(node);
-			inputs = std::make_shared<NodeInputListModel>();
-			inputs->setNode(node);
-		}
-	};
-	std::vector<ModelEntry> m_entries;
+	NodePtr m_node;
 };
 
 } // namespace Gui
 } // namespace Gogh
 
-#endif // H_GOGH_NODELISTMODEL
+Q_DECLARE_METATYPE(std::shared_ptr<Gogh::Gui::AbstractSlotListModel>)
+
+#endif // H_GOGH_ABSTRACTSLOTLISTMODEL
