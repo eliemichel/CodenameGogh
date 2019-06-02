@@ -32,6 +32,8 @@ set(SRC
 	Gui/ParameterListModel.cpp
 	Gui/ParameterTypeDelegate.h
 	Gui/ParameterTypeDelegate.cpp
+	Gui/NodeListModel.h
+	Gui/NodeListModel.cpp
 
 	main.cpp
 )

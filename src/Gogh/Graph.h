@@ -26,6 +26,9 @@
 #ifndef H_GOGH_GRAPH
 #define H_GOGH_GRAPH
 
+#include "Logger.h"
+#include "Parameter.h"
+
 namespace Gogh {
 
 struct Edge;
@@ -53,7 +56,10 @@ struct Node : public std::enable_shared_from_this<Node> {
 	Node() { DEBUG_LOG << "Node ctor"; }
 	~Node() { DEBUG_LOG << "Node dtor"; }
 
+	std::string name;
 	int payload;
+	float x;
+	float y;
 	std::vector<std::unique_ptr<Gogh::Parameter>> parameters;
 	std::vector<std::shared_ptr<NodeInput>> inputs;
 	std::vector<std::shared_ptr<NodeOutput>> outputs;

@@ -29,6 +29,7 @@
 #include "MainWindow.h"
 #include "ParameterListView.h"
 #include "ParameterListModel.h"
+#include "NodeListModel.h"
 
 using namespace Gogh::Gui;
 
@@ -36,7 +37,8 @@ MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
 {
 	ParameterListView *view = new ParameterListView();
-	ParameterListModel *model = new ParameterListModel();
+	//ParameterListModel *model = new ParameterListModel();
+	NodeListModel *model = new NodeListModel();
 	view->setModel(model);
 	setCentralWidget(view);
 }
