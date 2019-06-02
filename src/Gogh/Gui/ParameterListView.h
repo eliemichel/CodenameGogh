@@ -23,35 +23,45 @@
 * in the Software.
 */
 
-#include <memory>
+#ifndef H_GOGH_PARAMETERLISTVIEW
+#define H_GOGH_PARAMETERLISTVIEW
 
-#include <QGuiApplication>
-#include <QQmlApplicationEngine>
-#include <QUrl>
-#include <QApplication>
+#include <QTreeView>
+#include <QModelIndex>
 
-#include "Logger.h"
-#include "Parameter.h"
-#include "Graph.h"
-#include "Gui/MainWindow.h"
+class QTreeView;
+class QMenu;
 
-int main(int argc, char *argv[])
+
+namespace Gogh {
+namespace Gui {
+
+/**
+ * Variant of QTreeView to display a ParameterListModel. This view is mainly
+ * used for debugging and advanced operations. Regular users will use the
+ * ParameterView instead (TODO: find more distinct names)
+ * Try to depend as little as possible on ParameterListModel and instead use
+ * the regular QAbstractItemModel methods
+ */
+class ParameterListView : public QTreeView
 {
-	//QGuiApplication app(argc, argv);
-	QApplication app(argc, argv);
+	Q_OBJECT
+public:
+	ParameterListView(QWidget *parent = nullptr);
 
-	/*
-	QQmlApplicationEngine engine;
-	engine.load(QUrl(QStringLiteral("qrc:/qml/main.qml")));
-	if (engine.rootObjects().isEmpty())
-	{
-		return -1;
-	}
-	*/
+private slots:
+	void onContextMenu(const QPoint & point);
+	void removeParameter();
+	void insertParameterAbove();
+	void insertParameterBellow();
 
-	Gogh::Gui::MainWindow window;
-	window.resize(800, 600);
-	window.show();
+private:
+	QMenu *m_contextMenu;
+	/// cache the index of the item on which the context menu is open
+	QModelIndex m_contextMenuParameterIndex;
+};
 
-	return app.exec();
-}
+} // namespace Gui
+} // namespace Gogh
+
+#endif // H_GOGH_PARAMETERLISTVIEW

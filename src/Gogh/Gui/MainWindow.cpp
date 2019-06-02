@@ -23,35 +23,20 @@
 * in the Software.
 */
 
-#include <memory>
+#include <QTreeView>
+#include <QMenu>
 
-#include <QGuiApplication>
-#include <QQmlApplicationEngine>
-#include <QUrl>
-#include <QApplication>
+#include "MainWindow.h"
+#include "ParameterListView.h"
+#include "ParameterListModel.h"
 
-#include "Logger.h"
-#include "Parameter.h"
-#include "Graph.h"
-#include "Gui/MainWindow.h"
+using namespace Gogh::Gui;
 
-int main(int argc, char *argv[])
+MainWindow::MainWindow(QWidget *parent)
+	: QMainWindow(parent)
 {
-	//QGuiApplication app(argc, argv);
-	QApplication app(argc, argv);
-
-	/*
-	QQmlApplicationEngine engine;
-	engine.load(QUrl(QStringLiteral("qrc:/qml/main.qml")));
-	if (engine.rootObjects().isEmpty())
-	{
-		return -1;
-	}
-	*/
-
-	Gogh::Gui::MainWindow window;
-	window.resize(800, 600);
-	window.show();
-
-	return app.exec();
+	ParameterListView *view = new ParameterListView();
+	ParameterListModel *model = new ParameterListModel();
+	view->setModel(model);
+	setCentralWidget(view);
 }

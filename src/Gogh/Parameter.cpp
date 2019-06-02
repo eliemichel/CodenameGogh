@@ -128,6 +128,9 @@ std::string Parameter::evalAsString() const {
 	std::string value;
 	switch (type())
 	{
+	case NoneType:
+		value = "";
+		break;
 	case EnumType:
 	{
 		int menu = rawValue().toInt();

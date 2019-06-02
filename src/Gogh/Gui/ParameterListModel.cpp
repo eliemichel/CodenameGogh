@@ -85,9 +85,23 @@ QVariant ParameterListModel::data(const QModelIndex &index, int role) const
 				: QVariant(QString::fromStdString(ParameterTypeUtils::parameterTypeName(type)));
 		}
 		case ValueColumn:
-			return role == Qt::EditRole
-				? QString::fromStdString(m_parameters[index.row()]->rawValue().toString())
-				: QString::fromStdString(m_parameters[index.row()]->evalAsString());
+			if (role == Qt::EditRole)
+			{
+				std::shared_ptr<Parameter> param = m_parameters[index.row()];
+				switch (param->type()) {
+				case NoneType:
+					return QVariant();
+				case StringType:
+				case ButtonType:
+					return QString::fromStdString(param->rawValue().toString());
+				case IntType:
+				case EnumType:
+					return param->rawValue().toInt();
+				case CheckboxType:
+					return param->rawValue().toBool();
+				}
+			}
+			return QString::fromStdString(m_parameters[index.row()]->evalAsString());
 		default:
 			return QVariant();
 		}
@@ -111,13 +125,26 @@ bool ParameterListModel::setData(const QModelIndex &index, const QVariant &value
 			dataChanged(index, index);
 			return true;
 		case TypeColumn:
-			m_parameters[index.row()]->setType(static_cast<ParameterType>(value.toInt()));
-			dataChanged(index, index);
+		{
+			std::shared_ptr<Parameter> param = m_parameters[index.row()];
+			const QModelIndex & valueIndex = index.siblingAtColumn(ValueColumn);
+			// Get value before changing type, then write it to the new typed param
+			QVariant prevValue = valueIndex.data(Qt::EditRole);
+			param->setType(ParameterTypeUtils::fromInt(value.toInt()));
+			setParamFromQVariant(param, prevValue);
+			dataChanged(index, valueIndex);
 			return true;
+		}
 		case ValueColumn:
-			m_parameters[index.row()]->set(value.toInt());
-			dataChanged(index, index);
-			return true;
+		{
+			if (setParamFromQVariant(m_parameters[index.row()], value)) {
+				dataChanged(index, index);
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
 		default:
 			return false;
 		}
@@ -130,7 +157,23 @@ Qt::ItemFlags ParameterListModel::flags(const QModelIndex &index) const
 	Qt::ItemFlags itemFlags = QAbstractItemModel::flags(index);
 
 	if (index.column() == NameColumn || index.column() == TypeColumn || index.column() == ValueColumn) {
-		itemFlags |= Qt::ItemIsEditable;
+		if (index.column() == ValueColumn
+			&& index.column() >= 0 && index.column() < columnCount(index.parent())
+			&& index.row() >= 0 && index.row() < rowCount(index.parent())
+			&& m_parameters[index.row()]->type() == NoneType
+		)
+		{
+			// Value is not editable if type is NoneType
+		}
+		else
+		{
+			itemFlags |= Qt::ItemIsEditable;
+		}
+	}
+
+	if (index.isValid())
+	{
+		itemFlags |= Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
 	}
 
 	return itemFlags;
@@ -154,4 +197,65 @@ QVariant ParameterListModel::headerData(int section, Qt::Orientation orientation
 	default:
 		return QVariant();
 	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Resizable QAbstractItemModel implementation
+
+bool ParameterListModel::insertRows(int row, int count, const QModelIndex &parent)
+{
+	if (parent.isValid()) return false; // Only insert rows at root
+	if (row < 0 || row > rowCount(parent)) return false;
+
+	beginInsertRows(parent, row, row + count - 1);
+	m_parameters.insert(m_parameters.begin() + row, count, nullptr);
+	for (int i = row; i < row + count; ++i)
+	{
+		m_parameters[i] = std::make_shared<Parameter>();
+	}
+	endInsertRows();
+	return true;
+}
+
+bool ParameterListModel::removeRows(int row, int count, const QModelIndex &parent)
+{
+	if (parent.isValid()) return false; // Only remove rows from root
+	int startRow = std::max(row, 0);
+	int endRow = std::min(row + count, rowCount(parent) - 1);
+	if (endRow <= startRow) return false; // Nothing to remove
+	beginRemoveRows(parent, startRow, endRow);
+	m_parameters.erase(m_parameters.begin() + startRow, m_parameters.begin() + endRow);
+	endRemoveRows();
+	return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Drag and drop
+
+Qt::DropActions ParameterListModel::supportedDropActions() const
+{
+	return Qt::MoveAction;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Static utils
+
+bool ParameterListModel::setParamFromQVariant(std::shared_ptr<Gogh::Parameter> param, const QVariant &value)
+{
+	switch (param->type()) {
+	case NoneType:
+		return false;
+	case StringType:
+	case ButtonType:
+		param->set(value.toString().toStdString());
+		break;
+	case IntType:
+	case EnumType:
+		param->set(value.toInt());
+		break;
+	case CheckboxType:
+		param->set(value.toBool());
+		break;
+	}
+	return true;
 }

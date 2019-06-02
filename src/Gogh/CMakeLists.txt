@@ -24,10 +24,14 @@ set(SRC
 	Parameter.cpp
 
 	# Gui files
-	ParameterListModel.h
-	ParameterListModel.cpp
-	ParameterTypeDelegate.h
-	ParameterTypeDelegate.cpp
+	Gui/MainWindow.h
+	Gui/MainWindow.cpp
+	Gui/ParameterListView.h
+	Gui/ParameterListView.cpp
+	Gui/ParameterListModel.h
+	Gui/ParameterListModel.cpp
+	Gui/ParameterTypeDelegate.h
+	Gui/ParameterTypeDelegate.cpp
 
 	main.cpp
 )

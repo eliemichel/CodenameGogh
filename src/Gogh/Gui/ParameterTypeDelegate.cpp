@@ -30,6 +30,9 @@
 
 using namespace Gogh::Gui;
 
+///////////////////////////////////////////////////////////////////////////////
+// QStyledItemDelegate overrides
+
 QWidget* ParameterTypeDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
 	QComboBox *cb = new QComboBox(parent);

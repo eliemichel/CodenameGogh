@@ -23,53 +23,25 @@
 * in the Software.
 */
 
-#ifndef H_GOGH_PARAMETERLISTMODEL
-#define H_GOGH_PARAMETERLISTMODEL
+#ifndef H_GOGH_MAINWINDOW
 
-#include <QAbstractItemModel>
+#include <QMainWindow>
 #include <QModelIndex>
 
-#include "Parameter.h"
+class QTreeView;
+class QMenu;
 
 namespace Gogh {
 namespace Gui {
 
-/**
- * List of parameters attached to a node
- */
-class ParameterListModel : public QAbstractItemModel
+class MainWindow : public QMainWindow
 {
+	Q_OBJECT
 public:
-	ParameterListModel();
-
-public:
-	// Basic QAbstractItemModel implementation
-	QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
-	QModelIndex parent(const QModelIndex &index) const override;
-	int rowCount(const QModelIndex &parent = QModelIndex()) const override;
-	int columnCount(const QModelIndex &parent = QModelIndex()) const override;
-	QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
-
-	// Editable QAbstractItemModel implementation
-	bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
-	Qt::ItemFlags flags(const QModelIndex &index) const override;
-
-	// Headers QAbstractItemModel implementation
-	QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
-
-public:
-	enum Columns {
-		NameColumn = 0,
-		TypeColumn,
-		ValueColumn,
-		_ColumnCount,
-	};
-
-private:
-	std::vector<std::shared_ptr<Parameter>> m_parameters;
+	MainWindow(QWidget *parent = nullptr);
 };
 
 } // namespace Gui
 } // namespace Gogh
 
-#endif // H_GOGH_PARAMETERLISTMODEL
+#endif // H_GOGH_MAINWINDOW
