@@ -23,30 +23,31 @@
 * in the Software.
 */
 
-#ifndef H_GOGH_PARAMETERTYPE
-#define H_GOGH_PARAMETERTYPE
+#include "ParameterType.h"
 
-#include <string>
+using namespace Gogh;
 
-namespace Gogh {
-
-enum ParameterType
+ParameterType ParameterTypeUtils::fromInt(int index)
 {
-	NoneType,
-	StringType,
-	IntType,
-	EnumType,
-	ButtonType,
-	CheckboxType,
-	_ParameterTypeCount,
-};
-
-namespace ParameterTypeUtils
-{
-	ParameterType fromInt(int index);
-	std::string parameterTypeName(const ParameterType & type);
+	return static_cast<ParameterType>(index);
 }
 
-} // namespace Gogh
-
-#endif // H_GOGH_PARAMETERTYPE
+std::string ParameterTypeUtils::parameterTypeName(const ParameterType & type)
+{
+	switch (type) {
+	case NoneType:
+		return "None";
+	case StringType:
+		return "String";
+	case IntType:
+		return "Int";
+	case EnumType:
+		return "Enum";
+	case ButtonType:
+		return "Button";
+	case CheckboxType:
+		return "Checkbox";
+	default:
+		return "<Unknown Type>";
+	}
+}

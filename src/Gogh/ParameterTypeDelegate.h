@@ -23,30 +23,27 @@
 * in the Software.
 */
 
-#ifndef H_GOGH_PARAMETERTYPE
-#define H_GOGH_PARAMETERTYPE
+#ifndef H_GOGH_PARAMETERTYPEDELEGATE
+#define H_GOGH_PARAMETERTYPEDELEGATE
 
-#include <string>
+#include <QStyledItemDelegate>
 
 namespace Gogh {
+namespace Gui {
 
-enum ParameterType
+/**
+ * Delegate for displaying the type of parameters as a combo box in tree views
+ */
+class ParameterTypeDelegate : public QStyledItemDelegate
 {
-	NoneType,
-	StringType,
-	IntType,
-	EnumType,
-	ButtonType,
-	CheckboxType,
-	_ParameterTypeCount,
+	Q_OBJECT
+public:
+	QWidget * createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
+	void setEditorData(QWidget *editor, const QModelIndex &index) const override;
+	void setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const override;
 };
 
-namespace ParameterTypeUtils
-{
-	ParameterType fromInt(int index);
-	std::string parameterTypeName(const ParameterType & type);
-}
-
+} // namespace Gui
 } // namespace Gogh
 
-#endif // H_GOGH_PARAMETERTYPE
+#endif // H_GOGH_PARAMETERTYPEDELEGATE

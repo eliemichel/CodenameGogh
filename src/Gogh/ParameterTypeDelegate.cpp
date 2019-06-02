@@ -23,30 +23,35 @@
 * in the Software.
 */
 
-#ifndef H_GOGH_PARAMETERTYPE
-#define H_GOGH_PARAMETERTYPE
+#include <QComboBox>
 
-#include <string>
+#include "ParameterType.h"
+#include "ParameterTypeDelegate.h"
 
-namespace Gogh {
+using namespace Gogh::Gui;
 
-enum ParameterType
+QWidget* ParameterTypeDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
-	NoneType,
-	StringType,
-	IntType,
-	EnumType,
-	ButtonType,
-	CheckboxType,
-	_ParameterTypeCount,
-};
+	QComboBox *cb = new QComboBox(parent);
 
-namespace ParameterTypeUtils
-{
-	ParameterType fromInt(int index);
-	std::string parameterTypeName(const ParameterType & type);
+	using namespace Gogh::ParameterTypeUtils;
+	for (int i = 0; i < _ParameterTypeCount; ++i)
+	{
+		cb->addItem(QString::fromStdString(parameterTypeName(fromInt(i))));
+	}
+	return cb;
 }
 
-} // namespace Gogh
+void ParameterTypeDelegate::setEditorData(QWidget *editor, const QModelIndex &index) const
+{
+	QComboBox *cb = qobject_cast<QComboBox*>(editor);
+	Q_ASSERT(cb);
+	cb->setCurrentIndex(index.data(Qt::EditRole).toInt());
+}
 
-#endif // H_GOGH_PARAMETERTYPE
+void ParameterTypeDelegate::setModelData(QWidget *editor, QAbstractItemModel *model, const QModelIndex &index) const
+{
+	QComboBox *cb = qobject_cast<QComboBox*>(editor);
+	Q_ASSERT(cb);
+	model->setData(index, cb->currentIndex(), Qt::EditRole);
+}

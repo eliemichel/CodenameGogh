@@ -19,8 +19,16 @@ set(SRC
 	Variant.h
 	Signal.h
 	ParameterType.h
+	ParameterType.cpp
 	Parameter.h
 	Parameter.cpp
+
+	# Gui files
+	ParameterListModel.h
+	ParameterListModel.cpp
+	ParameterTypeDelegate.h
+	ParameterTypeDelegate.cpp
+
 	main.cpp
 )
 
