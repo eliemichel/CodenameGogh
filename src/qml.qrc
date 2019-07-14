@@ -1,0 +1,9 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>Node.qml</file>
+        <file>Slot.qml</file>
+        <file>Plug.qml</file>
+        <file>Link.qml</file>
+    </qresource>
+</RCC>
