@@ -49,12 +49,8 @@ Item {
     }
     //onPositionChanged: drag.active?console.log("drag moved"):console.log("moved")
     onReleased: {
-      draggerPlug.x = plug.x;
-      draggerPlug.y = plug.y;
-      dragger = false;
-
       //Node node = parent.parent.parent.nodes[0]
-      console.log(nodes[0].output);
+      //console.log(nodes[0].output);
       // slot snapping
       var slots = [];
       for (var i=0; i < nodes.length; i++){
@@ -64,7 +60,26 @@ Item {
           slots.push(nodes[i].input);
         }
       }
-      console.log(slots);
+
+      for (var i=0; i < slots.length; i++){
+        var dx = (slots[i].parent.x + slots[i].x) - (draggerPlug.parent.parent.x + draggerPlug.parent.x + draggerPlug.x);
+        var dy = (slots[i].parent.y + slots[i].y) - (draggerPlug.parent.parent.y + draggerPlug.parent.y + draggerPlug.y);
+        var distance = Math.sqrt(dx*dx + dy*dy);
+
+        if (distance < 25){
+          if(type == 0){
+          target = slots[i].plug;
+        } else {
+          slots[i].target = draggerPlug.parent.plug;
+        }
+        }
+        console.log("target", slots[i], target);
+      }
+
+      // Reset
+      draggerPlug.x = plug.x;
+      draggerPlug.y = plug.y;
+      dragger = false;
     }
   }
 }
