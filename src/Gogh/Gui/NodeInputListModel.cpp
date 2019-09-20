@@ -36,7 +36,7 @@ void NodeInputListModel::setNode(Gogh::NodePtr node)
 	m_node = node;
 	m_viewData.clear();
 	if (node) {
-		m_viewData.resize(node->outputs.size());
+		m_viewData.resize(node->inputs.size());
 	}
 	endResetModel();
 }
@@ -58,6 +58,7 @@ int NodeInputListModel::columnCount(const QModelIndex &parent) const
 QVariant NodeInputListModel::data(const QModelIndex &index, int role) const
 {
 	if (!index.isValid()) return QVariant();
+	if (index.row() < 0 || index.row() > rowCount(index.parent())) return QVariant();
 
 	if (role == Qt::DisplayRole || role == Qt::EditRole)
 	{
@@ -85,6 +86,8 @@ QVariant NodeInputListModel::data(const QModelIndex &index, int role) const
 bool NodeInputListModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
 	if (!index.isValid()) return false;
+	if (index.row() < 0 || index.row() > rowCount(index.parent())) return false;
+
 	if (role == Qt::EditRole)
 	{
 		switch (index.column())

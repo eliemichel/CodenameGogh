@@ -42,15 +42,10 @@ void NodeListModel::setGraph(Gogh::GraphPtr graph)
 
 QModelIndex NodeListModel::index(int row, int column, const QModelIndex &parent) const
 {
-	if (column < 0 || column >= columnCount(parent)) return QModelIndex();
-	if (row < 0 || row >= rowCount(parent)) return QModelIndex(); // out of bounds
-
-	if (isRoot(parent))
-	{
+	if (isRoot(parent) && isIndexValid(row, column, parent)) {
 		return createIndex(row, column, nullptr);
 	}
-	else
-	{
+	else {
 		return QModelIndex();
 	}
 }
@@ -62,9 +57,12 @@ QModelIndex NodeListModel::parent(const QModelIndex &index) const
 
 int NodeListModel::rowCount(const QModelIndex &parent) const
 {
-	if (parent.isValid()) return 0; // Children don't have subchildren
-	if (!m_graph) return 0;
-	return static_cast<int>(m_entries.size());
+	if (isRoot(parent) && !m_graph) {
+		return static_cast<int>(m_entries.size());
+	}
+	else {
+		return 0;
+	}
 }
 
 int NodeListModel::columnCount(const QModelIndex &parent) const
@@ -74,46 +72,15 @@ int NodeListModel::columnCount(const QModelIndex &parent) const
 
 QVariant NodeListModel::data(const QModelIndex &index, int role) const
 {
-	if (index.isValid()
-		&& index.column() >= 0 && index.column() < columnCount(index.parent())
-		&& index.row() >= 0 && index.row() < rowCount(index.parent()))
-	{
-		if (role == Qt::DisplayRole || role == Qt::EditRole)
-		{
-			switch (index.column())
-			{
-			case NameColumn:
-				return QString::fromStdString(m_entries[index.row()].node->name);
-			case XPosColumn:
-			{
-				return m_entries[index.row()].node->x;
-			}
-			case YPosColumn:
-			{
-				return m_entries[index.row()].node->y;
-			}
-			default:
-				return QVariant();
-			}
-		}
-		else if (role == NodePtrRole)
-		{
-			return QVariant::fromValue(m_entries[index.row()].node);
-		}
-		else if (role == ParameterModelRole)
-		{
-			return QVariant::fromValue(m_entries[index.row()].parametersModel);
-		}
-		else if (role == InputModelRole)
-		{
-			return QVariant::fromValue(m_entries[index.row()].inputsModel);
-		}
-		else if (role == OutputModelRole)
-		{
-			return QVariant::fromValue(m_entries[index.row()].outputsModel);
-		}
+	if (!isIndexValid(index)) {
+		return QVariant();
 	}
-	return QVariant();
+
+	if (role == Qt::DisplayRole || role == Qt::EditRole) {
+		role = columnToRole(index.column());
+	}
+	
+	return m_entries[index.row()].data(role);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -121,29 +88,20 @@ QVariant NodeListModel::data(const QModelIndex &index, int role) const
 
 bool NodeListModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-	if (role == Qt::EditRole && index.isValid()
-		&& index.column() >= 0 && index.column() < columnCount(index.parent())
-		&& index.row() >= 0 && index.row() < rowCount(index.parent()))
-	{
-		switch (index.column())
-		{
-		case NameColumn:
-			m_entries[index.row()].node->name = value.toString().toStdString();
-			dataChanged(index, index);
-			return true;
-		case XPosColumn:
-			m_entries[index.row()].node->x = value.toFloat();
-			dataChanged(index, index);
-			return true;
-		case YPosColumn:
-			m_entries[index.row()].node->y = value.toFloat();
-			dataChanged(index, index);
-			return true;
-		default:
-			return false;
-		}
+	if (!isIndexValid(index)) {
+		return false;
 	}
-	return false;
+
+	if (role == Qt::DisplayRole || role == Qt::EditRole) {
+		role = columnToRole(index.column());
+	}
+
+	if (m_entries[index.row()].setData(role, value)) {
+		dataChanged(index, index);
+		return true;
+	} else {
+		return false;
+	}
 }
 
 Qt::ItemFlags NodeListModel::flags(const QModelIndex &index) const
@@ -223,6 +181,47 @@ Qt::DropActions NodeListModel::supportedDropActions() const
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// QML Roles
+
+QHash<int, QByteArray> NodeListModel::roleNames() const
+{
+	QHash<int, QByteArray> names = QAbstractItemModel::roleNames();
+	names[NameRole] = "name";
+	names[XPosRole] = "x";
+	names[YPosRole] = "y";
+	names[RawParameterModelRole] = "parameters";
+	names[RawInputModelRole] = "inputs";
+	names[RawOutputModelRole] = "outputs";
+	return names;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Utils
+
+bool NodeListModel::isIndexValid(int row, int column, const QModelIndex &parent) const {
+	return column >= 0 && column < columnCount(parent)
+		&& row >= 0 && row < rowCount(parent);
+}
+bool NodeListModel::isIndexValid(const QModelIndex &index) const {
+	return index.isValid() && isIndexValid(index.row(), index.column(), index.parent());
+}
+
+NodeListModel::Role NodeListModel::columnToRole(int column)
+{
+	switch (column)
+	{
+	case NameColumn:
+		return NameRole;
+	case XPosColumn:
+		return XPosRole;
+	case YPosColumn:
+		return YPosRole;
+	default:
+		return InvalidRole;
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // Internal sync'ing with graph backend
 
 void NodeListModel::reloadFromGraph() noexcept
@@ -232,5 +231,66 @@ void NodeListModel::reloadFromGraph() noexcept
 	for (int i = 0; i < m_graph->nodes.size(); ++i)
 	{
 		m_entries.push_back(ModelEntry(m_graph->nodes[i]));
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ModelEntry methods
+
+QVariant NodeListModel::ModelEntry::data(int role) const {
+	switch (role)
+	{
+	case NameRole:
+		return QString::fromStdString(node->name);
+
+	case XPosRole:
+		return node->x;
+
+	case YPosRole:
+		return node->y;
+
+	case NodePtrRole:
+		return QVariant::fromValue(node);
+
+	case ParameterModelRole:
+		return QVariant::fromValue(parametersModel);
+
+	case InputModelRole:
+		return QVariant::fromValue(inputsModel);
+
+	case OutputModelRole:
+		return QVariant::fromValue(outputsModel);
+		
+	case RawParameterModelRole:
+		return QVariant::fromValue(parametersModel.get());
+
+	case RawInputModelRole:
+		return QVariant::fromValue(inputsModel.get());
+
+	case RawOutputModelRole:
+		return QVariant::fromValue(outputsModel.get());
+
+	default:
+		return QVariant();
+	}
+}
+
+bool NodeListModel::ModelEntry::setData(int role, QVariant value) {
+	switch (role)
+	{
+	case NameRole:
+		node->name = value.toString().toStdString();
+		return true;
+
+	case XPosRole:
+		node->x = value.toFloat();
+		return true;
+
+	case YPosRole:
+		node->y = value.toFloat();
+		return true;
+
+	default:
+		return false;
 	}
 }

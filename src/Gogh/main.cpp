@@ -29,18 +29,57 @@
 #include <QQmlApplicationEngine>
 #include <QUrl>
 #include <QApplication>
+#include <QQmlEngine>
+#include <QQmlContext>
 
 #include "Logger.h"
 #include "Parameter.h"
 #include "Graph.h"
 #include "Gui/MainWindow.h"
+#include "Gui/NodeListModel.h"
+
+using namespace Gogh;
 
 int main(int argc, char *argv[])
 {
-	/*
+	// DEBUG Mock graph
+	GraphPtr graph = std::make_shared<Graph>();
+
+	NodePtr n1 = graph->addNode();
+	n1->name = "Node_1";
+	NodeOutputPtr o1 = n1->addOutput();
+	o1->name = "Video Out";
+	NodeOutputPtr o2 = n1->addOutput();
+	o2->name = "Audio Out";
+
+	NodePtr n2 = graph->addNode();
+	n2->name = "Node_2";
+	NodeInputPtr i1 = n2->addInput();
+	i1->name = "Video In";
+	NodeInputPtr i2 = n2->addInput();
+	i2->name = "Audio In";
+
+	auto p = std::make_shared<Parameter>();
+	p->setName("Param_1");
+	n1->parameters.push_back(p);
+	p = std::make_shared<Parameter>();
+	p->setName("Param_2");
+	n1->parameters.push_back(p);
+
+	graph->addEdge(o1, i1);
+	graph->addEdge(o2, i2);
+
+	//*
 	QGuiApplication app(argc, argv);
 
 	QQmlApplicationEngine engine;
+
+	qmlRegisterType<Gogh::Gui::NodeListModel>("Gogh", 1, 0, "NodeListModel");
+	qmlRegisterType<Gogh::Gui::ParameterListModel>("Gogh", 1, 0, "ParameterListModel");
+	Gui::NodeListModel *nodeModel = new Gui::NodeListModel();
+	nodeModel->setGraph(graph);
+	engine.rootContext()->setContextProperty("nodeListModel", nodeModel);
+
 	engine.load(QUrl(QStringLiteral("qrc:/qml/main.qml")));
 	if (engine.rootObjects().isEmpty())
 	{

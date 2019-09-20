@@ -66,22 +66,26 @@ int ParameterListModel::columnCount(const QModelIndex &parent) const
 
 QVariant ParameterListModel::data(const QModelIndex &index, int role) const
 {
-	if ((role == Qt::DisplayRole || role == Qt::EditRole) && index.isValid()
+	if (index.isValid()
 		&& index.column() >= 0 && index.column() < columnCount(index.parent())
 		&& index.row() >= 0 && index.row() < rowCount(index.parent()))
 	{
-		switch (index.column())
+		switch (role)
 		{
-		case NameColumn:
+		case Qt::DisplayRole:
+		case Qt::EditRole:
+			return data(index, columnToRole(index.column()));
+		
+		case NameRole:
 			return QString::fromStdString(m_node->parameters[index.row()]->name());
-		case TypeColumn:
+		case TypeRole:
 		{
 			ParameterType type = m_node->parameters[index.row()]->type();
 			return role == Qt::EditRole
 				? QVariant(type)
 				: QVariant(QString::fromStdString(ParameterTypeUtils::parameterTypeName(type)));
 		}
-		case ValueColumn:
+		case ValueRole:
 			if (role == Qt::EditRole)
 			{
 				std::shared_ptr<Parameter> param = m_node->parameters[index.row()];
@@ -111,17 +115,20 @@ QVariant ParameterListModel::data(const QModelIndex &index, int role) const
 
 bool ParameterListModel::setData(const QModelIndex &index, const QVariant &value, int role)
 {
-	if (role == Qt::EditRole && index.isValid()
+	if (index.isValid()
 		&& index.column() >= 0 && index.column() < columnCount(index.parent())
 		&& index.row() >= 0 && index.row() < rowCount(index.parent()))
 	{
-		switch (index.column())
+		switch (role)
 		{
-		case NameColumn:
+		case Qt::EditRole:
+			return setData(index, value, columnToRole(index.column()));
+		
+		case NameRole:
 			m_node->parameters[index.row()]->setName(value.toString().toStdString());
 			dataChanged(index, index);
 			return true;
-		case TypeColumn:
+		case TypeRole:
 		{
 			std::shared_ptr<Parameter> param = m_node->parameters[index.row()];
 			const QModelIndex & valueIndex = index.siblingAtColumn(ValueColumn);
@@ -132,7 +139,7 @@ bool ParameterListModel::setData(const QModelIndex &index, const QVariant &value
 			dataChanged(index, valueIndex);
 			return true;
 		}
-		case ValueColumn:
+		case ValueRole:
 		{
 			if (setParamFromQVariant(m_node->parameters[index.row()], value)) {
 				dataChanged(index, index);
@@ -236,6 +243,18 @@ Qt::DropActions ParameterListModel::supportedDropActions() const
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+// QML Roles
+
+QHash<int, QByteArray> ParameterListModel::roleNames() const
+{
+	QHash<int, QByteArray> names = QAbstractItemModel::roleNames();
+	names[NameRole] = "name";
+	names[TypeRole] = "type";
+	names[ValueRole] = "value";
+	return names;
+}
+
+///////////////////////////////////////////////////////////////////////////////
 // Static utils
 
 bool ParameterListModel::setParamFromQVariant(std::shared_ptr<Gogh::Parameter> param, const QVariant &value)
@@ -256,4 +275,19 @@ bool ParameterListModel::setParamFromQVariant(std::shared_ptr<Gogh::Parameter> p
 		break;
 	}
 	return true;
+}
+
+ParameterListModel::Role ParameterListModel::columnToRole(int column)
+{
+	switch (column)
+	{
+	case NameColumn:
+		return NameRole;
+	case TypeColumn:
+		return TypeRole;
+	case ValueColumn:
+		return ValueRole;
+	default:
+		return InvalidRole;
+	}
 }

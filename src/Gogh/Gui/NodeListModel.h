@@ -38,11 +38,56 @@ namespace Gogh {
 namespace Gui {
 
 /**
- * List of nodes in a graph
+ * List of nodes in a graph.
+ * This is a proxy to an underlying graph model stored in a Graph object.
+ * Before doing anything with this, you must call setGraph() with a valid graph
+ * pointer.
+ * The models returned when asking for parameters, inputs or outputs are
+ * themselves wrappers around the underlying graph elements. Those wrappers add
+ * standard Qt model API to non-qt core classes like Parameter, Input and
+ * Output.
  */
 class NodeListModel : public QAbstractItemModel
 {
 public:
+	/**
+	 * Name of the model's columns
+	 */
+	enum Columns {
+		NameColumn = 0,
+		XPosColumn,
+		YPosColumn,
+		_ColumnCount,
+	};
+
+	/**
+	 * Name of the model's custom roles. Roles are the primary way of accessing
+	 * to model's data. Some of them are also accessible as column, mostly to
+	 * ease the integration to standard tree view for debug interfaces like
+	 * outliner.
+	 */
+	enum Role {
+		InvalidRole = Qt::UserRole,
+		NodePtrRole,
+		NameRole,
+		XPosRole,
+		YPosRole,
+		ParameterModelRole,
+		InputModelRole,
+		OutputModelRole,
+		// Return raw pointers instead of shared pointers (for qml binding)
+		RawParameterModelRole,
+		RawInputModelRole,
+		RawOutputModelRole,
+	};
+
+public:
+	/**
+	 * Set the underlying graph model.
+	 * You can call it again with another graph to change the target of this
+	 * model.
+	 * @param graph: MUST point to a valid graph
+	 */
 	void setGraph(GraphPtr graph);
 
 public:
@@ -67,25 +112,34 @@ public:
 	// Drag and drop
 	Qt::DropActions supportedDropActions() const override;
 
+	// QML Roles
+	QHash<int, QByteArray> roleNames() const override;
+
 private:
 	// Utils
-	/// This is an alias to "is not valid" used for clearer reading
+	
+	/**
+	 * Check that index is in bounds
+	 */
+	bool isIndexValid(int row, int column, const QModelIndex &parent) const;
+	bool isIndexValid(const QModelIndex &index) const;
+
+private:
+	// Static utils
+
+	/**
+	 * This is an alias to "is not valid" used for clearer reading
+	 */
 	static inline bool isRoot(const QModelIndex & index) { return !index.isValid(); }
 
-public:
-	enum Columns {
-		NameColumn = 0,
-		XPosColumn,
-		YPosColumn,
-		_ColumnCount,
-	};
-
-	enum Roles {
-		NodePtrRole = Qt::UserRole,
-		ParameterModelRole,
-		InputModelRole,
-		OutputModelRole,
-	};
+	/**
+	 * The same row data can be accessed both as a role and as a column.
+	 * It is the role that is the primary way of accessing it, but column is
+	 * useful for debugging, to be able to quickly display the model in a tree
+	 * view (in an of outline-like interface), so this functions makes the link
+	 * between the two.
+	 */
+	static Role columnToRole(int column);
 
 private:
 	/**
@@ -109,6 +163,9 @@ private:
 			outputsModel = std::make_shared<NodeOutputListModel>();
 			outputsModel->setNode(node);
 		}
+
+		QVariant data(int role) const;
+		bool setData(int role, QVariant value);
 	};
 
 	/**

@@ -3,6 +3,8 @@ import QtQml.Models 2.12
 import QtQuick.Controls 2.5
 import QtQuick.Layouts 1.0
 
+import Gogh 1.0
+
 ApplicationWindow
 {
     visible: true
@@ -84,10 +86,35 @@ ApplicationWindow
             }
         }
 
-        ParameterListView {
+        /*ParameterListView {
             Layout.fillWidth: true
             Layout.fillHeight: true
             Layout.minimumWidth: 20
+        }*/
+        ListView {
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            model: nodeListModel//NodeListModel {}
+            delegate: ColumnLayout {
+                width: parent.width
+                property ParameterListModel parameters: model.parameters
+                TextField {
+                    text: model.name
+                    onEditingFinished: model.name = text
+                    Layout.fillWidth: true
+                }
+                ColumnLayout {
+                    Layout.leftMargin: 20
+                    Repeater {
+                        model: parameters
+                        delegate: TextField {
+                            text: model.name
+                            onEditingFinished: model.name = text
+                            Layout.fillWidth: true
+                        }
+                    }
+                }
+            }
         }
 
     }
