@@ -40,81 +40,9 @@ void NodeListModel::setGraph(Gogh::GraphPtr graph)
 ///////////////////////////////////////////////////////////////////////////////
 // Basic QAbstractItemModel implementation
 
-QModelIndex NodeListModel::index(int row, int column, const QModelIndex &parent) const
-{
-	if (isRoot(parent) && isIndexValid(row, column, parent)) {
-		return createIndex(row, column, nullptr);
-	}
-	else {
-		return QModelIndex();
-	}
-}
-
-QModelIndex NodeListModel::parent(const QModelIndex &index) const
-{
-	return QModelIndex();
-}
-
-int NodeListModel::rowCount(const QModelIndex &parent) const
-{
-	if (isRoot(parent) && !m_graph) {
-		return static_cast<int>(m_entries.size());
-	}
-	else {
-		return 0;
-	}
-}
-
 int NodeListModel::columnCount(const QModelIndex &parent) const
 {
 	return _ColumnCount;
-}
-
-QVariant NodeListModel::data(const QModelIndex &index, int role) const
-{
-	if (!isIndexValid(index)) {
-		return QVariant();
-	}
-
-	if (role == Qt::DisplayRole || role == Qt::EditRole) {
-		role = columnToRole(index.column());
-	}
-	
-	return m_entries[index.row()].data(role);
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// Editable QAbstractItemModel implementation
-
-bool NodeListModel::setData(const QModelIndex &index, const QVariant &value, int role)
-{
-	if (!isIndexValid(index)) {
-		return false;
-	}
-
-	if (role == Qt::DisplayRole || role == Qt::EditRole) {
-		role = columnToRole(index.column());
-	}
-
-	if (m_entries[index.row()].setData(role, value)) {
-		dataChanged(index, index);
-		return true;
-	} else {
-		return false;
-	}
-}
-
-Qt::ItemFlags NodeListModel::flags(const QModelIndex &index) const
-{
-	Qt::ItemFlags itemFlags = QAbstractItemModel::flags(index);
-
-	if (index.isValid())
-	{
-		itemFlags |= Qt::ItemIsEditable;
-		itemFlags |= Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
-	}
-
-	return itemFlags;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -138,49 +66,6 @@ QVariant NodeListModel::headerData(int section, Qt::Orientation orientation, int
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Resizable QAbstractItemModel implementation
-
-bool NodeListModel::insertRows(int row, int count, const QModelIndex &parent)
-{
-	if (!m_graph) return false;
-	if (parent.isValid()) return false; // Only insert rows at root
-	if (row < 0 || row > rowCount(parent)) return false;
-
-	beginInsertRows(parent, row, row + count - 1);
-	for (int i = 0; i < count; ++i)
-	{
-		m_entries.insert(m_entries.begin() + row, ModelEntry(m_graph->insertNode(row)));
-	}
-	endInsertRows();
-	return true;
-}
-
-bool NodeListModel::removeRows(int row, int count, const QModelIndex &parent)
-{
-	if (!m_graph) return false;
-	if (parent.isValid()) return false; // Only remove rows from root
-	int startRow = std::max(row, 0);
-	int endRow = std::min(row + count, rowCount(parent) - 1);
-	if (endRow <= startRow) return false; // Nothing to remove
-	beginRemoveRows(parent, startRow, endRow);
-	for (auto it = m_entries.begin() + startRow, end = m_entries.begin() + endRow + 1; it != end; ++it)
-	{
-		m_graph->removeNode(it->node);
-	}
-	m_entries.erase(m_entries.begin() + startRow, m_entries.begin() + endRow);
-	endRemoveRows();
-	return true;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// Drag and drop
-
-Qt::DropActions NodeListModel::supportedDropActions() const
-{
-	return Qt::MoveAction;
-}
-
-///////////////////////////////////////////////////////////////////////////////
 // QML Roles
 
 QHash<int, QByteArray> NodeListModel::roleNames() const
@@ -198,15 +83,20 @@ QHash<int, QByteArray> NodeListModel::roleNames() const
 ///////////////////////////////////////////////////////////////////////////////
 // Utils
 
-bool NodeListModel::isIndexValid(int row, int column, const QModelIndex &parent) const {
-	return column >= 0 && column < columnCount(parent)
-		&& row >= 0 && row < rowCount(parent);
-}
-bool NodeListModel::isIndexValid(const QModelIndex &index) const {
-	return index.isValid() && isIndexValid(index.row(), index.column(), index.parent());
+NodeListModel::AbstractModelEntry * NodeListModel::createEntry(int row)
+{
+	if (!m_graph) return nullptr;
+	return new ModelEntry(m_graph->insertNode(row));
 }
 
-NodeListModel::Role NodeListModel::columnToRole(int column)
+bool NodeListModel::destroyEntry(AbstractModelEntry *entry)
+{
+	if (!m_graph) return false;
+	m_graph->removeNode(static_cast<ModelEntry*>(entry)->node);
+	return true;
+}
+
+int NodeListModel::columnToRole(int column) const
 {
 	switch (column)
 	{
@@ -226,11 +116,20 @@ NodeListModel::Role NodeListModel::columnToRole(int column)
 
 void NodeListModel::reloadFromGraph() noexcept
 {
+	// Detach from previous graph without deleting the underlying data
+	// which is why we don't call removeRows nor destroyEntry
+	for (int i = 0; i < m_entries.size(); ++i)
+	{
+		delete m_entries[i];
+	}
 	m_entries.clear();
-	m_entries.reserve(m_graph->edges.size());
+
+	// Attach to existing data without creating it, which is why we don't
+	// call insertRows nor createEntry
+	m_entries.reserve(m_graph->nodes.size());
 	for (int i = 0; i < m_graph->nodes.size(); ++i)
 	{
-		m_entries.push_back(ModelEntry(m_graph->nodes[i]));
+		m_entries.push_back(new ModelEntry(m_graph->nodes[i]));
 	}
 }
 

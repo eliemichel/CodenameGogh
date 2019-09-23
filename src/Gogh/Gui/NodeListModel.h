@@ -30,6 +30,7 @@
 #include <QModelIndex>
 
 #include "Graph.h"
+#include "AbstractListModel.h"
 #include "ParameterListModel.h"
 #include "NodeInputListModel.h"
 #include "NodeOutputListModel.h"
@@ -47,7 +48,7 @@ namespace Gui {
  * standard Qt model API to non-qt core classes like Parameter, Input and
  * Output.
  */
-class NodeListModel : public QAbstractItemModel
+class NodeListModel : public AbstractListModel
 {
 public:
 	/**
@@ -92,54 +93,21 @@ public:
 
 public:
 	// Basic QAbstractItemModel implementation
-	QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
-	QModelIndex parent(const QModelIndex &index) const override;
-	int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 	int columnCount(const QModelIndex &parent = QModelIndex()) const override;
-	QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
-
-	// Editable QAbstractItemModel implementation
-	bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
-	Qt::ItemFlags flags(const QModelIndex &index) const override;
 
 	// Headers QAbstractItemModel implementation
 	QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
 
-	// Resizable QAbstractItemModel implementation
-	bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
-	bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
-
-	// Drag and drop
-	Qt::DropActions supportedDropActions() const override;
-
 	// QML Roles
 	QHash<int, QByteArray> roleNames() const override;
 
-private:
+protected:
 	// Utils
 	
-	/**
-	 * Check that index is in bounds
-	 */
-	bool isIndexValid(int row, int column, const QModelIndex &parent) const;
-	bool isIndexValid(const QModelIndex &index) const;
+	AbstractModelEntry * createEntry(int row) override;
+	bool destroyEntry(AbstractModelEntry *entry) override;
 
-private:
-	// Static utils
-
-	/**
-	 * This is an alias to "is not valid" used for clearer reading
-	 */
-	static inline bool isRoot(const QModelIndex & index) { return !index.isValid(); }
-
-	/**
-	 * The same row data can be accessed both as a role and as a column.
-	 * It is the role that is the primary way of accessing it, but column is
-	 * useful for debugging, to be able to quickly display the model in a tree
-	 * view (in an of outline-like interface), so this functions makes the link
-	 * between the two.
-	 */
-	static Role columnToRole(int column);
+	int columnToRole(int column) const override;
 
 private:
 	/**
@@ -147,7 +115,7 @@ private:
 	 * parameters, inputs and outputs. This is used to avoid populating the
 	 * core graph structures with qt-related (so ui-related) attributes.
 	 */
-	struct ModelEntry {
+	struct ModelEntry : public AbstractModelEntry {
 		NodePtr node;
 		std::shared_ptr<ParameterListModel> parametersModel;
 		std::shared_ptr<NodeInputListModel> inputsModel;
@@ -175,7 +143,7 @@ private:
 	void reloadFromGraph() noexcept;
 
 private:
-	std::vector<ModelEntry> m_entries;
+	//std::vector<ModelEntry> m_entries;
 	GraphPtr m_graph;
 };
 

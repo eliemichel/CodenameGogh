@@ -28,6 +28,8 @@ set(SRC
 	Gui/GraphMetaTypes.h
 	Gui/MainWindow.h
 	Gui/MainWindow.cpp
+	Gui/AbstractListModel.h
+	Gui/AbstractListModel.cpp
 	Gui/ParameterListView.h
 	Gui/ParameterListView.cpp
 	Gui/ParameterListModel.h
