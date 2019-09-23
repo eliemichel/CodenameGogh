@@ -135,10 +135,11 @@ bool AbstractListModel::removeRows(int row, int count, const QModelIndex &parent
 	int endRow = std::min(row + count, rowCount(parent) - 1);
 	if (endRow <= startRow) return false; // Nothing to remove
 	beginRemoveRows(parent, startRow, endRow);
-	for (auto it = m_entries.begin() + startRow, end = m_entries.begin() + endRow + 1; it != end; ++it)
+	int i = startRow;
+	for (auto it = m_entries.begin() + startRow, end = m_entries.begin() + endRow + 1; it != end; ++it, ++i)
 	{
 		// todo: handle cases where destroyEvent returns false
-		destroyEntry(*it);
+		destroyEntry(i, *it);
 	}
 	m_entries.erase(m_entries.begin() + startRow, m_entries.begin() + endRow);
 	endRemoveRows();
@@ -162,9 +163,4 @@ bool AbstractListModel::isIndexValid(int row, int column, const QModelIndex &par
 }
 bool AbstractListModel::isIndexValid(const QModelIndex &index) const {
 	return index.isValid() && isIndexValid(index.row(), index.column(), index.parent());
-}
-
-int AbstractListModel::columnToRole(int column) const
-{
-	return InvalidRole;
 }

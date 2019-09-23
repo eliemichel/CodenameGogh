@@ -29,6 +29,7 @@
 #include <QAbstractItemModel>
 #include <QModelIndex>
 
+#include "AbstractListModel.h"
 #include "Parameter.h"
 #include "Graph.h"
 
@@ -38,7 +39,7 @@ namespace Gui {
 /**
  * List of parameters attached to a node
  */
-class ParameterListModel : public QAbstractItemModel
+class ParameterListModel : public AbstractListModel
 {
 	Q_OBJECT
 public:
@@ -61,42 +62,42 @@ public:
 
 public:
 	// Basic QAbstractItemModel implementation
-	QModelIndex index(int row, int column, const QModelIndex &parent = QModelIndex()) const override;
-	QModelIndex parent(const QModelIndex &index) const override;
-	int rowCount(const QModelIndex &parent = QModelIndex()) const override;
 	int columnCount(const QModelIndex &parent = QModelIndex()) const override;
-	QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
 
 	// Editable QAbstractItemModel implementation
-	bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
 	Qt::ItemFlags flags(const QModelIndex &index) const override;
-
+	
 	// Headers QAbstractItemModel implementation
 	QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
-
-	// Resizable QAbstractItemModel implementation
-	bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
-	bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
-
-	// Drag and drop
-	Qt::DropActions supportedDropActions() const override;
 
 	// QML Roles
 	QHash<int, QByteArray> roleNames() const override;
 
-private:
-	// Static utils, that may eventually be more suited to another location but
-	// for now stay here because this class is the only one to use them
-	static bool setParamFromQVariant(std::shared_ptr<Parameter> param, const QVariant &value);
+protected:
+	// Implementation of AbstractListModel
+	AbstractModelEntry * createEntry(int row) override;
+	bool destroyEntry(int row, AbstractModelEntry * entry) override;
 
-	/**
-	 * The same row data can be accessed both as a role and as a column.
-	 * It is the role that is the primary way of accessing it, but column is
-	 * useful for debugging, to be able to quickly display the model in a tree
-	 * view (in an of outline-like interface), so this functions makes the link
-	 * between the two.
-	 */
-	static Role columnToRole(int column);
+	int columnToRole(int column) const override;
+
+private:
+	class ParameterModel : public AbstractModelEntry {
+	public:
+		std::shared_ptr<Parameter> m_parameter;
+
+	public:
+		ParameterModel(std::shared_ptr<Parameter> parameter) : m_parameter(parameter) {}
+
+		QVariant data(int role) const override;
+		bool setData(int role, QVariant value) override;
+
+	private:
+		// Static utils, that may eventually be more suited to another location but
+		// for now stay here because this class is the only one to use them
+		static bool setParamFromQVariant(std::shared_ptr<Parameter> param, const QVariant &value);
+	};
+
+	void reloadFromNode() noexcept;
 
 private:
 	NodePtr m_node;

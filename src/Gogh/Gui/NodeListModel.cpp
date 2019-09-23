@@ -89,10 +89,12 @@ NodeListModel::AbstractModelEntry * NodeListModel::createEntry(int row)
 	return new ModelEntry(m_graph->insertNode(row));
 }
 
-bool NodeListModel::destroyEntry(AbstractModelEntry *entry)
+bool NodeListModel::destroyEntry(int row, AbstractModelEntry *entry)
 {
 	if (!m_graph) return false;
-	m_graph->removeNode(static_cast<ModelEntry*>(entry)->node);
+	ModelEntry* modelEntry = static_cast<ModelEntry*>(entry);
+	m_graph->removeNode(modelEntry->node);
+	delete modelEntry;
 	return true;
 }
 

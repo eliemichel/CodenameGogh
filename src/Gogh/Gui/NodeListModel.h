@@ -105,7 +105,7 @@ protected:
 	// Utils
 	
 	AbstractModelEntry * createEntry(int row) override;
-	bool destroyEntry(AbstractModelEntry *entry) override;
+	bool destroyEntry(int row, AbstractModelEntry *entry) override;
 
 	int columnToRole(int column) const override;
 
@@ -132,8 +132,8 @@ private:
 			outputsModel->setNode(node);
 		}
 
-		QVariant data(int role) const;
-		bool setData(int role, QVariant value);
+		QVariant data(int role) const override;
+		bool setData(int role, QVariant value) override;
 	};
 
 	/**

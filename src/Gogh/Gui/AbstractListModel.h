@@ -94,7 +94,7 @@ protected:
 	 * Create a new model entry
 	 */
 	virtual AbstractModelEntry * createEntry(int row) = 0;
-	virtual bool destroyEntry(AbstractModelEntry * entry) = 0;
+	virtual bool destroyEntry(int row, AbstractModelEntry * entry) = 0;
 	
 	/**
 	 * The same row data can be accessed both as a role and as a column.
@@ -103,7 +103,7 @@ protected:
 	 * view (in an of outline-like interface), so this functions makes the link
 	 * between the two.
 	 */
-	virtual int columnToRole(int column) const;
+	virtual int columnToRole(int column) const = 0;
 
 protected:
 	// Static utils

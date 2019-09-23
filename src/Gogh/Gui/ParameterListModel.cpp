@@ -32,31 +32,14 @@ void ParameterListModel::setNode(Gogh::NodePtr node)
 {
 	beginResetModel();
 	m_node = node;
+	reloadFromNode();
 	endResetModel();
 }
 
 ///////////////////////////////////////////////////////////////////////////////
 // Basic QAbstractItemModel implementation
 
-QModelIndex ParameterListModel::index(int row, int column, const QModelIndex &parent) const
-{
-	if (column < 0 || column >= columnCount(parent)) return QModelIndex();
-	if (parent.isValid()) return QModelIndex(); // Children don't have sub-children
-	if (row < 0 || row >= rowCount(parent)) return QModelIndex(); // out of bounds
-	return createIndex(row, column, nullptr);
-}
-
-QModelIndex ParameterListModel::parent(const QModelIndex &index) const
-{
-	return QModelIndex();
-}
-
-int ParameterListModel::rowCount(const QModelIndex &parent) const
-{
-	if (parent.isValid()) return 0; // Children don't have subchildren
-	if (!m_node) return 0;
-	return static_cast<int>(m_node->parameters.size());
-}
+//rowCount = static_cast<int>(m_node->parameters.size());
 
 int ParameterListModel::columnCount(const QModelIndex &parent) const
 {
@@ -64,97 +47,8 @@ int ParameterListModel::columnCount(const QModelIndex &parent) const
 	return _ColumnCount;
 }
 
-QVariant ParameterListModel::data(const QModelIndex &index, int role) const
-{
-	if (index.isValid()
-		&& index.column() >= 0 && index.column() < columnCount(index.parent())
-		&& index.row() >= 0 && index.row() < rowCount(index.parent()))
-	{
-		switch (role)
-		{
-		case Qt::DisplayRole:
-		case Qt::EditRole:
-			return data(index, columnToRole(index.column()));
-		
-		case NameRole:
-			return QString::fromStdString(m_node->parameters[index.row()]->name());
-		case TypeRole:
-		{
-			ParameterType type = m_node->parameters[index.row()]->type();
-			return role == Qt::EditRole
-				? QVariant(type)
-				: QVariant(QString::fromStdString(ParameterTypeUtils::parameterTypeName(type)));
-		}
-		case ValueRole:
-			if (role == Qt::EditRole)
-			{
-				std::shared_ptr<Parameter> param = m_node->parameters[index.row()];
-				switch (param->type()) {
-				case NoneType:
-					return QVariant();
-				case StringType:
-				case ButtonType:
-					return QString::fromStdString(param->rawValue().toString());
-				case IntType:
-				case EnumType:
-					return param->rawValue().toInt();
-				case CheckboxType:
-					return param->rawValue().toBool();
-				}
-			}
-			return QString::fromStdString(m_node->parameters[index.row()]->evalAsString());
-		default:
-			return QVariant();
-		}
-	}
-	return QVariant();
-}
-
 ///////////////////////////////////////////////////////////////////////////////
 // Editable QAbstractItemModel implementation
-
-bool ParameterListModel::setData(const QModelIndex &index, const QVariant &value, int role)
-{
-	if (index.isValid()
-		&& index.column() >= 0 && index.column() < columnCount(index.parent())
-		&& index.row() >= 0 && index.row() < rowCount(index.parent()))
-	{
-		switch (role)
-		{
-		case Qt::EditRole:
-			return setData(index, value, columnToRole(index.column()));
-		
-		case NameRole:
-			m_node->parameters[index.row()]->setName(value.toString().toStdString());
-			dataChanged(index, index);
-			return true;
-		case TypeRole:
-		{
-			std::shared_ptr<Parameter> param = m_node->parameters[index.row()];
-			const QModelIndex & valueIndex = index.siblingAtColumn(ValueColumn);
-			// Get value before changing type, then write it to the new typed param
-			QVariant prevValue = valueIndex.data(Qt::EditRole);
-			param->setType(ParameterTypeUtils::fromInt(value.toInt()));
-			setParamFromQVariant(param, prevValue);
-			dataChanged(index, valueIndex);
-			return true;
-		}
-		case ValueRole:
-		{
-			if (setParamFromQVariant(m_node->parameters[index.row()], value)) {
-				dataChanged(index, index);
-				return true;
-			}
-			else {
-				return false;
-			}
-		}
-		default:
-			return false;
-		}
-	}
-	return false;
-}
 
 Qt::ItemFlags ParameterListModel::flags(const QModelIndex &index) const
 {
@@ -204,45 +98,6 @@ QVariant ParameterListModel::headerData(int section, Qt::Orientation orientation
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Resizable QAbstractItemModel implementation
-
-bool ParameterListModel::insertRows(int row, int count, const QModelIndex &parent)
-{
-	if (!m_node) return false;
-	if (parent.isValid()) return false; // Only insert rows at root
-	if (row < 0 || row > rowCount(parent)) return false;
-
-	beginInsertRows(parent, row, row + count - 1);
-	m_node->parameters.insert(m_node->parameters.begin() + row, count, nullptr);
-	for (int i = row; i < row + count; ++i)
-	{
-		m_node->parameters[i] = std::make_shared<Parameter>();
-	}
-	endInsertRows();
-	return true;
-}
-
-bool ParameterListModel::removeRows(int row, int count, const QModelIndex &parent)
-{
-	if (parent.isValid()) return false; // Only remove rows from root
-	int startRow = std::max(row, 0);
-	int endRow = std::min(row + count, rowCount(parent) - 1);
-	if (endRow <= startRow) return false; // Nothing to remove
-	beginRemoveRows(parent, startRow, endRow);
-	m_node->parameters.erase(m_node->parameters.begin() + startRow, m_node->parameters.begin() + endRow);
-	endRemoveRows();
-	return true;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// Drag and drop
-
-Qt::DropActions ParameterListModel::supportedDropActions() const
-{
-	return Qt::MoveAction;
-}
-
-///////////////////////////////////////////////////////////////////////////////
 // QML Roles
 
 QHash<int, QByteArray> ParameterListModel::roleNames() const
@@ -255,9 +110,104 @@ QHash<int, QByteArray> ParameterListModel::roleNames() const
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// Static utils
+// Implementation of AbstractListModel
 
-bool ParameterListModel::setParamFromQVariant(std::shared_ptr<Gogh::Parameter> param, const QVariant &value)
+ParameterListModel::AbstractModelEntry * ParameterListModel::createEntry(int row)
+{
+	m_node->parameters.insert(m_node->parameters.begin() + row, 1, nullptr);
+	m_node->parameters[row] = std::make_shared<Parameter>();
+	return new ParameterModel(m_node->parameters[row]);
+}
+
+bool ParameterListModel::destroyEntry(int row, AbstractModelEntry * entry)
+{
+	if (row >= m_node->parameters.size()) return false;
+	ParameterModel* parameterModel = static_cast<ParameterModel*>(entry);
+	m_node->parameters.erase(m_node->parameters.begin() + row, m_node->parameters.begin() + row);
+	delete parameterModel;
+	return true;
+}
+
+int ParameterListModel::columnToRole(int column) const
+{
+	switch (column)
+	{
+	case NameColumn:
+		return NameRole;
+	case TypeColumn:
+		return TypeRole;
+	case ValueColumn:
+		return ValueRole;
+	default:
+		return InvalidRole;
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// ModelEntry methods
+
+QVariant ParameterListModel::ParameterModel::data(int role) const {
+	switch (role)
+	{
+	case NameRole:
+		return QString::fromStdString(m_parameter->name());
+
+	case TypeRole:
+	{
+		ParameterType type = m_parameter->type();
+		return true //role == Qt::EditRole // TODO: distinguish edit from read only cases
+			? QVariant(type)
+			: QVariant(QString::fromStdString(ParameterTypeUtils::parameterTypeName(type)));
+	}
+
+	case ValueRole:
+		if (true /*role == Qt::EditRole*/)
+		{
+			switch (m_parameter->type()) {
+			case NoneType:
+				return QVariant();
+			case StringType:
+			case ButtonType:
+				return QString::fromStdString(m_parameter->rawValue().toString());
+			case IntType:
+			case EnumType:
+				return m_parameter->rawValue().toInt();
+			case CheckboxType:
+				return m_parameter->rawValue().toBool();
+			}
+		}
+		return QString::fromStdString(m_parameter->evalAsString());
+
+	default:
+		return QVariant();
+	}
+}
+
+bool ParameterListModel::ParameterModel::setData(int role, QVariant value) {
+	switch (role)
+	{
+	case NameRole:
+		m_parameter->setName(value.toString().toStdString());
+		return true;
+
+	case TypeRole:
+	{
+		// Get value before changing type, then write it to the new typed param
+		QVariant prevValue = data(ValueRole);
+		m_parameter->setType(ParameterTypeUtils::fromInt(value.toInt()));
+		setData(ValueRole, prevValue);
+		return true;
+	}
+
+	case ValueRole:
+		return setParamFromQVariant(m_parameter, value);
+
+	default:
+		return false;
+	}
+}
+
+bool ParameterListModel::ParameterModel::setParamFromQVariant(std::shared_ptr<Gogh::Parameter> param, const QVariant &value)
 {
 	switch (param->type()) {
 	case NoneType:
@@ -277,17 +227,22 @@ bool ParameterListModel::setParamFromQVariant(std::shared_ptr<Gogh::Parameter> p
 	return true;
 }
 
-ParameterListModel::Role ParameterListModel::columnToRole(int column)
+void ParameterListModel::reloadFromNode() noexcept
 {
-	switch (column)
+	// Detach from previous graph without deleting the underlying data
+	// which is why we don't call removeRows nor destroyEntry
+	for (int i = 0; i < m_entries.size(); ++i)
 	{
-	case NameColumn:
-		return NameRole;
-	case TypeColumn:
-		return TypeRole;
-	case ValueColumn:
-		return ValueRole;
-	default:
-		return InvalidRole;
+		delete m_entries[i];
+	}
+	m_entries.clear();
+
+	// Attach to existing data without creating it, which is why we don't
+	// call insertRows nor createEntry
+	m_entries.reserve(m_node->parameters.size());
+	for (int i = 0; i < m_node->parameters.size(); ++i)
+	{
+		m_entries.push_back(new ParameterModel(m_node->parameters[i]));
 	}
 }
+
