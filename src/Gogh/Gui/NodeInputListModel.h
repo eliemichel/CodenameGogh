@@ -26,78 +26,21 @@
 #ifndef H_GOGH_NODEINPUTLISTMODEL
 #define H_GOGH_NODEINPUTLISTMODEL
 
-#include <QAbstractItemModel>
-#include <QModelIndex>
-
-#include"AbstractListModel.h"
+#include"AbstractNodeSlotListModel.h"
 #include "Graph.h"
 #include "ParameterListModel.h"
 
 namespace Gogh {
 namespace Gui {
 
-/**
- * List of inputs attached to a node
- * TODO: manage input type
- */
-class NodeInputListModel : public AbstractListModel
+class NodeInputListModel : public AbstractNodeSlotListModel
 {
 	Q_OBJECT
-public:
-	enum Columns {
-		NameColumn = 0,
-		TypeColumn,
-		ViewXColumn,
-		ViewYColumn,
-		_ColumnCount,
-	};
-
-	enum Role {
-		InvalidRole = Qt::UserRole,
-		NameRole,
-		TypeRole,
-		ViewXRole,
-		ViewYRole,
-	};
-
-public:
-	void setNode(NodePtr node);
-
-public:
-	// Basic QAbstractTableModel implementation
-	int columnCount(const QModelIndex &parent = QModelIndex()) const override;
-
-	// Headers QAbstractItemModel implementation
-	QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
-
 protected:
-	// Implementation of AbstractListModel
 	AbstractModelEntry * createEntry(int row) override;
 	bool destroyEntry(int row, AbstractModelEntry * entry) override;
 
-	int columnToRole(int column) const override;
-
-private:
-	void reloadFromNode() noexcept;
-
-private:
-	class NodeInputModel : public AbstractModelEntry {
-	public:
-		NodeInputModel(std::shared_ptr<NodeInput> input) : m_input(input) {}
-
-		QVariant data(int role) const override;
-		bool setData(int role, QVariant value) override;
-
-	private:
-		std::shared_ptr<NodeInput> m_input;
-		// Position of the slot, written by the node delegates, read by the
-		// edge delegates
-		float m_x;
-		float m_y;
-	};
-
-private:
-	NodePtr m_node;
+	void reloadFromNode() noexcept override;
 };
 
 } // namespace Gui

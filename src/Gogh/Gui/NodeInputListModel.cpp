@@ -29,79 +29,20 @@
 
 using namespace Gogh::Gui;
 
-
-void NodeInputListModel::setNode(Gogh::NodePtr node)
-{
-	beginResetModel();
-	m_node = node;
-	reloadFromNode();
-	endResetModel();
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// Basic QAbstractTableModel implementation
-
-int NodeInputListModel::columnCount(const QModelIndex &parent) const
-{
-	return _ColumnCount;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// Headers QAbstractItemModel implementation
-
-QVariant NodeInputListModel::headerData(int section, Qt::Orientation orientation, int role) const
-{
-	if (role != Qt::DisplayRole) return QVariant();
-
-	switch (section)
-	{
-	case NameColumn:
-		return "Name";
-	case TypeColumn:
-		return "Type";
-	case ViewXColumn:
-		return "View X";
-	case ViewYColumn:
-		return "View Y";
-	default:
-		return QVariant();
-	}
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// Implementation of AbstractListModel
-
 NodeInputListModel::AbstractModelEntry * NodeInputListModel::createEntry(int row)
 {
 	m_node->inputs.insert(m_node->inputs.begin() + row, 1, nullptr);
 	m_node->inputs[row] = std::make_shared<NodeInput>();
-	return new NodeInputModel(m_node->inputs[row]);
+	return new NodeSlotModel(m_node->inputs[row]);
 }
 
 bool NodeInputListModel::destroyEntry(int row, AbstractModelEntry * entry)
 {
 	if (row >= m_node->parameters.size()) return false;
-	NodeInputModel* inputModel = static_cast<NodeInputModel*>(entry);
+	NodeSlotModel* inputModel = static_cast<NodeSlotModel*>(entry);
 	m_node->inputs.erase(m_node->inputs.begin() + row);
 	delete inputModel;
 	return true;
-}
-
-int NodeInputListModel::columnToRole(int column) const
-{
-	switch (column)
-	{
-	case NameColumn:
-		return NameRole;
-	case TypeColumn:
-		return TypeRole;
-	case ViewXColumn:
-		return ViewXRole;
-	case ViewYColumn:
-		return ViewYRole;
-	default:
-		return InvalidRole;
-	}
 }
 
 void NodeInputListModel::reloadFromNode() noexcept
@@ -121,45 +62,6 @@ void NodeInputListModel::reloadFromNode() noexcept
 	m_entries.reserve(m_node->inputs.size());
 	for (int i = 0; i < m_node->inputs.size(); ++i)
 	{
-		m_entries.push_back(new NodeInputModel(m_node->inputs[i]));
-	}
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// NodeInputModel methods
-
-QVariant NodeInputListModel::NodeInputModel::data(int role) const {
-	switch (role)
-	{
-	case NameColumn:
-		return QString::fromStdString(m_input->name);
-	case TypeColumn:
-		return QVariant(); // TODO
-	case ViewXColumn:
-		return m_x;
-	case ViewYColumn:
-		return m_y;
-	default:
-		return QVariant();
-	}
-}
-
-bool NodeInputListModel::NodeInputModel::setData(int role, QVariant value) {
-	switch (role)
-	{
-	case NameColumn:
-		m_input->name = value.toString().toStdString();
-		return true;
-	case TypeColumn:
-		// TODO
-		return false;
-	case ViewXColumn:
-		m_x = value.toFloat();
-		return true;
-	case ViewYColumn:
-		m_y = value.toFloat();
-		return true;
-	default:
-		return false;
+		m_entries.push_back(new NodeSlotModel(m_node->inputs[i]));
 	}
 }

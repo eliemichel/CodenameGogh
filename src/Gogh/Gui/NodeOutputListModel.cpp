@@ -29,159 +29,39 @@
 
 using namespace Gogh::Gui;
 
-
-void NodeOutputListModel::setNode(Gogh::NodePtr node)
+NodeOutputListModel::AbstractModelEntry * NodeOutputListModel::createEntry(int row)
 {
-	beginResetModel();
-	m_node = node;
-	m_viewData.clear();
-	if (node) {
-		m_viewData.resize(node->outputs.size());
-	}
-	endResetModel();
+	m_node->outputs.insert(m_node->outputs.begin() + row, 1, nullptr);
+	m_node->outputs[row] = std::make_shared<NodeOutput>();
+	return new NodeSlotModel(m_node->outputs[row]);
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// Basic QAbstractTableModel implementation
-
-int NodeOutputListModel::rowCount(const QModelIndex &parent) const
+bool NodeOutputListModel::destroyEntry(int row, AbstractModelEntry * entry)
 {
-	if (parent.isValid()) return 0; // Children don't have sub-children
-	return m_node ? static_cast<int>(m_node->outputs.size()) : 0;
-}
-
-int NodeOutputListModel::columnCount(const QModelIndex &parent) const
-{
-	return _ColumnCount;
-}
-
-QVariant NodeOutputListModel::data(const QModelIndex &index, int role) const
-{
-	if (!index.isValid()) return QVariant();
-
-	if (role == Qt::DisplayRole || role == Qt::EditRole)
-	{
-		switch (index.column())
-		{
-		case NameColumn:
-			return QString::fromStdString(m_node->outputs[index.row()]->name);
-		case TypeColumn:
-			return QVariant(); // TODO
-		case ViewXColumn:
-			return m_viewData[index.row()].x;
-		case ViewYColumn:
-			return m_viewData[index.row()].y;
-		default:
-			return QVariant();
-		}
-	}
-
-	return QVariant();
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// Editable QAbstractTableModel implementation
-
-bool NodeOutputListModel::setData(const QModelIndex &index, const QVariant &value, int role)
-{
-	if (!index.isValid()) return false;
-	if (role == Qt::EditRole)
-	{
-		switch (index.column())
-		{
-		case NameColumn:
-			m_node->outputs[index.row()]->name = value.toString().toStdString();
-			dataChanged(index, index);
-			return true;
-		case TypeColumn:
-			// TODO
-			return false;
-		case ViewXColumn:
-			m_viewData[index.row()].x = value.toFloat();
-			return true;
-		case ViewYColumn:
-			m_viewData[index.row()].y = value.toFloat();
-			return true;
-		default:
-			return false;
-		}
-	}
-	return false;
-}
-
-Qt::ItemFlags NodeOutputListModel::flags(const QModelIndex &index) const
-{
-	Qt::ItemFlags itemFlags = QAbstractItemModel::flags(index);
-
-	if (index.isValid())
-	{
-		itemFlags |= Qt::ItemIsEditable;
-		//itemFlags |= Qt::ItemIsDragEnabled | Qt::ItemIsDropEnabled;
-	}
-
-	return itemFlags;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// Headers QAbstractItemModel implementation
-
-QVariant NodeOutputListModel::headerData(int section, Qt::Orientation orientation, int role) const
-{
-	if (role != Qt::DisplayRole) return QVariant();
-
-	switch (section)
-	{
-	case NameColumn:
-		return "Name";
-	case TypeColumn:
-		return "Type";
-	case ViewXColumn:
-		return "View X";
-	case ViewYColumn:
-		return "View Y";
-	default:
-		return QVariant();
-	}
-}
-
-///////////////////////////////////////////////////////////////////////////////
-// Resizable QAbstractTableModel implementation
-
-bool NodeOutputListModel::insertRows(int row, int count, const QModelIndex &parent)
-{
-	if (parent.isValid()) return false; // Only insert rows at root
-	if (row < 0 || row > rowCount(parent)) return false;
-
-	beginInsertRows(parent, row, row + count - 1);
-	std::vector<NodeOutputPtr> & l = m_node->outputs;
-	l.insert(l.begin() + row, count, nullptr);
-	m_viewData.insert(m_viewData.begin() + row, count, ViewDataEntry());
-	for (int i = row; i < row + count; ++i)
-	{
-		l[i] = std::make_shared<Gogh::NodeOutput>();
-	}
-	endInsertRows();
+	if (row >= m_node->parameters.size()) return false;
+	NodeSlotModel* outputModel = static_cast<NodeSlotModel*>(entry);
+	m_node->outputs.erase(m_node->outputs.begin() + row);
+	delete outputModel;
 	return true;
 }
 
-bool NodeOutputListModel::removeRows(int row, int count, const QModelIndex &parent)
+void NodeOutputListModel::reloadFromNode() noexcept
 {
-	if (parent.isValid()) return false; // Only remove rows from root
-	int startRow = std::max(row, 0);
-	int endRow = std::min(row + count, rowCount(parent) - 1);
-	if (endRow <= startRow) return false; // Nothing to remove
-	beginRemoveRows(parent, startRow, endRow);
-	std::vector<NodeOutputPtr> & l = m_node->outputs;
-	l.erase(l.begin() + startRow, l.begin() + endRow);
-	m_viewData.erase(m_viewData.begin() + startRow, m_viewData.begin() + endRow);
-	endRemoveRows();
-	return true;
-}
+	// Detach from previous graph without deleting the underlying data
+	// which is why we don't call removeRows nor destroyEntry
+	for (int i = 0; i < m_entries.size(); ++i)
+	{
+		delete m_entries[i];
+	}
+	m_entries.clear();
 
-///////////////////////////////////////////////////////////////////////////////
-// Drag and drop
+	if (!m_node) return;
 
-Qt::DropActions NodeOutputListModel::supportedDropActions() const
-{
-	return Qt::MoveAction;
+	// Attach to existing data without creating it, which is why we don't
+	// call insertRows nor createEntry
+	m_entries.reserve(m_node->outputs.size());
+	for (int i = 0; i < m_node->outputs.size(); ++i)
+	{
+		m_entries.push_back(new NodeSlotModel(m_node->outputs[i]));
+	}
 }

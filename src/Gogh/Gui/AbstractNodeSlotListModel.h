@@ -23,10 +23,10 @@
 * in the Software.
 */
 
-#ifndef H_GOGH_NODEOUTPUTLISTMODEL
-#define H_GOGH_NODEOUTPUTLISTMODEL
+#ifndef H_GOGH_ABSTRACTNODESLOTLISTMODEL
+#define H_GOGH_ABSTRACTNODESLOTLISTMODEL
 
-#include "AbstractNodeSlotListModel.h"
+#include"AbstractListModel.h"
 #include "Graph.h"
 #include "ParameterListModel.h"
 
@@ -34,24 +34,67 @@ namespace Gogh {
 namespace Gui {
 
 /**
- * List of outputs attached to a node
- * A lot of code duplication with the very similar NodeInputListModel, but I
- * could not find a clean way of factorizing it, especially because Q_OBJECT
- * do not support templating
+ * List of inputs attached to a node
+ * TODO: manage input type
  */
-class NodeOutputListModel : public AbstractNodeSlotListModel
+class AbstractNodeSlotListModel : public AbstractListModel
 {
 	Q_OBJECT
-protected:
-	AbstractModelEntry * createEntry(int row) override;
-	bool destroyEntry(int row, AbstractModelEntry * entry) override;
+public:
+	enum Columns {
+		NameColumn = 0,
+		TypeColumn,
+		ViewXColumn,
+		ViewYColumn,
+		_ColumnCount,
+	};
 
-	void reloadFromNode() noexcept override;
+	enum Role {
+		InvalidRole = Qt::UserRole,
+		NameRole,
+		TypeRole,
+		ViewXRole,
+		ViewYRole,
+	};
+
+public:
+	void setNode(NodePtr node);
+
+public:
+	// Basic QAbstractTableModel implementation
+	int columnCount(const QModelIndex &parent = QModelIndex()) const override;
+
+	// Headers QAbstractItemModel implementation
+	QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
+
+protected:
+	// Implementation of AbstractListModel
+	int columnToRole(int column) const override;
+
+protected:
+	virtual void reloadFromNode() noexcept = 0;
+
+protected:
+	class NodeSlotModel : public AbstractModelEntry {
+	public:
+		NodeSlotModel(std::shared_ptr<Slot> input) : m_slot(input) {}
+
+		QVariant data(int role) const override;
+		bool setData(int role, QVariant value) override;
+
+	private:
+		std::shared_ptr<Slot> m_slot;
+		// Position of the slot, written by the node delegates, read by the
+		// edge delegates
+		float m_x;
+		float m_y;
+	};
+
+protected:
+	NodePtr m_node;
 };
 
 } // namespace Gui
 } // namespace Gogh
 
-Q_DECLARE_METATYPE(std::shared_ptr<Gogh::Gui::NodeOutputListModel>)
-
-#endif // H_GOGH_NODEOUTPUTLISTMODEL
+#endif // H_GOGH_ABSTRACTNODESLOTLISTMODEL

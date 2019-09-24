@@ -30,6 +30,8 @@ set(SRC
 	Gui/MainWindow.cpp
 	Gui/AbstractListModel.h
 	Gui/AbstractListModel.cpp
+	Gui/AbstractNodeSlotListModel.h
+	Gui/AbstractNodeSlotListModel.cpp
 	Gui/ParameterListView.h
 	Gui/ParameterListView.cpp
 	Gui/ParameterListModel.h
