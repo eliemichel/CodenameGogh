@@ -39,8 +39,6 @@ void ParameterListModel::setNode(Gogh::NodePtr node)
 ///////////////////////////////////////////////////////////////////////////////
 // Basic QAbstractItemModel implementation
 
-//rowCount = static_cast<int>(m_node->parameters.size());
-
 int ParameterListModel::columnCount(const QModelIndex &parent) const
 {
 	if (parent.isValid()) return 0; // Children don't have subchildren
@@ -123,7 +121,7 @@ bool ParameterListModel::destroyEntry(int row, AbstractModelEntry * entry)
 {
 	if (row >= m_node->parameters.size()) return false;
 	ParameterModel* parameterModel = static_cast<ParameterModel*>(entry);
-	m_node->parameters.erase(m_node->parameters.begin() + row, m_node->parameters.begin() + row);
+	m_node->parameters.erase(m_node->parameters.begin() + row);
 	delete parameterModel;
 	return true;
 }
@@ -236,6 +234,8 @@ void ParameterListModel::reloadFromNode() noexcept
 		delete m_entries[i];
 	}
 	m_entries.clear();
+
+	if (!m_node) return;
 
 	// Attach to existing data without creating it, which is why we don't
 	// call insertRows nor createEntry

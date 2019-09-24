@@ -41,6 +41,8 @@ namespace Gui {
  * themselves wrappers around the underlying graph elements. Those wrappers add
  * standard Qt model API to non-qt core classes like Parameter, Input and
  * Output.
+ * TODO: factorize "reloadFromNode" and "reloadFromGraph" present in every
+ * subclasses.
  */
 class AbstractListModel : public QAbstractItemModel
 {

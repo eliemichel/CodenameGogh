@@ -29,6 +29,7 @@
 #include <QAbstractItemModel>
 #include <QModelIndex>
 
+#include"AbstractListModel.h"
 #include "Graph.h"
 #include "ParameterListModel.h"
 
@@ -36,34 +37,12 @@ namespace Gogh {
 namespace Gui {
 
 /**
-* List of inputs attached to a node
-*/
-class NodeInputListModel : public QAbstractTableModel
+ * List of inputs attached to a node
+ * TODO: manage input type
+ */
+class NodeInputListModel : public AbstractListModel
 {
 	Q_OBJECT
-public:
-	void setNode(NodePtr node);
-
-public:
-	// Basic QAbstractTableModel implementation
-	int rowCount(const QModelIndex &parent = QModelIndex()) const override;
-	int columnCount(const QModelIndex &parent = QModelIndex()) const override;
-	QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
-
-	// Editable QAbstractTableModel implementation
-	bool setData(const QModelIndex &index, const QVariant &value, int role = Qt::EditRole) override;
-	Qt::ItemFlags flags(const QModelIndex &index) const override;
-
-	// Headers QAbstractItemModel implementation
-	QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
-
-	// Resizable QAbstractTableModel implementation
-	bool insertRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
-	bool removeRows(int row, int count, const QModelIndex &parent = QModelIndex()) override;
-
-	// Drag and drop
-	Qt::DropActions supportedDropActions() const override;
-
 public:
 	enum Columns {
 		NameColumn = 0,
@@ -73,19 +52,51 @@ public:
 		_ColumnCount,
 	};
 
+	enum Role {
+		InvalidRole = Qt::UserRole,
+		NameRole,
+		TypeRole,
+		ViewXRole,
+		ViewYRole,
+	};
+
+public:
+	void setNode(NodePtr node);
+
+public:
+	// Basic QAbstractTableModel implementation
+	int columnCount(const QModelIndex &parent = QModelIndex()) const override;
+
+	// Headers QAbstractItemModel implementation
+	QVariant headerData(int section, Qt::Orientation orientation, int role = Qt::DisplayRole) const override;
+
+protected:
+	// Implementation of AbstractListModel
+	AbstractModelEntry * createEntry(int row) override;
+	bool destroyEntry(int row, AbstractModelEntry * entry) override;
+
+	int columnToRole(int column) const override;
+
 private:
-	/**
-	* Data related to the view, so not serialized and not stored in the
-	* backend object.
-	* Beware to keep it in sync with the backend outputs
-	*/
-	struct ViewDataEntry {
+	void reloadFromNode() noexcept;
+
+private:
+	class NodeInputModel : public AbstractModelEntry {
+	public:
+		NodeInputModel(std::shared_ptr<NodeInput> input) : m_input(input) {}
+
+		QVariant data(int role) const override;
+		bool setData(int role, QVariant value) override;
+
+	private:
+		std::shared_ptr<NodeInput> m_input;
 		// Position of the slot, written by the node delegates, read by the
 		// edge delegates
-		float x;
-		float y;
+		float m_x;
+		float m_y;
 	};
-	std::vector<ViewDataEntry> m_viewData;
+
+private:
 	NodePtr m_node;
 };
 

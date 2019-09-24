@@ -126,6 +126,8 @@ void NodeListModel::reloadFromGraph() noexcept
 	}
 	m_entries.clear();
 
+	if (!m_graph) return;
+
 	// Attach to existing data without creating it, which is why we don't
 	// call insertRows nor createEntry
 	m_entries.reserve(m_graph->nodes.size());

@@ -83,9 +83,6 @@ protected:
 private:
 	class ParameterModel : public AbstractModelEntry {
 	public:
-		std::shared_ptr<Parameter> m_parameter;
-
-	public:
 		ParameterModel(std::shared_ptr<Parameter> parameter) : m_parameter(parameter) {}
 
 		QVariant data(int role) const override;
@@ -95,6 +92,9 @@ private:
 		// Static utils, that may eventually be more suited to another location but
 		// for now stay here because this class is the only one to use them
 		static bool setParamFromQVariant(std::shared_ptr<Parameter> param, const QVariant &value);
+
+	private:
+		std::shared_ptr<Parameter> m_parameter;
 	};
 
 	void reloadFromNode() noexcept;
