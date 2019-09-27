@@ -1,0 +1,6 @@
+[submodule "src/External/glad"]
+	path = src/External/glad
+	url = https://github.com/Dav1dde/glad
+[submodule "src/External/nodeeditor"]
+	path = src/External/nodeeditor
+	url = https://github.com/paceholder/nodeeditor
