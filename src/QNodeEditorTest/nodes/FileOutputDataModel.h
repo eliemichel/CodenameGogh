@@ -13,7 +13,8 @@ using QtNodes::NodeDataType;
 using QtNodes::NodeDataModel;
 using QtNodes::NodeValidationState;
 
-class QLineEdit;
+class FileInputWidget;
+class QPushButton;
 class VideoStreamData;
 class AudioStreamData;
 
@@ -59,7 +60,7 @@ public:
   setInData(std::shared_ptr<NodeData> data, int portIndex) override;
 
   QWidget *
-  embeddedWidget() override { return _lineEdit; }
+  embeddedWidget() override { return _widget; }
 
   NodeValidationState
   validationState() const override;
@@ -67,13 +68,18 @@ public:
   QString
   validationMessage() const override;
 
+private slots:
+	void render() const;
+
 private:
 
   NodeValidationState modelValidationState = NodeValidationState::Warning;
-  QString modelValidationError = QStringLiteral("Missing or incorrect inputs");
+  QString modelValidationError = QStringLiteral("At least one stream must be provided");
 
   std::weak_ptr<VideoStreamData> _videoStream;
   std::weak_ptr<AudioStreamData> _audioStream;
 
-  QLineEdit * _lineEdit;
+  QWidget * _widget;
+  FileInputWidget * _fileInput;
+  QPushButton * _renderButton;
 };

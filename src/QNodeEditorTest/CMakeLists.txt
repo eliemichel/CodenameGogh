@@ -33,19 +33,25 @@ endif()
 add_executable (
 	QNodeEditorTest
 
-	DecimalData.h
-	VideoStreamData.h
-	AudioStreamData.h
+	nodes/DecimalData.h
+	nodes/VideoStreamData.h
+	nodes/AudioStreamData.h
 
-	NumberDisplayDataModel.h
-	NumberDisplayDataModel.cpp
-	NumberSourceDataModel.h
-	NumberSourceDataModel.cpp
+	nodes/NumberDisplayDataModel.h
+	nodes/NumberDisplayDataModel.cpp
+	nodes/NumberSourceDataModel.h
+	nodes/NumberSourceDataModel.cpp
 
-	FileInputDataModel.h
-	FileInputDataModel.cpp
-	FileOutputDataModel.h
-	FileOutputDataModel.cpp
+	nodes/FileInputDataModel.h
+	nodes/FileInputDataModel.cpp
+	nodes/FileOutputDataModel.h
+	nodes/FileOutputDataModel.cpp
+
+	widgets/FileInputWidget.h
+	widgets/FileInputWidget.cpp
+
+	FileProbeProcess.h
+	FileProbeProcess.cpp
 
 	main.cpp
 )

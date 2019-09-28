@@ -10,10 +10,10 @@
 
 #include <nodes/DataModelRegistry>
 
-#include "NumberSourceDataModel.h"
-#include "NumberDisplayDataModel.h"
-#include "FileInputDataModel.h"
-#include "FileOutputDataModel.h"
+#include "nodes/NumberSourceDataModel.h"
+#include "nodes/NumberDisplayDataModel.h"
+#include "nodes/FileInputDataModel.h"
+#include "nodes/FileOutputDataModel.h"
 
 
 using QtNodes::DataModelRegistry;
@@ -63,6 +63,47 @@ setStyle()
 }
 
 
+#include <QMainWindow>
+
+using QtNodes::Node;
+
+class MainWindow : public QMainWindow {
+public:
+	MainWindow(QWidget *parent = nullptr);
+
+private:
+	std::shared_ptr<FlowScene> m_scene;
+};
+
+#include <nodes/Node>
+
+MainWindow::MainWindow(QWidget *parent)
+	: QMainWindow(parent)
+{
+  auto menuBar    = new QMenuBar();
+  auto saveAction = menuBar->addAction("Save..");
+  auto loadAction = menuBar->addAction("Load..");
+
+  auto centralWidget = new QWidget();
+  QVBoxLayout *l = new QVBoxLayout(centralWidget);
+
+  l->addWidget(menuBar);
+  m_scene = std::make_shared<FlowScene>(registerDataModels(), this);
+  l->addWidget(new FlowView(m_scene.get()));
+  l->setContentsMargins(0, 0, 0, 0);
+  l->setSpacing(0);
+
+  QObject::connect(saveAction, &QAction::triggered,
+                   m_scene.get(), &FlowScene::save);
+
+  QObject::connect(loadAction, &QAction::triggered,
+                   m_scene.get(), &FlowScene::load);
+
+  setCentralWidget(centralWidget);
+  setWindowTitle("Gogh");
+  resize(800, 600);
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -70,29 +111,8 @@ main(int argc, char *argv[])
 
   setStyle();
 
-  QWidget mainWidget;
-
-  auto menuBar    = new QMenuBar();
-  auto saveAction = menuBar->addAction("Save..");
-  auto loadAction = menuBar->addAction("Load..");
-
-  QVBoxLayout *l = new QVBoxLayout(&mainWidget);
-
-  l->addWidget(menuBar);
-  auto scene = new FlowScene(registerDataModels(), &mainWidget);
-  l->addWidget(new FlowView(scene));
-  l->setContentsMargins(0, 0, 0, 0);
-  l->setSpacing(0);
-
-  QObject::connect(saveAction, &QAction::triggered,
-                   scene, &FlowScene::save);
-
-  QObject::connect(loadAction, &QAction::triggered,
-                   scene, &FlowScene::load);
-
-  mainWidget.setWindowTitle("Gogh");
-  mainWidget.resize(800, 600);
-  mainWidget.showNormal();
-
+  MainWindow w;
+  w.showNormal();
+  
   return app.exec();
 }
