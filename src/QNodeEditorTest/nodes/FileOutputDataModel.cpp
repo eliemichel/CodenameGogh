@@ -70,6 +70,7 @@ setInData(std::shared_ptr<NodeData> data, int portIndex)
   switch (portIndex) {
     case 0:
       _videoStream = std::dynamic_pointer_cast<VideoStreamData>(data);
+	  break;
     case 1:
     default:
       _audioStream = std::dynamic_pointer_cast<AudioStreamData>(data);

@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include <QJsonValue>
+#include <QJsonArray>
 #include <QIntValidator>
 #include <QVBoxLayout>
 
@@ -30,6 +31,11 @@ save() const
   QJsonObject modelJson = NodeDataModel::save();
 
   modelJson["file"] = _fileInput->filename();
+  QJsonArray jsonStreams;
+  for (auto s : _streams) {
+	  jsonStreams << s->type().id;
+  }
+  modelJson["streams"] = jsonStreams;
 
   return modelJson;
 }
@@ -44,6 +50,28 @@ restore(QJsonObject const &p)
   if (!v.isUndefined())
   {
 	_fileInput->setFilename(v.toString());
+  }
+
+  QJsonArray jsonStreams;
+  for (auto s : _streams) {
+	  jsonStreams << s->type().id;
+  }
+  QJsonValue s = p["streams"];
+  if (s.isArray()) {
+	  _streams.clear();
+	  int i = 0;
+	  for (auto stream : s.toArray()) {
+		if (stream.toString() == VideoStreamData().type().id) {
+			_streams.push_back(std::make_shared<VideoStreamData>(0, i));
+		} else if (stream.toString() == AudioStreamData().type().id) {
+			_streams.push_back(std::make_shared<AudioStreamData>(0, i));
+		} else {
+			_streams.push_back(std::make_shared<VideoStreamData>(0, i)); // NOPE! TODO
+		}
+		++i;
+	  }
+
+	  Q_EMIT portCountChanged();
   }
 }
 
@@ -104,8 +132,6 @@ onFileProbed()
 	for (int i = 0 ; i < static_cast<int>(_streams.size()) ; ++i) {
 		Q_EMIT dataUpdated(i);
 	}
-
-	
 }
 
 NodeDataType
