@@ -32,15 +32,20 @@ void FileInputWidget::setFilename(const QString & value) const
 }
 
 void FileInputWidget::browse() {
+	QString dir = QDir::currentPath();
+	QFileInfo info(filename());
+	if (info.isDir()) dir = info.path();
+	if (info.isFile()) dir = info.dir().path();
+
 	QString filename;
 	switch (_type) {
 	case ReadFile:
-		filename = QFileDialog::getOpenFileName(this, tr("Open Media"), QDir::currentPath());
+		filename = QFileDialog::getOpenFileName(this, tr("Open Media"), dir);
 		break;
 
 	case WriteFile:
 	default:
-		filename = QFileDialog::getSaveFileName(this, tr("Save Media"), QDir::currentPath());
+		filename = QFileDialog::getSaveFileName(this, tr("Save Media"), dir);
 	}
 
 	if (!filename.isEmpty()) {

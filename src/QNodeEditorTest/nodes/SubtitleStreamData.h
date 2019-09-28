@@ -4,23 +4,23 @@
 
 using QtNodes::NodeDataType;
 
-class VideoStreamData : public AbstractStreamData
+class SubtitleStreamData : public AbstractStreamData
 {
 public:
-  VideoStreamData()
+  SubtitleStreamData()
     : AbstractStreamData()
   {}
 
-  VideoStreamData(const QString & filename, int streamId)
+  SubtitleStreamData(const QString & filename, int streamId)
     : AbstractStreamData(filename, streamId)
   {}
 
   NodeDataType type() const override
   {
-    return NodeDataType {"video",
-                         "Video"};
+    return NodeDataType {"subtitle",
+                         "Subtitle"};
   }
 
   QString ffmpegShortName() const override
-  { return "v"; }
+  { return "s"; }
 };

@@ -21,6 +21,29 @@ FileOutputDataModel()
 	_widget->setStyleSheet("QWidget{background-color: rgba(0,0,0,0);color: white} QAbstractButton{background-color: rgba(96,96,96,204)}");
 }
 
+QJsonObject
+FileOutputDataModel::
+save() const
+{
+  QJsonObject modelJson = NodeDataModel::save();
+
+  modelJson["file"] = _fileInput->filename();
+
+  return modelJson;
+}
+
+
+void
+FileOutputDataModel::
+restore(QJsonObject const &p)
+{
+  QJsonValue v = p["file"];
+
+  if (!v.isUndefined())
+  {
+	_fileInput->setFilename(v.toString());
+  }
+}
 
 unsigned int
 FileOutputDataModel::
@@ -115,18 +138,59 @@ render() const
   if (videoStreamData && audioStreamData)
   {
     std::cout
-      << "Exporting video stream #" << videoStreamData->streamId() << " from input file #" << videoStreamData->fileId()
-      << " and audio stream #" << audioStreamData->streamId() << " from input file #" << audioStreamData->fileId() << std::endl;
+      << "Exporting video stream #" << videoStreamData->streamId() << " from input file " << videoStreamData->filename().toStdString()
+      << " and audio stream #" << audioStreamData->streamId() << " from input file #" << audioStreamData->filename().toStdString() << std::endl;
+
+	// TODO: move this into a dedicated location
+	QVector<std::shared_ptr<AbstractStreamData>> outputStreams{
+		videoStreamData,
+		audioStreamData
+	};
+
+	QVector<int> streams(outputStreams.size());
+	QVector<int> streamsIndexAmongType(outputStreams.size()); // stream 'i' is the streamsIndexAmongType[i]th stream of its type (video, audio, etc.)
+	QMap<QString, int> streamCountPerType;
+
+	QList<QString> inputFilenames;
+	QMap<QString, int> inputFilenamesMap;
+
+	for (int i = 0 ; i < outputStreams.size() ; ++i) {
+		const QString & filename = outputStreams[i]->filename();
+		if (!inputFilenamesMap.contains(filename)) {
+			inputFilenamesMap[filename] = inputFilenamesMap.count();
+			inputFilenames << filename;
+		}
+		streams[i] = inputFilenamesMap[filename];
+
+		const QString & sname = outputStreams[i]->ffmpegShortName();
+		if (!streamCountPerType.contains(sname)) streamCountPerType[sname] = 0;
+		streamsIndexAmongType[i] = streamCountPerType[sname];
+		streamCountPerType[sname]++;
+	}
+
+	QString cmd = "ffmpeg";
+	for (const auto & f : inputFilenames) {
+		cmd += " -i " + f; // TODO: escape string
+	}
+	for (int i = 0 ; i < outputStreams.size() ; ++i) {
+		cmd += " -map " + QString::number(streams[i]) + ":" + QString::number(outputStreams[i]->streamId());
+	}
+	for (int i = 0 ; i < outputStreams.size() ; ++i) {
+		const QString & sname = outputStreams[i]->ffmpegShortName();
+		cmd += " -c:" + sname + ":" + QString::number(streamsIndexAmongType[i]) + " copy";
+	}
+	cmd += " " + _fileInput->filename(); // TODO: escape string
+	std::cout << "CMD: " << cmd.toStdString() << std::endl;
   }
   else if (videoStreamData)
   {
     std::cout
-      << "Exporting only video stream #" << videoStreamData->streamId() << " from input file #" << videoStreamData->fileId() << std::endl;
+      << "Exporting only video stream #" << videoStreamData->streamId() << " from input file " << videoStreamData->filename().toStdString() << std::endl;
   }
   else if (audioStreamData)
   {
     std::cout
-      << "Exporting only audio stream #" << audioStreamData->streamId() << " from input file #" << audioStreamData->fileId() << std::endl;
+      << "Exporting only audio stream #" << audioStreamData->streamId() << " from input file " << audioStreamData->filename().toStdString() << std::endl;
   }
   else
   {

@@ -8,6 +8,8 @@
 #include "FileInputDataModel.h"
 #include "VideoStreamData.h"
 #include "AudioStreamData.h"
+#include "SubtitleStreamData.h"
+#include "DataStreamData.h"
 #include "widgets/FileInputWidget.h"
 
 FileInputDataModel::
@@ -60,13 +62,18 @@ restore(QJsonObject const &p)
   if (s.isArray()) {
 	  _streams.clear();
 	  int i = 0;
-	  for (auto stream : s.toArray()) {
-		if (stream.toString() == VideoStreamData().type().id) {
-			_streams.push_back(std::make_shared<VideoStreamData>(0, i));
-		} else if (stream.toString() == AudioStreamData().type().id) {
-			_streams.push_back(std::make_shared<AudioStreamData>(0, i));
+	  for (auto value : s.toArray()) {
+		QString stream = value.toString();
+		if (stream == VideoStreamData().type().id) {
+			_streams.push_back(std::make_shared<VideoStreamData>(_fileInput->filename(), i));
+		} else if (stream == AudioStreamData().type().id) {
+			_streams.push_back(std::make_shared<AudioStreamData>(_fileInput->filename(), i));
+		} else if (stream == SubtitleStreamData().type().id) {
+			_streams.push_back(std::make_shared<SubtitleStreamData>(_fileInput->filename(), i));
+		} else if (stream == DataStreamData().type().id) {
+			_streams.push_back(std::make_shared<DataStreamData>(_fileInput->filename(), i));
 		} else {
-			_streams.push_back(std::make_shared<VideoStreamData>(0, i)); // NOPE! TODO
+			std::cerr << "Invalid stream type: " << stream.toStdString() << std::endl;
 		}
 		++i;
 	  }
@@ -115,15 +122,19 @@ onFileProbed()
 		switch (stream)
 		{
 		case FileProbeProcess::VideoStream:
-			_streams.push_back(std::make_shared<VideoStreamData>(0, i));
+			_streams.push_back(std::make_shared<VideoStreamData>(_fileInput->filename(), i));
 			break;
 		case FileProbeProcess::AudioStream:
-			_streams.push_back(std::make_shared<AudioStreamData>(0, i));
+			_streams.push_back(std::make_shared<AudioStreamData>(_fileInput->filename(), i));
 			break;
 		case FileProbeProcess::SubtitleStream:
+			_streams.push_back(std::make_shared<SubtitleStreamData>(_fileInput->filename(), i));
+			break;
 		case FileProbeProcess::DataStream:
+			_streams.push_back(std::make_shared<DataStreamData>(_fileInput->filename(), i));
+			break;
 		default:
-			_streams.push_back(std::make_shared<VideoStreamData>(0, i)); // NOPE! TODO
+			Q_UNREACHABLE();
 			break;
 		}
 		++i;

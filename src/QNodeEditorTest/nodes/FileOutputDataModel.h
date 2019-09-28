@@ -43,6 +43,14 @@ public:
   QString
   name() const override
   { return QStringLiteral("File Output"); }
+  
+public:
+
+  QJsonObject
+  save() const override;
+
+  void
+  restore(QJsonObject const &p) override;
 
 public:
 

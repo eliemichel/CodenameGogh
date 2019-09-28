@@ -29,13 +29,13 @@ if(Qt5Widgets_FOUND)
 	message("Using Qt ${Qt5Widgets_VERSION} from ${Qt5Core_DIR}")
 endif()
 
-
-add_executable (
-	QNodeEditorTest
-
+set(SRC
 	nodes/DecimalData.h
+	nodes/AbstractStreamData.h
 	nodes/VideoStreamData.h
 	nodes/AudioStreamData.h
+	nodes/SubtitleStreamData.h
+	nodes/DataStreamData.h
 
 	nodes/NumberDisplayDataModel.h
 	nodes/NumberDisplayDataModel.cpp
@@ -55,6 +55,8 @@ add_executable (
 
 	main.cpp
 )
+
+add_executable (QNodeEditorTest ${SRC})
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 

@@ -1,22 +1,18 @@
 #pragma once
 
-#include <nodes/NodeDataModel>
+#include "AbstractStreamData.h"
 
 using QtNodes::NodeDataType;
-using QtNodes::NodeData;
 
-class AudioStreamData : public NodeData
+class AudioStreamData : public AbstractStreamData
 {
 public:
-
   AudioStreamData()
-    : _fileId(-1)
-    , _streamId(-1)
+    : AbstractStreamData()
   {}
 
-  AudioStreamData(int fileId, int streamId)
-    : _fileId(fileId)
-    , _streamId(streamId)
+  AudioStreamData(const QString & filename, int streamId)
+    : AbstractStreamData(filename, streamId)
   {}
 
   NodeDataType type() const override
@@ -25,13 +21,6 @@ public:
                          "Audio"};
   }
 
-  int fileId() const
-  { return _fileId; }
-
-  int streamId() const
-  { return _streamId; }
-
-private:
-  int _fileId;
-  int _streamId;
+  QString ffmpegShortName() const override
+  { return "a"; }
 };
