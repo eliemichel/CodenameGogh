@@ -65,7 +65,7 @@ void GoghFlowView::keyReleaseEvent(QKeyEvent *event) {
 
 void GoghFlowView::dragEnterEvent(QDragEnterEvent *event) {
 	// TODO: this could be compiled only once
-	// and shared with dropEvent
+	// and shared with dropEvent; and TODO full list
 	QRegularExpression isMediaFile(R"((\.wav|\.mp3|\.mp4|\.mkv|\.m4v)$)");
 
 	if (event->mimeData()->hasFormat("text/uri-list")) {

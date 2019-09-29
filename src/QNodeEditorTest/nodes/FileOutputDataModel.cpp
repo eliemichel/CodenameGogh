@@ -1,6 +1,8 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QHBoxLayout>
+#include <QFileInfo>
+#include <QDir>
 
 #include "FileOutputDataModel.h"
 #include "widgets/FileInputWidget.h"
@@ -111,6 +113,18 @@ setInData(std::shared_ptr<NodeData> data, int portIndex)
   {
     modelValidationState = NodeValidationState::Warning;
     modelValidationError = QStringLiteral("At least one stream must be provided");
+  }
+
+  // Update default directory
+  QString dir = QDir::currentPath();
+  QString inputFile;
+  if (videoStreamData) inputFile = videoStreamData->filename();
+  if (audioStreamData) inputFile = audioStreamData->filename();
+  if (!inputFile.isEmpty()) {
+    QFileInfo info(inputFile);
+    if (info.isDir()) dir = info.path();
+    if (info.isFile()) dir = info.dir().path();
+    _fileInput->setDefaultDir(dir);
   }
 }
 

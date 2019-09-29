@@ -8,6 +8,7 @@
 FileInputWidget::FileInputWidget(FileInputType type, QWidget *parent)
 	: QWidget(parent)
 	, _type(type)
+	, _defaultDir(QDir::currentPath())
 	, _lineEdit(new QLineEdit)
 	, _browseButton(new QToolButton())
 {
@@ -26,13 +27,16 @@ QString FileInputWidget::filename() const {
 	return _lineEdit->text();
 }
 
-void FileInputWidget::setFilename(const QString & value) const
-{
+void FileInputWidget::setFilename(const QString & value) {
 	_lineEdit->setText(value);
 }
 
+void FileInputWidget::setDefaultDir(const QString & dir) {
+	_defaultDir = dir;
+}
+
 void FileInputWidget::browse() {
-	QString dir = QDir::currentPath();
+	QString dir = _defaultDir;
 	QFileInfo info(filename());
 	if (info.isDir()) dir = info.path();
 	if (info.isFile()) dir = info.dir().path();
