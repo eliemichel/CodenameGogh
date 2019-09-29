@@ -34,6 +34,8 @@ set(SRC
 	RenderCommand.cpp
 	FileProbeProcess.h
 	FileProbeProcess.cpp
+	GoghFlowScene.h
+	GoghFlowScene.cpp
 
 	nodes/DecimalData.h
 	nodes/AbstractStreamData.h
@@ -54,6 +56,8 @@ set(SRC
 
 	widgets/FileInputWidget.h
 	widgets/FileInputWidget.cpp
+	widgets/GoghFlowView.h
+	widgets/GoghFlowView.cpp
 
 	dialogs/RenderDialog.h
 	dialogs/RenderDialog.cpp

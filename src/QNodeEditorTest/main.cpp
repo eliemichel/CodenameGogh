@@ -14,13 +14,13 @@
 #include "nodes/NumberDisplayDataModel.h"
 #include "nodes/FileInputDataModel.h"
 #include "nodes/FileOutputDataModel.h"
-#include "RenderCommand.h"
 #include "dialogs/RenderDialog.h"
+#include "widgets/GoghFlowView.h"
+#include "RenderCommand.h"
+#include "GoghFlowScene.h"
 
 
 using QtNodes::DataModelRegistry;
-using QtNodes::FlowScene;
-using QtNodes::FlowView;
 using QtNodes::ConnectionStyle;
 using QtNodes::TypeConverter;
 using QtNodes::TypeConverterId;
@@ -78,7 +78,7 @@ private slots:
 	void startRenderInDialog(const RenderCommand & cmd);
 
 private:
-	std::shared_ptr<FlowScene> m_scene;
+	std::shared_ptr<GoghFlowScene> m_scene;
 };
 
 #include <nodes/Node>
@@ -94,8 +94,8 @@ MainWindow::MainWindow(QWidget *parent)
   QVBoxLayout *l = new QVBoxLayout(centralWidget);
 
   l->addWidget(menuBar);
-  m_scene = std::make_shared<FlowScene>(registerDataModels(), this);
-  l->addWidget(new FlowView(m_scene.get()));
+  m_scene = std::make_shared<GoghFlowScene>(registerDataModels(), this);
+  l->addWidget(new GoghFlowView(m_scene.get()));
   l->setContentsMargins(0, 0, 0, 0);
   l->setSpacing(0);
 
