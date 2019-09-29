@@ -54,6 +54,7 @@ void GoghFlowScene::loadFromMemory(const QByteArray& data, bool newIds)
 {
 	if (!newIds) {
 		FlowScene::loadFromMemory(data);
+		return;
 	}
 
 	QMap<QUuid,QUuid> newIdsMap;

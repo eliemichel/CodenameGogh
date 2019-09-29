@@ -30,24 +30,20 @@ if(Qt5Widgets_FOUND)
 endif()
 
 set(SRC
-	RenderCommand.h
-	RenderCommand.cpp
 	FileProbeProcess.h
 	FileProbeProcess.cpp
 	GoghFlowScene.h
 	GoghFlowScene.cpp
+	MainWindow.h
+	MainWindow.cpp
+	RenderCommand.h
+	RenderCommand.cpp
 
-	nodes/DecimalData.h
 	nodes/AbstractStreamData.h
 	nodes/VideoStreamData.h
 	nodes/AudioStreamData.h
 	nodes/SubtitleStreamData.h
 	nodes/DataStreamData.h
-
-	nodes/NumberDisplayDataModel.h
-	nodes/NumberDisplayDataModel.cpp
-	nodes/NumberSourceDataModel.h
-	nodes/NumberSourceDataModel.cpp
 
 	nodes/FileInputDataModel.h
 	nodes/FileInputDataModel.cpp

@@ -20,5 +20,5 @@ public:
 
 	/// if newIds is true, replace uuids in data by new ones to avoid conflit
 	/// with existing nodes.
-	void loadFromMemory(const QByteArray& data, bool newIds);
+	void loadFromMemory(const QByteArray& data, bool newIds = false);
 };

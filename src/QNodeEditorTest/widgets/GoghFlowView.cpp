@@ -34,12 +34,9 @@ void GoghFlowView::setScene(GoghFlowScene *scene) {
 // ----------------------------------------------------------------------------
 
 void GoghFlowView::keyPressEvent(QKeyEvent *event) {
-	std::cout << "keyPressEvent" << std::endl;
 	switch (event->key()) {
 	case Qt::Key_C:
-		std::cout << "C" << std::endl;
 		if (event->modifiers() & Qt::ControlModifier) {
-			std::cout << "Ctrl+C" << std::endl;
 			copy();
 			return;
 		}
