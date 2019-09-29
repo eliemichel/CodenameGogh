@@ -30,6 +30,11 @@ if(Qt5Widgets_FOUND)
 endif()
 
 set(SRC
+	RenderCommand.h
+	RenderCommand.cpp
+	FileProbeProcess.h
+	FileProbeProcess.cpp
+
 	nodes/DecimalData.h
 	nodes/AbstractStreamData.h
 	nodes/VideoStreamData.h
@@ -50,8 +55,8 @@ set(SRC
 	widgets/FileInputWidget.h
 	widgets/FileInputWidget.cpp
 
-	FileProbeProcess.h
-	FileProbeProcess.cpp
+	dialogs/RenderDialog.h
+	dialogs/RenderDialog.cpp
 
 	main.cpp
 )

@@ -1,10 +1,12 @@
 #pragma once
 
+#include <iostream>
+
 #include <QtCore/QObject>
 
 #include <nodes/NodeDataModel>
 
-#include <iostream>
+#include "RenderCommand.h"
 
 using QtNodes::PortType;
 using QtNodes::PortIndex;
@@ -40,9 +42,13 @@ public:
   captionVisible() const override
   { return false; }
 
+  static QString
+  staticName()
+  { return QStringLiteral("File Output"); }
+
   QString
   name() const override
-  { return QStringLiteral("File Output"); }
+  { return staticName(); }
   
 public:
 
@@ -76,8 +82,12 @@ public:
   QString
   validationMessage() const override;
 
+signals:
+	/// The render command has been built and is ready for actual rendering
+	void renderReady(const RenderCommand & cmd);
+
 private slots:
-	void render() const;
+	void render();
 
 private:
 

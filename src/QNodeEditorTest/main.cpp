@@ -14,6 +14,8 @@
 #include "nodes/NumberDisplayDataModel.h"
 #include "nodes/FileInputDataModel.h"
 #include "nodes/FileOutputDataModel.h"
+#include "RenderCommand.h"
+#include "dialogs/RenderDialog.h"
 
 
 using QtNodes::DataModelRegistry;
@@ -71,6 +73,10 @@ class MainWindow : public QMainWindow {
 public:
 	MainWindow(QWidget *parent = nullptr);
 
+private slots:
+	void onNodeCreated(Node &n);
+	void startRenderInDialog(const RenderCommand & cmd);
+
 private:
 	std::shared_ptr<FlowScene> m_scene;
 };
@@ -99,9 +105,25 @@ MainWindow::MainWindow(QWidget *parent)
   QObject::connect(loadAction, &QAction::triggered,
                    m_scene.get(), &FlowScene::load);
 
+  QObject::connect(m_scene.get(), &FlowScene::nodeCreated,
+                   this, &MainWindow::onNodeCreated);
+
   setCentralWidget(centralWidget);
   setWindowTitle("Gogh");
   resize(800, 600);
+}
+
+void MainWindow::onNodeCreated(Node &n) {
+	QString name = n.nodeDataModel()->name();
+	if (name == FileOutputDataModel::staticName()) {
+		auto model = static_cast<FileOutputDataModel*>(n.nodeDataModel());
+		connect(model, &FileOutputDataModel::renderReady, this, &MainWindow::startRenderInDialog);
+	}
+}
+
+void MainWindow::startRenderInDialog(const RenderCommand & cmd) {
+	RenderDialog dialog(cmd, this);
+	dialog.exec();
 }
 
 int
