@@ -1,21 +1,24 @@
 #include <QMap>
 
 #include "RenderCommand.h"
-#include "nodes/VideoStreamData.h"
-#include "nodes/AudioStreamData.h"
-#include "nodes/SubtitleStreamData.h"
-#include "nodes/DataStreamData.h"
+
+#include "nodes/AbstractStreamData.h"
 
 QString RenderCommand::locateFfmpeg() {
 	return "ffmpeg";
 }
 
-RenderCommand::RenderCommand(const QString & filename, const StreamDataList & streams)
+RenderCommand::RenderCommand(const QString & filename,
+	                         const StreamDataList & streams,
+	                         const CodecData & videoCodec)
 	: m_program(locateFfmpeg())
-	, m_arguments(buildArguments(filename, streams))
+	, m_arguments(buildArguments(filename, streams, videoCodec))
 {}
 
-QStringList RenderCommand::buildArguments(const QString & filename, const StreamDataList & streams) {
+QStringList RenderCommand::buildArguments(const QString & filename,
+	                                      const StreamDataList & streams,
+	                                      const CodecData & videoCodec)
+{
 	int streamCount = streams.size();
 	QVector<int> streamsFileIndex(streamCount); // index of the stream's origin file (different from stream index if several streams come from the same input)
 	QVector<int> streamsIndexAmongType(streamCount); // stream 'i' is the streamsIndexAmongType[i]th stream of its type (video, audio, etc.)
@@ -53,10 +56,16 @@ QStringList RenderCommand::buildArguments(const QString & filename, const Stream
 	i = 0;
 	for (const auto & s : streams) {
 		const QString & sname = s->ffmpegShortName();
-		cmd << ("-c:" + sname + ":" + QString::number(streamsIndexAmongType[i])) << "copy";
+		cmd << ("-c:" + sname + ":" + QString::number(streamsIndexAmongType[i]));
+		if (i == 0 && sname == "v") {
+			// TODO: extend custom codec to other streams than the first one
+			cmd << videoCodec.name();
+			cmd += videoCodec.options();
+		} else {
+			cmd << "copy";
+		}
 		++i;
 	}
-	// TODO: output options
 	cmd << filename;
 	return cmd;
 }

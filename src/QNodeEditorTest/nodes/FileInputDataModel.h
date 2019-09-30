@@ -37,7 +37,7 @@ public:
 
   bool
   captionVisible() const override
-  { return false; }
+  { return true; }
 
   static QString
   staticName()

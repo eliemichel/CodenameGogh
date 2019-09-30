@@ -16,6 +16,7 @@
 
 #include "nodes/FileInputDataModel.h"
 #include "nodes/FileOutputDataModel.h"
+#include "nodes/H264CodecDataModel.h"
 
 using QtNodes::DataModelRegistry;
 
@@ -25,6 +26,7 @@ registerDataModels()
   auto ret = std::make_shared<DataModelRegistry>();
   ret->registerModel<FileInputDataModel>("I/O");
   ret->registerModel<FileOutputDataModel>("I/O");
+  ret->registerModel<H264CodecDataModel>("Codec");
 
   return ret;
 }
@@ -35,14 +37,20 @@ QByteArray
 defaultScene()
 {
   return R"(
-  {"nodes": [{
-    "id": "{12345678-abcd-ef01-2345-0123456789ab}",
-    "model": { "name": "File Output", "file": "" },
-    "position": { "x": 411, "y": 93 }
-  }]}
+  {"nodes": [
+    {
+      "id": "{12345678-abcd-ef01-2345-0123456789ab}",
+      "model": { "name": "File Output", "file": "" },
+      "position": { "x": 600, "y": 330 }
+    },
+    {
+      "id": "{01234567-abcd-ef01-2345-0123456789ab}",
+      "model": { "name": "File Input", "file": "" },
+      "position": { "x": 90, "y": 110 }
+    }
+  ]}
   )";
 }
-
 
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
@@ -59,7 +67,6 @@ MainWindow::MainWindow(QWidget *parent)
 
   l->addWidget(menuBar);
   m_scene = std::make_shared<GoghFlowScene>(registerDataModels(), this);
-  m_scene->loadFromMemory(defaultScene());
   l->addWidget(new GoghFlowView(m_scene.get()));
   l->addWidget(statusBar);
   l->setContentsMargins(0, 0, 0, 0);
@@ -73,6 +80,8 @@ MainWindow::MainWindow(QWidget *parent)
 
   QObject::connect(m_scene.get(), &FlowScene::nodeCreated,
                    this, &MainWindow::onNodeCreated);
+
+  m_scene->loadFromMemory(defaultScene());
 
   setCentralWidget(centralWidget);
   setWindowTitle("Gogh -- DEVELOPMENT VERSION");

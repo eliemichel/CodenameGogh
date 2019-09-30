@@ -39,7 +39,7 @@ void FileInputWidget::browse() {
 	QString dir = _defaultDir;
 	QFileInfo info(filename());
 	if (info.isDir()) dir = info.path();
-	if (info.isFile()) dir = info.dir().path();
+	if (info.dir().exists()) dir = info.dir().path();
 
 	QString filename;
 	switch (_type) {

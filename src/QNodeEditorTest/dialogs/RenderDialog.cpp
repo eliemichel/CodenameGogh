@@ -83,7 +83,7 @@ void RenderDialog::showEvent(QShowEvent *event)
 
 	// Prompts the command sent to ffmpeg right before
 
-	std::cout << m_cmd.program().toStdString() << m_cmd.arguments().join("").toStdString() << std::endl;
+	std::cout << m_cmd.program().toStdString() << " " << m_cmd.arguments().join(" ").toStdString() << std::endl;
 
 	m_ffmpegProcess->start(m_cmd.program(), m_cmd.arguments());
 

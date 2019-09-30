@@ -10,6 +10,7 @@
 
 #include "VideoStreamData.h"
 #include "AudioStreamData.h"
+#include "CodecData.h"
 
 FileOutputDataModel::
 FileOutputDataModel()
@@ -55,7 +56,7 @@ nPorts(PortType portType) const
   switch (portType)
   {
     case PortType::In:
-      return 2;
+      return 3;
 
     case PortType::Out:
       return 0;
@@ -71,9 +72,11 @@ FileOutputDataModel::
 dataType(PortType, PortIndex portIndex) const
 {
   switch (portIndex) {
-    case 0:
-      return VideoStreamData().type();
+	case 0:
+      return CodecData().type();
     case 1:
+      return VideoStreamData().type();
+    case 2:
     default:
       return AudioStreamData().type();
   }
@@ -95,9 +98,12 @@ setInData(std::shared_ptr<NodeData> data, int portIndex)
 {
   switch (portIndex) {
     case 0:
+      _codec = std::dynamic_pointer_cast<CodecData>(data);
+	  break;
+	case 1:
       _videoStream = std::dynamic_pointer_cast<VideoStreamData>(data);
 	  break;
-    case 1:
+    case 2:
     default:
       _audioStream = std::dynamic_pointer_cast<AudioStreamData>(data);
   }
@@ -148,6 +154,7 @@ void
 FileOutputDataModel::
 render()
 {
+  auto codecData = _codec.lock();
   auto videoStreamData = _videoStream.lock();
   auto audioStreamData = _audioStream.lock();
 
@@ -181,7 +188,8 @@ render()
   }
 
   if (!outputStreams.isEmpty()) {
-	  RenderCommand cmd(_fileInput->filename(), outputStreams);
+	  const CodecData & videoCodec = codecData ? *codecData : CodecData();
+	  RenderCommand cmd(_fileInput->filename(), outputStreams, videoCodec);
 	  emit renderReady(cmd);
   }
 }

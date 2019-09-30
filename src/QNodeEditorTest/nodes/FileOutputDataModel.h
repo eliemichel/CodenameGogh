@@ -40,7 +40,7 @@ public:
 
   bool
   captionVisible() const override
-  { return false; }
+  { return true; }
 
   static QString
   staticName()
@@ -94,6 +94,7 @@ private:
   NodeValidationState modelValidationState = NodeValidationState::Warning;
   QString modelValidationError = QStringLiteral("At least one stream must be provided");
 
+  std::weak_ptr<CodecData> _codec;
   std::weak_ptr<VideoStreamData> _videoStream;
   std::weak_ptr<AudioStreamData> _audioStream;
 

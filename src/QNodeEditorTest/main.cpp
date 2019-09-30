@@ -8,10 +8,7 @@
 
 using QtNodes::ConnectionStyle;
 
-static
-void
-setStyle()
-{
+static void setFlowViewStyle() {
   ConnectionStyle::setConnectionStyle(
   R"(
   {
@@ -32,6 +29,21 @@ setStyle()
   )");
 }
 
+static QString getStyleSheet() {
+	return "";
+	/*
+	return R"(
+	QWidget {
+		background-color: rgba(96, 96, 96, 0);
+		color: white;
+	}
+	QAbstractButton {
+		background-color: rgba(96, 96, 96, 0);
+	}
+	)";
+	*/
+}
+
 int
 main(int argc, char *argv[])
 {
@@ -49,7 +61,8 @@ main(int argc, char *argv[])
 		;
 	QApplication app(argc, argv);
 
-	setStyle();
+	app.setStyleSheet(getStyleSheet());
+	setFlowViewStyle();
 
 	MainWindow w;
 	w.showNormal();
