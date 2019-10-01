@@ -63,7 +63,7 @@ void GoghFlowView::keyReleaseEvent(QKeyEvent *event) {
 void GoghFlowView::dragEnterEvent(QDragEnterEvent *event) {
 	// TODO: this could be compiled only once
 	// and shared with dropEvent; and TODO full list
-	QRegularExpression isMediaFile(R"((\.wav|\.mp3|\.mp4|\.mkv|\.m4v)$)");
+	QRegularExpression isMediaFile(R"((\.wav|\.mp3|\.mp4|\.mkv|\.m4v|\.png|\.jpg|\.exr)$)");
 
 	if (event->mimeData()->hasFormat("text/uri-list")) {
 		QByteArrayList data = event->mimeData()->data("text/uri-list").split('\n');
@@ -82,7 +82,7 @@ void GoghFlowView::dragMoveEvent(QDragMoveEvent *event) {
 
 void GoghFlowView::dropEvent(QDropEvent *event)
 {
-	QRegularExpression isMediaFile(R"((\.wav|\.mp3|\.mp4|\.mkv|\.m4v)$)");
+	QRegularExpression isMediaFile(R"((\.wav|\.mp3|\.mp4|\.mkv|\.m4v|\.png|\.jpg|\.exr)$)");
 
 	QJsonObject sceneJson;
 	QJsonArray nodesJsonArray;

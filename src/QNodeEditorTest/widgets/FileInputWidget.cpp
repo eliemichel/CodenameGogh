@@ -4,6 +4,7 @@
 #include <QFileDialog>
 
 #include "FileInputWidget.h"
+#include "ImageSequenceDetector.h"
 
 FileInputWidget::FileInputWidget(FileInputType type, QWidget *parent)
 	: QWidget(parent)
@@ -28,7 +29,7 @@ QString FileInputWidget::filename() const {
 }
 
 void FileInputWidget::setFilename(const QString & value) {
-	_lineEdit->setText(value);
+	_lineEdit->setText(ImageSequenceDetector::autodetect(value));
 }
 
 void FileInputWidget::setDefaultDir(const QString & dir) {
@@ -53,6 +54,6 @@ void FileInputWidget::browse() {
 	}
 
 	if (!filename.isEmpty()) {
-		_lineEdit->setText(filename);
+		setFilename(filename);
 	}
 }

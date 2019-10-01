@@ -44,16 +44,19 @@ QStringList RenderCommand::buildArguments(const QString & filename,
 	}
 
 	QStringList cmd;
+	// Input files demuxing
 	for (const auto & f : inputFilenames) {
 		// TODO: input options
 		cmd << "-i" << f;
 	}
 	i = 0;
+	// Stream mapping
 	for (const auto & s : streams) {
 		cmd << "-map" << (QString::number(streamsFileIndex[i]) + ":" + QString::number(s->streamId()));
 		++i;
 	}
 	i = 0;
+	// Output codecs
 	for (const auto & s : streams) {
 		const QString & sname = s->ffmpegShortName();
 		cmd << ("-c:" + sname + ":" + QString::number(streamsIndexAmongType[i]));
@@ -66,6 +69,7 @@ QStringList RenderCommand::buildArguments(const QString & filename,
 		}
 		++i;
 	}
+	// Output file muxing
 	cmd << filename;
 	return cmd;
 }

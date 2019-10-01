@@ -34,6 +34,8 @@ set(SRC
 	FileProbeProcess.cpp
 	GoghFlowScene.h
 	GoghFlowScene.cpp
+	ImageSequenceDetector.h
+	ImageSequenceDetector.cpp
 	MainWindow.h
 	MainWindow.cpp
 	RenderCommand.h

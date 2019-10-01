@@ -49,7 +49,7 @@ main(int argc, char *argv[])
 {
 	std::cout
 		<< "This is a DEVELOPMENT version of Gogh." << std::endl
-		<< "Build number: 20190930-001" << std::endl
+		<< "Build number: 20190930-002" << std::endl
 		<< "Copyright (c) 2018 - 2019 -- Gogh Team. All right reserved." << std::endl
 		<< std::endl
 		<< "This version is not meant for production and is still a work in progress." << std::endl
