@@ -6,15 +6,15 @@
 using QtNodes::NodeDataType;
 using QtNodes::NodeData;
 
-class CodecData : public NodeData
+class AbstractCodecData : public NodeData
 {
 public:
 
-  CodecData()
+  AbstractCodecData()
     : _name("copy")
   {}
 
-  CodecData(const QString & name, const QStringList & options)
+  AbstractCodecData(const QString & name, const QStringList & options)
     : _name(name)
     , _options(options)
   {}

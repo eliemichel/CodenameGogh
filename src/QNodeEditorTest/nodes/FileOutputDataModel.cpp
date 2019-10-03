@@ -10,7 +10,8 @@
 
 #include "VideoStreamData.h"
 #include "AudioStreamData.h"
-#include "CodecData.h"
+#include "VideoCodecData.h"
+#include "AudioCodecData.h"
 
 FileOutputDataModel::
 FileOutputDataModel()
@@ -56,7 +57,7 @@ nPorts(PortType portType) const
   switch (portType)
   {
     case PortType::In:
-      return 3;
+      return 4;
 
     case PortType::Out:
       return 0;
@@ -71,15 +72,17 @@ NodeDataType
 FileOutputDataModel::
 dataType(PortType, PortIndex portIndex) const
 {
-  switch (portIndex) {
+	switch (portIndex) {
 	case 0:
-      return CodecData().type();
-    case 1:
-      return VideoStreamData().type();
-    case 2:
-    default:
-      return AudioStreamData().type();
-  }
+		return VideoCodecData().type();
+	case 1:
+		return VideoStreamData().type();
+	case 2:
+		return AudioCodecData().type();
+	case 3:
+	default:
+		return AudioStreamData().type();
+	}
 }
 
 
@@ -98,12 +101,15 @@ setInData(std::shared_ptr<NodeData> data, int portIndex)
 {
   switch (portIndex) {
     case 0:
-      _codec = std::dynamic_pointer_cast<CodecData>(data);
+      _videoCodec = std::dynamic_pointer_cast<VideoCodecData>(data);
 	  break;
 	case 1:
       _videoStream = std::dynamic_pointer_cast<VideoStreamData>(data);
 	  break;
-    case 2:
+	case 2:
+      _audioCodec = std::dynamic_pointer_cast<AudioCodecData>(data);
+	  break;
+    case 3:
     default:
       _audioStream = std::dynamic_pointer_cast<AudioStreamData>(data);
   }
@@ -154,12 +160,17 @@ void
 FileOutputDataModel::
 render()
 {
-  auto codecData = _codec.lock();
+  auto videoCodecData = _videoCodec.lock();
+  auto audioCodecData = _audioCodec.lock();
   auto videoStreamData = _videoStream.lock();
   auto audioStreamData = _audioStream.lock();
 
   // streams to export in the file
-  QList<std::shared_ptr<AbstractStreamData>> outputStreams;
+  StreamDataList outputStreams;
+  CodecDataList outputCodecs;
+
+  videoCodecData = videoCodecData ? videoCodecData : std::make_shared<VideoCodecData>();
+  audioCodecData = audioCodecData ? audioCodecData : std::make_shared<AudioCodecData>();
 
   if (videoStreamData && audioStreamData)
   {
@@ -169,18 +180,22 @@ render()
 
 	outputStreams << videoStreamData;
 	outputStreams << audioStreamData;
+	outputCodecs << videoCodecData;
+	outputCodecs << audioCodecData;
   }
   else if (videoStreamData)
   {
     std::cout
       << "Exporting only video stream #" << videoStreamData->streamId() << " from input file " << videoStreamData->filename().toStdString() << std::endl;
 	outputStreams << videoStreamData;
+	outputCodecs << videoCodecData;
   }
   else if (audioStreamData)
   {
     std::cout
       << "Exporting only audio stream #" << audioStreamData->streamId() << " from input file " << audioStreamData->filename().toStdString() << std::endl;
 	outputStreams << audioStreamData;
+	outputCodecs << audioCodecData;
   }
   else
   {
@@ -188,8 +203,7 @@ render()
   }
 
   if (!outputStreams.isEmpty()) {
-	  const CodecData & videoCodec = codecData ? *codecData : CodecData();
-	  RenderCommand cmd(_fileInput->filename(), outputStreams, videoCodec);
+	  RenderCommand cmd(_fileInput->filename(), outputStreams, outputCodecs);
 	  emit renderReady(cmd);
   }
 }

@@ -47,6 +47,12 @@ set(SRC
 	nodes/SubtitleStreamData.h
 	nodes/DataStreamData.h
 
+	nodes/AbstractCodecData.h
+	nodes/VideoCodecData.h
+	nodes/AudioCodecData.h
+	nodes/SubtitleCodecData.h
+	nodes/DataCodecData.h
+
 	nodes/FileInputDataModel.h
 	nodes/FileInputDataModel.cpp
 	nodes/FileOutputDataModel.h

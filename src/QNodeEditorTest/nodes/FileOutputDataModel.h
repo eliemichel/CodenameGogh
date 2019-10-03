@@ -19,6 +19,8 @@ class FileInputWidget;
 class QPushButton;
 class VideoStreamData;
 class AudioStreamData;
+class VideoCodecData;
+class AudioCodecData;
 
 /// The model dictates the number of inputs and outputs for the Node.
 /// In this example it has no logic.
@@ -94,7 +96,8 @@ private:
   NodeValidationState modelValidationState = NodeValidationState::Warning;
   QString modelValidationError = QStringLiteral("At least one stream must be provided");
 
-  std::weak_ptr<CodecData> _codec;
+  std::weak_ptr<VideoCodecData> _videoCodec;
+  std::weak_ptr<AudioCodecData> _audioCodec;
   std::weak_ptr<VideoStreamData> _videoStream;
   std::weak_ptr<AudioStreamData> _audioStream;
 

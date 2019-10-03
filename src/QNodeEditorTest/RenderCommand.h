@@ -3,10 +3,11 @@
 #include <QList>
 #include <QStringList>
 #include <memory>
-#include "nodes/CodecData.h"
 
 class AbstractStreamData;
+class AbstractCodecData;
 typedef QList<std::shared_ptr<AbstractStreamData>> StreamDataList;
+typedef QList<std::shared_ptr<AbstractCodecData>> CodecDataList;
 
 class RenderCommand {
 public:
@@ -15,7 +16,7 @@ public:
 public:
 	RenderCommand(const QString & filename,
 	              const StreamDataList & streams,
-	              const CodecData & videoCodec);
+	              const CodecDataList & codecs);
 
 	const QString & program() { return m_program; }
 	const QStringList & arguments() { return m_arguments; }
@@ -23,7 +24,7 @@ public:
 private:
 	static QStringList buildArguments(const QString & filename,
 	                                  const StreamDataList & streams,
-	                                  const CodecData & videoCodec);
+	                                  const CodecDataList & codecs);
 
 private:
 	const QString m_program;

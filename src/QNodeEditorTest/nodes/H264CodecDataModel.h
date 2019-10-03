@@ -12,7 +12,8 @@ using QtNodes::NodeValidationState;
 
 class QWidget;
 class QSpinBox;
-class CodecData;
+class QComboBox;
+class VideoCodecData;
 
 class H264CodecDataModel
 	: public NodeDataModel
@@ -70,7 +71,9 @@ public:
 	embeddedWidget() override { return _widget; }
 
 private:
-	std::shared_ptr<CodecData> _codec;
+	std::shared_ptr<VideoCodecData> _codec;
 	QWidget * _widget;
 	QSpinBox * _crfInput;
+	QComboBox * _presetInput;
+	QComboBox * _tuneInput;
 };

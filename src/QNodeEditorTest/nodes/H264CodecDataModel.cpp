@@ -1,24 +1,61 @@
 #include <QWidget>
 #include <QSpinBox>
-#include <QVBoxLayout>
+#include <QFormLayout>
 #include <QJsonObject>
 #include <QLabel>
+#include <QComboBox>
 
 #include "H264CodecDataModel.h"
-#include "CodecData.h"
+#include "VideoCodecData.h"
 
 H264CodecDataModel::H264CodecDataModel()
 	: _widget(new QWidget())
 	, _crfInput(new QSpinBox())
+	, _presetInput(new QComboBox())
+	, _tuneInput(new QComboBox())
 {
-	auto l = new QHBoxLayout(_widget);
+	auto l = new QFormLayout(_widget);
 	l->setMargin(0);
+
 	_crfInput->setMinimum(0);
 	_crfInput->setMaximum(51);
 	_crfInput->setValue(22);
-	l->addWidget(new QLabel("CRF"));
-	l->addWidget(_crfInput);
-	_widget->setStyleSheet("QWidget{background-color: rgba(0,0,0,0);color: white} QAbstractButton{background-color: rgba(96,96,96,204)}");
+	l->addRow("CRF", _crfInput);
+
+	_presetInput->addItems(QStringList{
+		"ultrafast",
+		"superfast",
+		"veryfast",
+		"faster",
+		"fast",
+		"medium",
+		"slow",
+		"slower",
+		"veryslow",
+		"placebo",
+	});
+	_presetInput->setCurrentIndex(6 /* slow */);
+	l->addRow("Preset", _presetInput);
+
+	_tuneInput->addItems(QStringList{
+		"none",
+		"film",
+		"animation",
+		"grain",
+		"stillimage",
+		"fastdecode",
+		"zerolatency",
+		"psnr",
+		"ssim",
+	});
+	_tuneInput->setCurrentIndex(0 /* none */);
+	l->addRow("Tune", _tuneInput);
+
+	_widget->setStyleSheet(R"(
+		QWidget { background-color: rgba(0,0,0,0); color: white }
+		QAbstractButton { background-color: rgba(96,96,96,204) }
+		QComboBox QAbstractItemView { background-color: rgba(96,96,96,204) }
+	)");
 }
 
 // ----------------------------------------------------------------------------
@@ -53,17 +90,24 @@ unsigned int H264CodecDataModel::nPorts(PortType portType) const {
 }
 
 NodeDataType H264CodecDataModel::dataType(PortType, PortIndex) const {
-	return CodecData().type();
+	return VideoCodecData().type();
 }
 
 std::shared_ptr<NodeData> H264CodecDataModel::outData(PortIndex port) {
 	if (!_codec) {
-		_codec = std::make_shared<CodecData>("libx264", QStringList());
+		_codec = std::make_shared<VideoCodecData>("libx264", QStringList());
 	}
 	QString crf = _crfInput->text();
 	_codec->options().clear();
+	QString preset = _presetInput->currentText();
+	if (preset != "medium") {
+		_codec->options() << "-preset" << preset;
+	}
+	QString tune = _tuneInput->currentText();
+	if (tune != "none") {
+		_codec->options() << "-tune" << tune;
+	}
 	_codec->options()
-		<< "-preset" << "slow"
 		<< "-crf" << crf
 		<< "-pix_fmt" << "yuv420p"; // TODO: this is a filter actually, it does not belong in codec data. Equivalent to '-vf format=yuv420p'
 	return _codec;
