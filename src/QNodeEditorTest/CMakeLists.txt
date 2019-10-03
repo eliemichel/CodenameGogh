@@ -57,8 +57,12 @@ set(SRC
 	nodes/FileInputDataModel.cpp
 	nodes/FileOutputDataModel.h
 	nodes/FileOutputDataModel.cpp
+
 	nodes/H264CodecDataModel.h
 	nodes/H264CodecDataModel.cpp
+
+	nodes/AacCodecDataModel.h
+	nodes/AacCodecDataModel.cpp
 
 	widgets/FileInputWidget.h
 	widgets/FileInputWidget.cpp

@@ -64,15 +64,28 @@ QJsonObject H264CodecDataModel::save() const {
 	QJsonObject modelJson = NodeDataModel::save();
 
 	modelJson["crf"] = _crfInput->value();
+	modelJson["preset"] = _presetInput->currentIndex();
+	modelJson["tune"] = _tuneInput->currentIndex();
 
 	return modelJson;
 }
 
 void H264CodecDataModel::restore(QJsonObject const &p) {
-	 QJsonValue v = p["file"];
+	QJsonValue v;
 
-	if (!v.isUndefined()) {
+	v = p["crf"];
+	if (v.isDouble()) {
 		_crfInput->setValue(v.toInt());
+	}
+
+	v = p["preset"];
+	if (v.isDouble()) {
+		_presetInput->setCurrentIndex(v.toInt());
+	}
+
+	v = p["tune"];
+	if (v.isDouble()) {
+		_tuneInput->setCurrentIndex(v.toInt());
 	}
 }
 
@@ -97,13 +110,15 @@ std::shared_ptr<NodeData> H264CodecDataModel::outData(PortIndex port) {
 	if (!_codec) {
 		_codec = std::make_shared<VideoCodecData>("libx264", QStringList());
 	}
+
 	QString crf = _crfInput->text();
-	_codec->options().clear();
 	QString preset = _presetInput->currentText();
+	QString tune = _tuneInput->currentText();
+
+	_codec->options().clear();
 	if (preset != "medium") {
 		_codec->options() << "-preset" << preset;
 	}
-	QString tune = _tuneInput->currentText();
 	if (tune != "none") {
 		_codec->options() << "-tune" << tune;
 	}
