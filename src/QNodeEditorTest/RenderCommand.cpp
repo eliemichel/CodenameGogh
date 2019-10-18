@@ -42,7 +42,7 @@ QStringList RenderCommand::buildArguments(const QString & filename,
 	QVector<int> streamsIndexAmongType(streamCount); // stream 'i' is the streamsIndexAmongType[i]th stream of its type (video, audio, etc.)
 	QMap<QString, int> streamCountPerType;
 
-	QList<QString> inputFilenames;
+	QList<std::shared_ptr<AbstractStreamData>> inputFiles;
 	QMap<QString, int> inputFilenamesMap;
 
 	int i = 0;
@@ -50,7 +50,7 @@ QStringList RenderCommand::buildArguments(const QString & filename,
 		const QString & filename = s->filename();
 		if (!inputFilenamesMap.contains(filename)) {
 			inputFilenamesMap[filename] = inputFilenamesMap.count();
-			inputFilenames << filename;
+			inputFiles << s;
 		}
 		streamsFileIndex[i] = inputFilenamesMap[filename];
 
@@ -63,9 +63,9 @@ QStringList RenderCommand::buildArguments(const QString & filename,
 
 	QStringList cmd;
 	// Input files demuxing
-	for (const auto & f : inputFilenames) {
-		// TODO: input options
-		cmd << "-i" << f;
+	for (const auto & f : inputFiles) {
+		cmd += f->options();
+		cmd << "-i" << f->filename();
 	}
 	i = 0;
 	// Stream mapping

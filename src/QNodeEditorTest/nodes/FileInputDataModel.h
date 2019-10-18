@@ -15,6 +15,7 @@ using QtNodes::NodeValidationState;
 
 class VideoStreamData;
 class FileInputWidget;
+class QSpinBox;
 
 /// The model dictates the number of inputs and outputs for the Node.
 /// In this example it has no logic.

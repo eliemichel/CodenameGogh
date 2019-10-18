@@ -4,6 +4,8 @@
 #include <QJsonArray>
 #include <QIntValidator>
 #include <QVBoxLayout>
+#include <QLabel>
+#include <QSpinBox>
 
 #include "FileInputDataModel.h"
 #include "VideoStreamData.h"
@@ -14,16 +16,16 @@
 
 FileInputDataModel::
 FileInputDataModel()
-  : _widget(new QWidget())
-  , _fileInput(new FileInputWidget(FileInputWidget::ReadFile))
+	: _widget(new QWidget())
+	, _fileInput(new FileInputWidget(FileInputWidget::ReadFile))
 {
-  connect(_fileInput, &FileInputWidget::fileChanged, this, &FileInputDataModel::onFileChanged);
-  connect(&_probeProcess, &FileProbeProcess::probed, this, &FileInputDataModel::onFileProbed);
+	connect(_fileInput, &FileInputWidget::fileChanged, this, &FileInputDataModel::onFileChanged);
+	connect(&_probeProcess, &FileProbeProcess::probed, this, &FileInputDataModel::onFileProbed);
 
-  auto layout = new QVBoxLayout(_widget);
-  layout->setMargin(0);
-  layout->addWidget(_fileInput);
-  _widget->setStyleSheet("QWidget{background-color: rgba(0,0,0,0);color: white} QAbstractButton{background-color: rgba(96,96,96,204)}");
+	auto layout = new QVBoxLayout(_widget);
+	layout->setMargin(0);
+	layout->addWidget(_fileInput);
+	_widget->setStyleSheet("QWidget{background-color: rgba(0,0,0,0);color: white} QAbstractButton{background-color: rgba(96,96,96,204)}");
 }
 
 QJsonObject
@@ -38,6 +40,7 @@ save() const
 	  jsonStreams << s->type().id;
   }
   modelJson["streams"] = jsonStreams;
+  modelJson["start_number"] = _fileInput->startNumber();
 
   return modelJson;
 }
@@ -48,10 +51,15 @@ FileInputDataModel::
 restore(QJsonObject const &p)
 {
   QJsonValue v = p["file"];
-
   if (!v.isUndefined())
   {
 	_fileInput->setFilename(v.toString());
+  }
+
+  QJsonValue start_number = p["start_number"];
+  if (start_number.isDouble())
+  {
+    _fileInput->setStartNumber(start_number.toInt());
   }
 
   QJsonArray jsonStreams;
@@ -109,7 +117,11 @@ void
 FileInputDataModel::
 onFileChanged(QString const &filename)
 {
-	_probeProcess.probe(filename);
+	if (_fileInput->isImageSequence()) {
+		_probeProcess.probe(_fileInput->imageSequence().getFrameFilename());
+	} else {
+		_probeProcess.probe(filename);
+	}
 }
 
 void
@@ -122,8 +134,14 @@ onFileProbed()
 		switch (stream)
 		{
 		case FileProbeProcess::VideoStream:
-			_streams.push_back(std::make_shared<VideoStreamData>(_fileInput->filename(), i));
+		{
+			auto s = std::make_shared<VideoStreamData>(_fileInput->filename(), i);
+			if (_fileInput->isImageSequence()) {
+				s->options() << "-start_number" << QString::number(_fileInput->startNumber());
+			}
+			_streams.push_back(s);
 			break;
+		}
 		case FileProbeProcess::AudioStream:
 			_streams.push_back(std::make_shared<AudioStreamData>(_fileInput->filename(), i));
 			break;

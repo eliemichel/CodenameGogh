@@ -28,7 +28,16 @@ public:
   int streamId() const
   { return _streamId; }
 
+  QStringList & options()
+  { return _options; }
+
 private:
-  QString _filename;
-  int _streamId;
+	/// Filename from which this stream is loaded
+	QString _filename;
+
+	/// Input options for reading the file, e.g. image sequence -start_number
+	QStringList _options;
+
+	/// Id of the stream within the file.
+	int _streamId;
 };

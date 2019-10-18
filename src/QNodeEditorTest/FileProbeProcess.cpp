@@ -29,6 +29,7 @@ void FileProbeProcess::probe(const QString & filename)
 	{
 		m_mustRetry = true;
 		cancel();
+		return;
 	}
 
 	QString program = FileProbeProcess::locateFfprobe();
@@ -49,7 +50,7 @@ void FileProbeProcess::probe(const QString & filename)
 
 void FileProbeProcess::cancel()
 {
-	m_wasCanceled = false;
+	m_wasCanceled = true;
 	kill();
 }
 
@@ -63,6 +64,7 @@ void FileProbeProcess::onProcessFinished()
 		{
 			probe(m_filename);
 		}
+		return;
 	}
 
 	// Parse output

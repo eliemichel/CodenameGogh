@@ -4,26 +4,38 @@
 #include <QRegularExpression>
 #include <QDir>
 
-#include "ImageSequenceDetector.h"
+#include "ImageSequence.h"
 
-QString ImageSequenceDetector::autodetect(const QString & rawFilename)
+bool ImageSequence::isValid() const
+{
+	return basename != "";
+}
+
+QString ImageSequence::getFrameFilename(int frame) const
+{
+	QString str;
+	str.sprintf(basename.toStdString().data(), startFrame + frame);
+	return str;
+}
+
+ImageSequence ImageSequence::fromAutodetect(const QString & rawFilename)
 {
 	QRegularExpression isImageFile(R"((\.png|\.jpg|\.exr)$)");
 	QRegularExpression digitSequence(R"((\d+)\.\w+$)");
 
 	if (!isImageFile.match(rawFilename).hasMatch()) {
-		return rawFilename;
+		return ImageSequence();
 	}
 
 	QFileInfo info(rawFilename);
 	if (!info.isFile()) {
-		return rawFilename;
+		return ImageSequence();
 	}
 
 	const QString & shortName = info.fileName();
 	QRegularExpressionMatch m = digitSequence.match(shortName);
 	if (!m.hasMatch()) {
-		return rawFilename;
+		return ImageSequence();
 	}
 
 	int nDigits = m.captured(1).length();
@@ -58,5 +70,9 @@ QString ImageSequenceDetector::autodetect(const QString & rawFilename)
 
 	std::cout << "Found image sequence pattern '" << pattern.toStdString() << "' from " << startFrame << " to " << endFrame << std::endl;
 
-	return newInfo.filePath();
+	ImageSequence seq;
+	seq.basename = newInfo.filePath();
+	seq.startFrame = startFrame;
+	seq.endFrame = endFrame;
+	return seq;
 }
