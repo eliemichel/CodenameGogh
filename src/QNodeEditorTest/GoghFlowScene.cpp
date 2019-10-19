@@ -11,13 +11,30 @@ using QtNodes::PortType;
 
 GoghFlowScene::GoghFlowScene(std::shared_ptr<DataModelRegistry> registry, QObject * parent)
 	: FlowScene(registry, parent)
-{}
+{
+	init();
+}
 
 GoghFlowScene::GoghFlowScene(QObject * parent)
 	: FlowScene(parent)
-{}
+{
+	init();
+}
 
-QByteArray GoghFlowScene::saveToMemory(const std::vector<Node*> & nodes) const {
+void GoghFlowScene::init() {
+	m_hasBeenModified = true;
+
+	connect(this, &FlowScene::nodeCreated, this, &GoghFlowScene::setModified);
+	connect(this, &FlowScene::nodeDeleted, this, &GoghFlowScene::setModified);
+	connect(this, &FlowScene::connectionCreated, this, &GoghFlowScene::setModified);
+	connect(this, &FlowScene::connectionDeleted, this, &GoghFlowScene::setModified);
+	connect(this, &FlowScene::nodeMoved, this, &GoghFlowScene::setModified);
+	
+	// TODO: Detect when DataModel's fields are modified
+}
+
+QByteArray GoghFlowScene::saveToMemory(const std::vector<Node*> & nodes) const
+{
 	QJsonObject sceneJson;
 
 	QSet<QUuid> nodeIds;
@@ -89,4 +106,27 @@ void GoghFlowScene::loadFromMemory(const QByteArray& data, bool newIds)
 
 	QByteArray newData = QJsonDocument(jsonDocument).toJson();
 	FlowScene::loadFromMemory(newData);
+}
+
+void GoghFlowScene::wasSavedAs(const QString & filename)
+{
+	m_filename = filename;
+	m_hasBeenModified = false;
+	emit fileStatusChanged(m_filename, m_hasBeenModified);
+}
+
+void GoghFlowScene::selectAll()
+{
+	auto allItems = items();
+	auto beg = allItems.begin();
+	auto end = allItems.end();
+	for (auto it = beg; it != end; ++it) {
+		(*it)->setSelected(true);
+	}
+}
+
+void GoghFlowScene::setModified()
+{
+	m_hasBeenModified = true;
+	emit fileStatusChanged(m_filename, m_hasBeenModified);
 }

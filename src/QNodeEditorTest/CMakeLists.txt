@@ -37,9 +37,12 @@ set(SRC
 	ImageSequence.h
 	ImageSequence.cpp
 	MainWindow.h
+	MainWindow.ui
 	MainWindow.cpp
 	RenderCommand.h
 	RenderCommand.cpp
+	Style.h
+	Style.cpp
 
 	nodes/AbstractStreamData.h
 	nodes/VideoStreamData.h
@@ -71,6 +74,9 @@ set(SRC
 
 	dialogs/RenderDialog.h
 	dialogs/RenderDialog.cpp
+	dialogs/AboutDialog.h
+	dialogs/AboutDialog.ui
+	dialogs/AboutDialog.cpp
 
 	main.cpp
 )

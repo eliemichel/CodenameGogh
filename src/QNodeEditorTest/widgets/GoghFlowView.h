@@ -14,6 +14,10 @@ public:
 
 	void setScene(GoghFlowScene *scene);
 
+public slots:
+	void copy();
+	void paste();
+
 protected:
 	void keyPressEvent(QKeyEvent *event) override;
 
@@ -29,8 +33,5 @@ protected:
 	GoghFlowScene * goghScene();
 
 private:
-	void copy();
-	void paste();
-
 	void setScene(FlowScene *) {} // shadow original, replaced by the GoghFlowScene version
 };

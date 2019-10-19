@@ -4,12 +4,16 @@
 #include <QMenuBar>
 #include <QStatusBar>
 #include <QLabel>
+#include <QFileDialog>
+#include <QDesktopServices>
 
 #include <nodes/Node>
 #include <nodes/DataModelRegistry>
 
 #include "MainWindow.h"
+#include "ui_MainWindow.h"
 #include "dialogs/RenderDialog.h"
+#include "dialogs/AboutDialog.h"
 #include "widgets/GoghFlowView.h"
 #include "RenderCommand.h"
 #include "GoghFlowScene.h"
@@ -56,41 +60,139 @@ defaultScene()
 
 MainWindow::MainWindow(QWidget *parent)
 	: QMainWindow(parent)
+	, ui(new Ui::MainWindow())
+	, m_scene(std::make_unique<GoghFlowScene>(registerDataModels(), this))
 {
-  auto menuBar = new QMenuBar();
-  auto saveAction = menuBar->addAction("Save..");
-  auto loadAction = menuBar->addAction("Load..");
+	// 1. Setup UI
 
-  auto statusBar = new QStatusBar();
-  statusBar->addWidget(new QLabel("Add node: Mouse Right or Drop file  |  Box select: Shift + Mouse Left"));
+	ui->setupUi(this);
+  
+	ui->statusBar->addWidget(new QLabel("Add node: Mouse Right or Drop file  |  Box select: Shift + Mouse Left"));
 
-  auto centralWidget = new QWidget();
-  QVBoxLayout *l = new QVBoxLayout(centralWidget);
+	auto flowView = new GoghFlowView(m_scene.get());
 
-  l->addWidget(menuBar);
-  m_scene = std::make_shared<GoghFlowScene>(registerDataModels(), this);
-  l->addWidget(new GoghFlowView(m_scene.get()));
-  l->addWidget(statusBar);
-  l->setContentsMargins(0, 0, 0, 0);
-  l->setSpacing(0);
+	setCentralWidget(flowView);
+	setWindowTitle("Gogh -- DEVELOPMENT VERSION");
+	resize(1000, 600);
 
-  QObject::connect(saveAction, &QAction::triggered,
-                   m_scene.get(), &FlowScene::save);
+	// 2. Signals
 
-  QObject::connect(loadAction, &QAction::triggered,
-                   m_scene.get(), &FlowScene::load);
+	/////////// File Menu
+  
+	connect(
+		ui->actionSave, &QAction::triggered,
+		this, &MainWindow::save);
 
-  QObject::connect(m_scene.get(), &FlowScene::nodeCreated,
-                   this, &MainWindow::onNodeCreated);
+	connect(
+		ui->actionSaveAs, &QAction::triggered,
+		this, &MainWindow::saveAs);
 
-  m_scene->loadFromMemory(defaultScene());
+	connect(
+		ui->actionOpen, &QAction::triggered,
+		m_scene.get(), &FlowScene::load);
 
-  setCentralWidget(centralWidget);
-  setWindowTitle("Gogh -- DEVELOPMENT VERSION");
-  resize(1000, 600);
+	// TODO: why does it crash on quit? It does not when using the window cross
+	connect(
+		ui->actionQuit, &QAction::triggered,
+		this, &QMainWindow::close);
+
+	/////////// Edit Menu
+
+	connect(
+		ui->actionCopy, &QAction::triggered,
+		flowView, &GoghFlowView::copy);
+
+	connect(
+		ui->actionPaste, &QAction::triggered,
+		flowView, &GoghFlowView::paste);
+
+	connect(
+		ui->actionSelectAll, &QAction::triggered,
+		m_scene.get(), &GoghFlowScene::selectAll);
+
+	/////////// Help Menu
+
+	connect(
+		ui->actionDocumentation, &QAction::triggered,
+		this, &MainWindow::openDocumentation);
+
+	connect(
+		ui->actionAbout, &QAction::triggered,
+		this, &MainWindow::openAboutDialog);
+
+	/////////// Scene signals
+
+	connect(
+		m_scene.get(), &FlowScene::nodeCreated,
+		this, &MainWindow::onNodeCreated);
+
+	connect(
+		m_scene.get(), &GoghFlowScene::fileStatusChanged,
+		this, &MainWindow::onSceneFileStatusChanged);
+
+	// 3. Startup
+
+	m_scene->loadFromMemory(defaultScene());
+	onSceneFileStatusChanged("", true);
 }
 
-void MainWindow::onNodeCreated(Node &n) {
+bool MainWindow::writeScene(const QString & filename)
+{
+	if (!m_scene || filename.isEmpty()) return false;
+	auto scene = m_scene.get();
+
+	QString suffix = "";
+	if (!filename.endsWith(".gog", Qt::CaseInsensitive)) {
+		suffix = ".gog";
+	}
+
+	QFile file(filename + suffix);
+	if (!file.open(QIODevice::WriteOnly)) return false;
+
+	file.write(scene->FlowScene::saveToMemory());
+	scene->wasSavedAs(filename);
+	return true;
+}
+
+void MainWindow::save()
+{
+	if (!m_scene) return;
+	auto scene = m_scene.get();
+	
+	QString filename = scene->filename();
+	if (filename.isEmpty()) {
+		saveAs();
+	} else {
+		writeScene(filename);
+	}
+}
+
+void MainWindow::saveAs()
+{
+	if (!m_scene) return;
+	auto scene = m_scene.get();
+	
+	QString filename = QFileDialog::getSaveFileName(
+		nullptr,
+		tr("Save Gogh Graph"),
+		QDir::homePath(),
+		tr("Gogh Files (*.gog)"));
+
+	writeScene(filename);
+}
+
+void MainWindow::openDocumentation()
+{
+	QDesktopServices::openUrl(QUrl("https://github.com/eliemichel/CodenameGogh")); // TODO: unhardcode-me
+}
+
+void MainWindow::openAboutDialog()
+{
+	AboutDialog(this).exec();
+}
+
+void MainWindow::onNodeCreated(Node &n)
+{
 	QString name = n.nodeDataModel()->name();
 	if (name == FileOutputDataModel::staticName()) {
 		auto model = static_cast<FileOutputDataModel*>(n.nodeDataModel());
@@ -98,7 +200,13 @@ void MainWindow::onNodeCreated(Node &n) {
 	}
 }
 
-void MainWindow::startRenderInDialog(const RenderCommand & cmd) {
-	RenderDialog dialog(cmd, this);
-	dialog.exec();
+void MainWindow::onSceneFileStatusChanged(const QString & filename, bool hasBeenModified)
+{
+	QString shortName = filename.isEmpty() ? "untitled" : QFileInfo(filename).fileName();
+	setWindowTitle("Gogh -- DEVELOPMENT VERSION - " + shortName + (hasBeenModified ? "*" : ""));
+}
+
+void MainWindow::startRenderInDialog(const RenderCommand & cmd)
+{
+	RenderDialog(cmd, this).exec();
 }

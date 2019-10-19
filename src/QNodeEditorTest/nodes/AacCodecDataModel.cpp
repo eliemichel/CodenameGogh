@@ -8,6 +8,7 @@
 #include <QRadioButton>
 #include <QtGlobal>
 
+#include "Style.h"
 #include "AacCodecDataModel.h"
 #include "AudioCodecData.h"
 
@@ -63,11 +64,7 @@ AacCodecDataModel::AacCodecDataModel()
 		this, &AacCodecDataModel::onSelectChanged);
 	onSelectChanged();
 
-	_widget->setStyleSheet(R"(
-		QWidget { background-color: rgba(0,0,0,0); color: white }
-		QAbstractButton { background-color: rgba(96,96,96,204) }
-		QComboBox QAbstractItemView { background-color: rgba(96,96,96,204) }
-	)");
+	_widget->setStyleSheet(Gogh::Style::nodeStyle());
 }
 
 // ----------------------------------------------------------------------------

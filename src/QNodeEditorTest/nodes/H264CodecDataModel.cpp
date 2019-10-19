@@ -5,6 +5,7 @@
 #include <QLabel>
 #include <QComboBox>
 
+#include "Style.h"
 #include "H264CodecDataModel.h"
 #include "VideoCodecData.h"
 
@@ -51,11 +52,7 @@ H264CodecDataModel::H264CodecDataModel()
 	_tuneInput->setCurrentIndex(0 /* none */);
 	l->addRow("Tune", _tuneInput);
 
-	_widget->setStyleSheet(R"(
-		QWidget { background-color: rgba(0,0,0,0); color: white }
-		QAbstractButton { background-color: rgba(96,96,96,204) }
-		QComboBox QAbstractItemView { background-color: rgba(96,96,96,204) }
-	)");
+	_widget->setStyleSheet(Gogh::Style::nodeStyle());
 }
 
 // ----------------------------------------------------------------------------

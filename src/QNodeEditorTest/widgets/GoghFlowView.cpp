@@ -34,6 +34,7 @@ void GoghFlowView::setScene(GoghFlowScene *scene) {
 // ----------------------------------------------------------------------------
 
 void GoghFlowView::keyPressEvent(QKeyEvent *event) {
+	/*
 	switch (event->key()) {
 	case Qt::Key_C:
 		if (event->modifiers() & Qt::ControlModifier) {
@@ -52,7 +53,7 @@ void GoghFlowView::keyPressEvent(QKeyEvent *event) {
 	default:
 		break;
 	}
-
+	*/
 	FlowView::keyPressEvent(event);
 }
 

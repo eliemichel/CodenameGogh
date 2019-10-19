@@ -7,6 +7,7 @@
 #include <QLabel>
 #include <QSpinBox>
 
+#include "Style.h"
 #include "FileInputDataModel.h"
 #include "VideoStreamData.h"
 #include "AudioStreamData.h"
@@ -25,7 +26,7 @@ FileInputDataModel()
 	auto layout = new QVBoxLayout(_widget);
 	layout->setMargin(0);
 	layout->addWidget(_fileInput);
-	_widget->setStyleSheet("QWidget{background-color: rgba(0,0,0,0);color: white} QAbstractButton{background-color: rgba(96,96,96,204)}");
+	_widget->setStyleSheet(Gogh::Style::nodeStyle());
 }
 
 QJsonObject

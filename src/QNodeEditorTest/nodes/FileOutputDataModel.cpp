@@ -4,6 +4,7 @@
 #include <QFileInfo>
 #include <QDir>
 
+#include "Style.h"
 #include "FileOutputDataModel.h"
 #include "widgets/FileInputWidget.h"
 #include "RenderCommand.h"
@@ -23,7 +24,7 @@ FileOutputDataModel()
 	auto layout = new QHBoxLayout(_widget);
 	layout->addWidget(_fileInput);
 	layout->addWidget(_renderButton);
-	_widget->setStyleSheet("QWidget{background-color: rgba(0,0,0,0);color: white} QAbstractButton{background-color: rgba(96,96,96,204)}");
+	_widget->setStyleSheet(Gogh::Style::nodeStyle());
 }
 
 QJsonObject
