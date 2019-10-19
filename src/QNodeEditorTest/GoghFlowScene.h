@@ -23,9 +23,9 @@ public:
 
 	/**
 	 * Tells whether the scene been modified since it has last been saved or
-	 * loaded. Always true if filename() is empty.
+	 * loaded.
 	 */
-	bool hasBeenModified() const { return m_filename.isEmpty() || m_hasBeenModified; }
+	bool hasBeenModified() const { return m_hasBeenModified; }
 
 	/**
 	 * Save only some of the nodes to memory

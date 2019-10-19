@@ -2,6 +2,7 @@
 <qresource>
     <file>images/open-file.png</file>
     <file>images/new-file.png</file>
+    <file>images/cross.png</file>
     <file>fonts/cmunbmo.ttf</file>
     <file>fonts/cmunbmr.ttf</file>
     <file>fonts/cmunbsr.ttf</file>

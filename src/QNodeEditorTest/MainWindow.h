@@ -22,6 +22,9 @@ class MainWindow : public QMainWindow {
 public:
 	MainWindow(QWidget *parent = nullptr);
 
+public slots:
+	void openFile();
+
 private:
 	/**
 	 * Utility function used by both save() and saveAs() to actually write the

@@ -71,6 +71,8 @@ set(SRC
 	widgets/FileInputWidget.cpp
 	widgets/GoghFlowView.h
 	widgets/GoghFlowView.cpp
+	widgets/ClickableWidget.h
+	widgets/ClickableWidget.cpp
 
 	dialogs/RenderDialog.h
 	dialogs/RenderDialog.cpp

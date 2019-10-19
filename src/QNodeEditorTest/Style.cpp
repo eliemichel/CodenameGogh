@@ -22,3 +22,24 @@ QString Gogh::Style::nodeStyle()
 	)";
 }
 
+QString Gogh::Style::dialogStyle()
+{
+	return R"(
+		QDialog {
+			background-color: #1d1d1d;
+			color: #e1e1e1;
+		}
+		QLabel {
+			color: #e1e1e1;
+		}
+		QWidget[objectName^="newButtonContent"],
+		QWidget[objectName^="openButtonContent"] {
+			background-color: #282828;
+		}
+		QWidget[objectName^="newButtonContent"]:hover,
+		QWidget[objectName^="openButtonContent"]:hover {
+			background-color: #353535;
+		}
+	)";
+}
+

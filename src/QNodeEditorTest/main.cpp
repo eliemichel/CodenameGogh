@@ -5,6 +5,7 @@
 #include <nodes/ConnectionStyle>
 
 #include "MainWindow.h"
+#include "dialogs/WelcomeDialog.h"
 
 using QtNodes::ConnectionStyle;
 
@@ -65,7 +66,23 @@ main(int argc, char *argv[])
 	setFlowViewStyle();
 
 	MainWindow w;
+
+	WelcomeDialog welcomeDialog;
+	welcomeDialog.exec();
+
+	switch (welcomeDialog.selectedAction()) {
+	case WelcomeDialog::OpenGraph:
+		w.openFile();
+		break;
+	case WelcomeDialog::NewGraph:
+		break;
+	default:
+	case WelcomeDialog::Cancel:
+		return EXIT_SUCCESS;
+	}
+
 	w.showNormal();
+	w.raise();
   
 	return app.exec();
 }

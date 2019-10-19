@@ -22,7 +22,7 @@ GoghFlowScene::GoghFlowScene(QObject * parent)
 }
 
 void GoghFlowScene::init() {
-	m_hasBeenModified = true;
+	m_hasBeenModified = false;
 
 	connect(this, &FlowScene::nodeCreated, this, &GoghFlowScene::setModified);
 	connect(this, &FlowScene::nodeDeleted, this, &GoghFlowScene::setModified);

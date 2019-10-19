@@ -14,7 +14,6 @@
 #include "ui_MainWindow.h"
 #include "dialogs/AboutDialog.h"
 #include "dialogs/RenderDialog.h"
-#include "dialogs/WelcomeDialog.h"
 #include "widgets/GoghFlowView.h"
 #include "RenderCommand.h"
 #include "GoghFlowScene.h"
@@ -90,7 +89,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 	connect(
 		ui->actionOpen, &QAction::triggered,
-		m_scene.get(), &FlowScene::load);
+		this, &MainWindow::openFile);
 
 	// TODO: why does it crash on quit? It does not when using the window cross
 	connect(
@@ -132,8 +131,6 @@ MainWindow::MainWindow(QWidget *parent)
 		this, &MainWindow::onSceneFileStatusChanged);
 
 	// 3. Startup
-
-	WelcomeDialog(this).exec();
 
 	m_scene->loadFromMemory(defaultScene());
 	onSceneFileStatusChanged("", true);
@@ -182,6 +179,29 @@ void MainWindow::saveAs()
 		tr("Gogh Files (*.gog)"));
 
 	writeScene(filename);
+}
+
+void MainWindow::openFile()
+{
+	QString fileName = QFileDialog::getOpenFileName(
+		nullptr,
+		tr("Open Gogh Graph"),
+		QDir::homePath(),
+		tr("Gogh Files (*.gog)"));
+
+	if (!QFileInfo::exists(fileName)) {
+		return;
+	}
+
+	QFile file(fileName);
+
+	if (!file.open(QIODevice::ReadOnly)) {
+		return;
+	}
+
+	m_scene->clearScene();
+	QByteArray wholeFile = file.readAll();
+	m_scene->loadFromMemory(wholeFile);
 }
 
 void MainWindow::openDocumentation()
