@@ -12,8 +12,9 @@
 
 #include "MainWindow.h"
 #include "ui_MainWindow.h"
-#include "dialogs/RenderDialog.h"
 #include "dialogs/AboutDialog.h"
+#include "dialogs/RenderDialog.h"
+#include "dialogs/WelcomeDialog.h"
 #include "widgets/GoghFlowView.h"
 #include "RenderCommand.h"
 #include "GoghFlowScene.h"
@@ -131,6 +132,8 @@ MainWindow::MainWindow(QWidget *parent)
 		this, &MainWindow::onSceneFileStatusChanged);
 
 	// 3. Startup
+
+	WelcomeDialog(this).exec();
 
 	m_scene->loadFromMemory(defaultScene());
 	onSceneFileStatusChanged("", true);

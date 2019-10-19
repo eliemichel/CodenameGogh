@@ -77,6 +77,11 @@ set(SRC
 	dialogs/AboutDialog.h
 	dialogs/AboutDialog.ui
 	dialogs/AboutDialog.cpp
+	dialogs/WelcomeDialog.h
+	dialogs/WelcomeDialog.ui
+	dialogs/WelcomeDialog.cpp
+
+	resources/resources.qrc
 
 	main.cpp
 )
