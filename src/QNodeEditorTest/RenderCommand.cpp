@@ -18,9 +18,14 @@ RenderCommand::RenderCommand(const QString & filename,
 	, m_outputFilename(filename)
 {}
 
-QString RenderCommand::displayOutputFile()
+QString RenderCommand::displayOutputFile() const
 {
 	return QFileInfo(m_outputFilename).fileName();
+}
+
+bool RenderCommand::fileExists() const
+{
+	return QFileInfo(m_outputFilename).isFile();
 }
 
 QStringList RenderCommand::buildArguments(const QString & filename,
@@ -69,6 +74,7 @@ QStringList RenderCommand::buildArguments(const QString & filename,
 	}
 
 	QStringList cmd;
+	cmd << "-y"; // force overwrite (we manage confirmation dialog ourselves)
 	// Input files demuxing
 	for (const auto & f : inputFiles) {
 		cmd += f->options();

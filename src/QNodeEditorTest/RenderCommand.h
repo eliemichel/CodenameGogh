@@ -24,7 +24,13 @@ public:
 	/**
 	 * Short name of the output file, used for display only
 	 */
-	QString displayOutputFile();
+	QString displayOutputFile() const;
+
+	/**
+	 * Return true if the file that the render command is supposed to write on
+	 * already exists.
+	 */
+	bool fileExists() const;
 
 private:
 	static QStringList buildArguments(const QString & filename,

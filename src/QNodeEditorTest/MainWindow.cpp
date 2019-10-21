@@ -6,6 +6,7 @@
 #include <QLabel>
 #include <QFileDialog>
 #include <QDesktopServices>
+#include <QMessageBox>
 
 #include <nodes/Node>
 #include <nodes/DataModelRegistry>
@@ -231,5 +232,15 @@ void MainWindow::onSceneFileStatusChanged(const QString & filename, bool hasBeen
 
 void MainWindow::startRenderInDialog(const RenderCommand & cmd)
 {
+	if (cmd.fileExists()) {
+		QMessageBox confirmationDialog;
+		confirmationDialog.setText("Overwrite");
+		confirmationDialog.setInformativeText("File '" + cmd.displayOutputFile() + "' already exists. Do you want to overwrite it?");
+		confirmationDialog.setStandardButtons(QMessageBox::Yes | QMessageBox::No);
+		confirmationDialog.setDefaultButton(QMessageBox::No);
+		if (confirmationDialog.exec() == QMessageBox::No) {
+			return;
+		}
+	}
 	RenderDialog(cmd, this).exec();
 }
