@@ -21,6 +21,11 @@ public:
 	const QString & program() { return m_program; }
 	const QStringList & arguments() { return m_arguments; }
 
+	/**
+	 * Short name of the output file, used for display only
+	 */
+	QString displayOutputFile();
+
 private:
 	static QStringList buildArguments(const QString & filename,
 	                                  const StreamDataList & streams,
@@ -29,4 +34,5 @@ private:
 private:
 	const QString m_program;
 	const QStringList m_arguments;
+	const QString m_outputFilename;
 };

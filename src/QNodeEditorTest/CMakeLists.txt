@@ -43,6 +43,8 @@ set(SRC
 	RenderCommand.cpp
 	Style.h
 	Style.cpp
+	FfmpegOutputParser.h
+	FfmpegOutputParser.cpp
 
 	nodes/AbstractStreamData.h
 	nodes/VideoStreamData.h

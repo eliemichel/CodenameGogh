@@ -1,4 +1,5 @@
 #include <QMap>
+#include <QFileInfo>
 
 #include "RenderCommand.h"
 
@@ -14,7 +15,13 @@ RenderCommand::RenderCommand(const QString & filename,
 	                         const CodecDataList & codecs)
 	: m_program(locateFfmpeg())
 	, m_arguments(buildArguments(filename, streams, codecs))
+	, m_outputFilename(filename)
 {}
+
+QString RenderCommand::displayOutputFile()
+{
+	return QFileInfo(m_outputFilename).fileName();
+}
 
 QStringList RenderCommand::buildArguments(const QString & filename,
 	                                      const StreamDataList & streams,

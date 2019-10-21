@@ -61,7 +61,7 @@
        </spacer>
       </item>
       <item>
-       <widget class="QPushButton" name="closeButton">
+       <widget class="QPushButton" name="titleBarCloseButton">
         <property name="minimumSize">
          <size>
           <width>32</width>
@@ -251,8 +251,6 @@
                 </widget>
                </item>
               </layout>
-              <zorder>newIcon</zorder>
-              <zorder>newButtonContent</zorder>
              </widget>
             </item>
             <item>

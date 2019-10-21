@@ -1,0 +1,22 @@
+ffmpeg version 3.4 Copyright (c) 2000-2017 the FFmpeg developers
+  built with gcc 7.2.0 (GCC)
+  configuration: --enable-gpl --enable-version3 --enable-sdl2 --enable-bzlib --enable-fontconfig --enable-gnutls --enable-iconv --enable-libass --enable-libbluray --enable-libfreetype --enable-libmp3lame --enable-libopenjpeg --enable-libopus --enable-libshine --enable-libsnappy --enable-libsoxr --enable-libtheora --enable-libtwolame --enable-libvpx --enable-libwavpack --enable-libwebp --enable-libx264 --enable-libx265 --enable-libxml2 --enable-libzimg --enable-lzma --enable-zlib --enable-gmp --enable-libvidstab --enable-libvorbis --enable-cuda --enable-cuvid --enable-d3d11va --enable-nvenc --enable-dxva2 --enable-avisynth --enable-libmfx
+  libavutil      55. 78.100 / 55. 78.100
+  libavcodec     57.107.100 / 57.107.100
+  libavformat    57. 83.100 / 57. 83.100
+  libavdevice    57. 10.100 / 57. 10.100
+  libavfilter     6.107.100 /  6.107.100
+  libswscale      4.  8.100 /  4.  8.100
+  libswresample   2.  9.100 /  2.  9.100
+  libpostproc    54.  7.100 / 54.  7.100
+Input #0, image2, from 'E:/Cours/ATI/Arya_Lucie_Elie/reel/sequences/renders/00_Sequence/%04d.png':
+  Duration: 00:00:57.00, start: 0.000000, bitrate: N/A
+    Stream #0:0: Video: png, rgba(pc), 1920x1080 [SAR 2835:2835 DAR 16:9], 25 fps, 25 tbr, 25 tbn, 25 tbc
+Output #0, mp4, to 'G:/SourceCode/QNodeEditorTest/build-msvc15/src/QNodeEditorTest/test65.mp4':
+  Metadata:
+    encoder         : Lavf57.83.100
+    Stream #0:0: Video: png (mp4v / 0x7634706D), rgba(pc), 1920x1080 [SAR 2835:2835 DAR 16:9], q=2-31, 25 fps, 25 tbr, 12800 tbn, 25 tbc
+Stream mapping:
+  Stream #0:0 -> #0:0 (copy)
+Press [q] to stop, [?] for help
+frame=  128 fps=0.0 q=-1.0 size=   17408kB time=00:00:05.08 bitrate=28071.8kbits/s speed=9.77x    

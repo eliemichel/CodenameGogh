@@ -27,7 +27,7 @@ WelcomeDialog::WelcomeDialog(QWidget *parent)
 		this, &WelcomeDialog::openGraph);
 
 	connect(
-		ui->closeButton, &QPushButton::clicked,
+		ui->titleBarCloseButton, &QPushButton::clicked,
 		this, &QDialog::close);
 }
 

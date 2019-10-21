@@ -9,47 +9,50 @@
 #include <QProcess>
 #include <QScrollBar>
 #include <QMessageBox>
+#include <QTimer>
 
+#include "Style.h"
 #include "RenderDialog.h"
+#include "ui_RenderDialog.h"
 
 RenderDialog::RenderDialog(const RenderCommand & cmd, QWidget *parent)
 	: QDialog(parent)
+	, ui(new Ui::RenderDialog())
 	, m_cmd(cmd)
 	, m_isRunning(false)
 	, m_ffmpegProcess(nullptr)
+	, m_minimumParseInterval(1000)
 {
-	QVBoxLayout *layout = new QVBoxLayout();
+	setWindowFlags(Qt::Window | Qt::FramelessWindowHint);
 
-	m_processOutputLabel = new QLabel();
-	m_processOutputLabel->setWordWrap(true);
-	m_processOutputLabel->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+	int id = QFontDatabase::addApplicationFont(":/fonts/cmunbmr.ttf");
+	QString family = QFontDatabase::applicationFontFamilies(id).at(0);
+	setFont(QFont(family));
+	setStyleSheet(Gogh::Style::dialogStyle());
 
-	m_scrollArea = new QScrollArea();
-	m_scrollArea->setWidget(m_processOutputLabel);
-	m_scrollArea->setWidgetResizable(true);
-	layout->addWidget(m_scrollArea);
+	ui->setupUi(this);
+	
+	ui->processOutput->setFont(QFontDatabase::systemFont(QFontDatabase::FixedFont));
+	ui->processOutput->setText("");
 
-	QHBoxLayout *buttonLayout = new QHBoxLayout();
-	buttonLayout->addStretch();
-	m_cancelButton = new QPushButton("Cancel");
-	connect(m_cancelButton, &QPushButton::clicked, this, &RenderDialog::cancel);
-	buttonLayout->addWidget(m_cancelButton);
-	m_closeButton = new QPushButton("Close");
-	connect(m_closeButton, &QPushButton::clicked, this, &QDialog::close);
-	buttonLayout->addWidget(m_closeButton);
-	layout->addLayout(buttonLayout);
+	connect(ui->cancelButton, &QPushButton::clicked, this, &RenderDialog::cancel);
+	connect(ui->cancelAllButton, &QPushButton::clicked, this, &RenderDialog::cancel);
+	connect(ui->closeButton, &QPushButton::clicked, this, &QDialog::close);
+	connect(ui->titleBarCloseButton, &QPushButton::clicked, this, &QDialog::close);
 
-	this->setLayout(layout);
-	this->setMinimumSize(600, 300);
+	m_nextParseTimer.setSingleShot(true);
+	connect(&m_nextParseTimer, &QTimer::timeout, this, &RenderDialog::parse);
 
+	m_lastParseTimer.invalidate();
+	
 	setRunning(false);
 }
 
 RenderDialog::~RenderDialog()
 {
-	if (m_ffmpegProcess)
-	{
+	if (m_ffmpegProcess) {
 		delete m_ffmpegProcess;
+		m_ffmpegProcess = nullptr;
 	}
 }
 
@@ -67,13 +70,11 @@ void RenderDialog::closeEvent(QCloseEvent *event)
 
 void RenderDialog::showEvent(QShowEvent *event)
 {
-	if (m_isRunning)
-	{
+	if (m_isRunning) {
 		return;
 	}
 
-	if (m_ffmpegProcess)
-	{
+	if (m_ffmpegProcess) {
 		delete m_ffmpegProcess;
 	}
 	m_ffmpegProcess = new QProcess(this);
@@ -87,6 +88,12 @@ void RenderDialog::showEvent(QShowEvent *event)
 
 	m_ffmpegProcess->start(m_cmd.program(), m_cmd.arguments());
 
+	m_processStdout = "";
+	m_processStderr = "";
+	m_lastParseTimer.invalidate();
+	m_nextParseTimer.stop();
+	setProgress(0);
+
 	setRunning(m_ffmpegProcess->isOpen());
 
 	QDialog::showEvent(event);
@@ -95,27 +102,69 @@ void RenderDialog::showEvent(QShowEvent *event)
 void RenderDialog::setRunning(bool running)
 {
 	m_isRunning = running;
-	m_closeButton->setEnabled(!running);
-	m_cancelButton->setEnabled(running);
+	ui->closeButton->setEnabled(!running);
+	ui->titleBarCloseButton->setEnabled(!running);
+	ui->cancelAllButton->setEnabled(running);
+
+	if (m_isRunning) {
+		ui->subtitle->setText("<span style=\"font-size:12pt;\">Exporting " + m_cmd.displayOutputFile() + "...</span>");
+	}
+}
+
+void RenderDialog::setProgress(float progress)
+{
+	int percent = static_cast<int>(progress);
+	ui->progressBar->setValue(percent);
+	ui->progressNumber->setText(QString::number(percent) + "%");
+}
+
+void RenderDialog::parse()
+{
+	m_parser.parse(m_processStdout, m_processStderr);
+
+	if (m_isRunning) {
+		setProgress(m_parser.progress());
+	}
+
+	m_lastParseTimer.start();
+}
+
+void RenderDialog::needParsing()
+{
+	if (m_lastParseTimer.isValid() && m_lastParseTimer.elapsed() < m_minimumParseInterval) {
+		if (!m_nextParseTimer.isActive()) {
+			m_nextParseTimer.start(m_minimumParseInterval - m_lastParseTimer.elapsed());
+		}
+	}
+	else {
+		parse();
+	}
 }
 
 void RenderDialog::onProcessFinished()
 {
 	std::cout << "render finished with code " << m_ffmpegProcess->exitCode() << std::endl;
 	setRunning(false);
-	m_scrollArea->verticalScrollBar()->setValue(m_scrollArea->verticalScrollBar()->maximum());
+	setProgress(100);
+	ui->outputScrollArea->verticalScrollBar()->setValue(ui->outputScrollArea->verticalScrollBar()->maximum());
 }
 
 void RenderDialog::readStdout()
 {
-	m_processOutputLabel->setText(m_processOutputLabel->text() + m_ffmpegProcess->readAllStandardOutput());
-	m_scrollArea->verticalScrollBar()->setValue(m_scrollArea->verticalScrollBar()->maximum());
+	m_processStdout += m_ffmpegProcess->readAllStandardOutput();
+	needParsing();
+
+	ui->processOutput->setText(m_processStdout);
+	ui->outputScrollArea->verticalScrollBar()->setValue(ui->outputScrollArea->verticalScrollBar()->maximum());
 }
 
 void RenderDialog::readStderr()
 {
-	m_processOutputLabel->setText(m_processOutputLabel->text() + m_ffmpegProcess->readAllStandardError());
-	m_scrollArea->verticalScrollBar()->setValue(m_scrollArea->verticalScrollBar()->maximum());
+	m_processStderr += m_ffmpegProcess->readAllStandardError();
+	needParsing();
+
+	ui->processOutput->setText(m_processStderr);
+	ui->outputScrollArea->verticalScrollBar()->setValue(ui->outputScrollArea->verticalScrollBar()->maximum());
 }
 
 void RenderDialog::cancel()
