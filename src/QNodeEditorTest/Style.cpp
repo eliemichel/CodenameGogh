@@ -33,6 +33,24 @@ QLabel {
 	background-color: transparent;
 	color: #e1e1e1;
 }
+QPushButton {
+	background-color: #353535;
+	color: #e1e1e1;
+	font-size: 12pt;
+	border: none;
+	min-width: 80px;
+	min-height: 24px;
+}
+QPushButton:hover {
+	background-color: #3f3f3f;
+}
+QPushButton:pressed {
+	background-color: #353535;
+}
+QPushButton:disabled {
+	background-color: #252525;
+	color: #525252;
+}
 QWidget[objectName^="newButtonContent"],
 QWidget[objectName^="openButtonContent"] {
 	background-color: #282828;
@@ -40,6 +58,11 @@ QWidget[objectName^="openButtonContent"] {
 QWidget[objectName^="newButtonContent"]:hover,
 QWidget[objectName^="openButtonContent"]:hover {
 	background-color: #353535;
+}
+QWidget[objectName^="titleBarCloseButton"],
+QWidget[objectName^="cancelButton"] {
+	min-width: 32px;
+	background-color: transparent;
 }
 QWidget[objectName^="titleBarCloseButton"]:hover,
 QWidget[objectName^="cancelButton"]:hover {
