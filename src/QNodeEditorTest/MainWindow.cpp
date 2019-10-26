@@ -23,6 +23,7 @@
 #include "nodes/FileOutputDataModel.h"
 #include "nodes/H264CodecDataModel.h"
 #include "nodes/AacCodecDataModel.h"
+#include "nodes/FdkAacCodecDataModel.h"
 
 using QtNodes::DataModelRegistry;
 
@@ -34,6 +35,7 @@ registerDataModels()
   ret->registerModel<FileOutputDataModel>("I/O");
   ret->registerModel<H264CodecDataModel>("Video Codec");
   ret->registerModel<AacCodecDataModel>("Audio Codec");
+  ret->registerModel<FdkAacCodecDataModel>("Audio Codec");
 
   return ret;
 }
