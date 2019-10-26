@@ -70,6 +70,8 @@ set(SRC
 	nodes/AacCodecDataModel.cpp
 	nodes/FdkAacCodecDataModel.h
 	nodes/FdkAacCodecDataModel.cpp
+	nodes/Mp3CodecDataModel.h
+	nodes/Mp3CodecDataModel.cpp
 
 	widgets/FileInputWidget.h
 	widgets/FileInputWidget.cpp
