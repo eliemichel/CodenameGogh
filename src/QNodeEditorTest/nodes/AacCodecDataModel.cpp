@@ -14,6 +14,8 @@
 
 AacCodecDataModel::AacCodecDataModel()
 	: _widget(new QWidget())
+	, _cbrLabel(new QLabel("CBR"))
+	, _vbrLabel(new QLabel("VBR"))
 	, _cbrInput (new QLineEdit())
 	, _vbrInput (new QLineEdit())
 	, _cbrPresets (new QComboBox())
@@ -26,6 +28,12 @@ AacCodecDataModel::AacCodecDataModel()
 
 	_cbrSelect->click();
 	l->addWidget(_cbrSelect, 0, 0);
+	l->addWidget(_vbrSelect, 0, 1);
+
+
+	l->addWidget(_cbrLabel, 1, 0);
+	_cbrInput->setText("160k");
+	l->addWidget(_cbrInput, 1, 1);
 
 	_cbrPresets->addItems(QStringList{
 		"(presets)",
@@ -36,12 +44,12 @@ AacCodecDataModel::AacCodecDataModel()
 		"384k",
 	});
 	_cbrPresets->setCurrentIndex(0);
-	l->addWidget(_cbrPresets, 0, 1);
+	l->addWidget(_cbrPresets, 1, 2);
 
-	_cbrInput->setText("160k");
-	l->addWidget(_cbrInput, 0, 2);
+	l->addWidget(_vbrLabel, 2, 0);
 
-	l->addWidget(_vbrSelect, 1, 0);
+	_vbrInput->setText("2");
+	l->addWidget(_vbrInput, 2, 1);
 
 	_vbrPresets->addItems(QStringList{
 		"(presets)",
@@ -51,10 +59,7 @@ AacCodecDataModel::AacCodecDataModel()
 		"2",
 	});
 	_vbrPresets->setCurrentIndex(0);
-	l->addWidget(_vbrPresets, 1, 1);
-
-	_vbrInput->setText("2");
-	l->addWidget(_vbrInput, 1, 2);
+	l->addWidget(_vbrPresets, 2, 2);
 
 	connect<void(QComboBox::*)(int)>(
 		_cbrPresets, &QComboBox::currentIndexChanged,
@@ -150,10 +155,12 @@ std::shared_ptr<NodeData> AacCodecDataModel::outData(PortIndex port) {
 void AacCodecDataModel::onSelectChanged()
 {
 	bool isCbr = _cbrSelect->isChecked();
-	_cbrPresets->setEnabled(isCbr);
-	_cbrInput->setEnabled(isCbr);
-	_vbrPresets->setEnabled(!isCbr);
-	_vbrInput->setEnabled(!isCbr);
+	_cbrLabel->setVisible(isCbr);
+	_cbrPresets->setVisible(isCbr);
+	_cbrInput->setVisible(isCbr);
+	_vbrLabel->setVisible(!isCbr);
+	_vbrPresets->setVisible(!isCbr);
+	_vbrInput->setVisible(!isCbr);
 }
 
 void AacCodecDataModel::onPresetChanged()

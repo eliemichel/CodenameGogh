@@ -10,6 +10,7 @@ using QtNodes::NodeDataType;
 using QtNodes::NodeDataModel;
 using QtNodes::NodeValidationState;
 
+class QLabel;
 class QWidget;
 class QLineEdit;
 class QRadioButton;
@@ -78,6 +79,8 @@ private slots:
 private:
 	std::shared_ptr<AudioCodecData> _codec;
 	QWidget * _widget;
+	QLabel * _cbrLabel;
+	QLabel * _vbrLabel;
 	QLineEdit * _cbrInput;
 	QLineEdit * _vbrInput;
 	QComboBox * _cbrPresets;
