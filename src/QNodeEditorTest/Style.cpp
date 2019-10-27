@@ -72,3 +72,76 @@ QWidget[objectName^="cancelButton"]:hover {
 	)";
 }
 
+QString Gogh::Style::contextMenuStyle()
+{
+	return R"(
+QWidget {
+	color: #e1e1e1;
+	background-color: transparent;
+}
+QLabel {
+	color: #e1e1e1;
+}
+QWidget[objectName^="leftSide"] {
+	background-color: #1d1d1d;
+}
+QWidget[objectName^="rightSide"] {
+	background-color: #252526;
+}
+
+QWidget[objectName^="searchInput"] {
+	font-size: 12pt;
+	border: none;
+	background-color: #2a2a2c;
+	padding-left: 4px;
+}
+
+QPushButton {
+	background-color: #353535;
+	color: #e1e1e1;
+	font-size: 12pt;
+	border: none;
+	min-width: 80px;
+	min-height: 24px;
+}
+QPushButton:hover {
+	background-color: #3f3f3f;
+}
+QPushButton:pressed {
+	background-color: #353535;
+}
+QPushButton:disabled {
+	background-color: #252525;
+	color: #525252;
+}
+
+QScrollBar:vertical {
+	border: none;
+	background:#1d1d1d;
+	width:6px;
+	margin: 0px 0px 0px 0px;
+}
+
+QScrollBar::handle:vertical {
+	background: #2a2a2c;
+	min-height: 0px;
+}
+
+QScrollBar::add-line:vertical {
+	height: 0px;
+	subcontrol-position: bottom;
+	subcontrol-origin: margin;
+}
+
+QScrollBar::sub-line:vertical {
+	height: 0 px;
+	subcontrol-position: top;
+	subcontrol-origin: margin;
+}
+QScrollBar::add-page:vertical,
+QScrollBar::sub-page:vertical {
+	background: none;
+}
+	)";
+}
+

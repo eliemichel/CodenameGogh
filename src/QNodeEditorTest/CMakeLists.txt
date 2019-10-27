@@ -79,6 +79,8 @@ set(SRC
 	widgets/GoghFlowView.cpp
 	widgets/ClickableWidget.h
 	widgets/ClickableWidget.cpp
+	widgets/AddNodeMenu.h
+	widgets/AddNodeMenu.cpp
 
 	dialogs/RenderDialog.h
 	dialogs/RenderDialog.cpp

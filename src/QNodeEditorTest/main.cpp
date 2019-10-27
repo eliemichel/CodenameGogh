@@ -6,6 +6,7 @@
 
 #include "MainWindow.h"
 #include "dialogs/WelcomeDialog.h"
+#include "widgets/AddNodeMenu.h"
 
 using QtNodes::ConnectionStyle;
 
@@ -66,6 +67,12 @@ main(int argc, char *argv[])
 	setFlowViewStyle();
 
 	MainWindow w;
+
+	// TEST
+	//AddNodeMenu tmp;
+	//tmp.showNormal();
+	//return app.exec();
+	// END TEST
 
 	WelcomeDialog welcomeDialog;
 	welcomeDialog.exec();

@@ -12,6 +12,8 @@ public:
 	static QString nodeStyle();
 
 	static QString dialogStyle();
+
+	static QString contextMenuStyle();
 };
 
 } // namespace Gogh
