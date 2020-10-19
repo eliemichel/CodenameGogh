@@ -21,12 +21,12 @@
 # in the Software.
 
 cmake_minimum_required(VERSION 3.0)
-project(QNodeEditorTest)
+project(Gogh)
 
 include(cmake/utils.cmake)
 guess_qt5_dir()
-include(cmake/Qt5QuickTemplates2Config.cmake)
-include(cmake/Qt5QuickShapesConfig.cmake)
+#include(cmake/Qt5QuickTemplates2Config.cmake)
+#include(cmake/Qt5QuickShapesConfig.cmake)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 add_subdirectory(src)

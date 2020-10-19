@@ -1,6 +1,6 @@
-# This file is part of Augen Light
+# This file is part of Gogh
 #
-# Copyright (c) 2017 - 2019 -- Élie Michel <elie.michel@exppad.com>
+# Copyright (c) 2017 - 2020 -- Élie Michel <elie.michel@exppad.com>
 # 
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the “Software”), to
@@ -39,6 +39,8 @@ set(SRC
 	MainWindow.h
 	MainWindow.ui
 	MainWindow.cpp
+	MainWindowStyle.h
+	MainWindowStyle.cpp
 	RenderCommand.h
 	RenderCommand.cpp
 	Style.h
@@ -96,14 +98,19 @@ set(SRC
 	main.cpp
 )
 
-add_executable (QNodeEditorTest ${SRC})
+add_executable (Gogh ${SRC})
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries_and_dll(QNodeEditorTest NodeEditor::nodes)
-target_link_libraries_and_dll(QNodeEditorTest Qt5::Core)
-target_link_libraries_and_dll(QNodeEditorTest Qt5::Gui)
-target_link_libraries_and_dll(QNodeEditorTest Qt5::Widgets)
+target_link_libraries_and_dll(Gogh NodeEditor::nodes)
+target_link_libraries_and_dll(Gogh Qt5::Core)
+target_link_libraries_and_dll(Gogh Qt5::Gui)
+target_link_libraries_and_dll(Gogh Qt5::Widgets)
+
+#add_custom_command(
+#    TARGET Gogh POST_BUILD
+#    COMMAND "${Qt5Core_DIR}/../../../bin/windeployqt.exe" "$<IF:$<CONFIG:Debug>,--debug,--release>" $<TARGET_FILE:Gogh>
+#)
 
 # For IDE projects
 group_source_by_folder(${SRC})
