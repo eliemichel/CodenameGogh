@@ -1,49 +1,35 @@
 #include <iostream>
 
 #include <QApplication>
+#include <QFile>
 
+#include <nodes/FlowViewStyle>
 #include <nodes/ConnectionStyle>
+#include <nodes/Connection>
 
 #include "MainWindow.h"
+#include "MainWindowStyle.h"
 #include "dialogs/WelcomeDialog.h"
 #include "widgets/AddNodeMenu.h"
 
 using QtNodes::ConnectionStyle;
 
-static void setFlowViewStyle() {
-  ConnectionStyle::setConnectionStyle(
-  R"(
-  {
-    "ConnectionStyle": {
-      "ConstructionColor": "gray",
-      "NormalColor": "black",
-      "SelectedColor": "gray",
-      "SelectedHaloColor": "deepskyblue",
-      "HoveredColor": "deepskyblue",
+static void setNodeStyle()
+{
+	using namespace QtNodes;
 
-      "LineWidth": 3.0,
-      "ConstructionLineWidth": 2.0,
-      "PointDiameter": 10.0,
+	// Set style for node editor
+	QFile nodeEditorStyleFile(":NodeEditorStyle.json");
 
-      "UseDataDefinedColors": true
-    }
-  }
-  )");
-}
-
-static QString getStyleSheet() {
-	return "";
-	/*
-	return R"(
-	QWidget {
-		background-color: rgba(96, 96, 96, 0);
-		color: white;
+	if (nodeEditorStyleFile.open(QIODevice::ReadOnly))
+	{
+		QString nodeEditorStyle = nodeEditorStyleFile.readAll();
+		FlowViewStyle::setStyle(nodeEditorStyle);
+		NodeStyle::setNodeStyle(nodeEditorStyle);
+		ConnectionStyle::setConnectionStyle(nodeEditorStyle);
 	}
-	QAbstractButton {
-		background-color: rgba(96, 96, 96, 0);
-	}
-	)";
-	*/
+
+	Connection::SetPolicy(Connection::Policy::OverrideExistingConnections);
 }
 
 int
@@ -63,8 +49,9 @@ main(int argc, char *argv[])
 		;
 	QApplication app(argc, argv);
 
-	app.setStyleSheet(getStyleSheet());
-	setFlowViewStyle();
+	setNodeStyle();
+	app.setStyle(new MainWindowStyle());
+	app.setPalette(app.style()->standardPalette());
 
 	MainWindow w;
 

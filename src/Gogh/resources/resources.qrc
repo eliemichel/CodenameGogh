@@ -1,5 +1,7 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource>
+    <file>NodeEditorStyle.json</file>
+  
     <file>images/open-file.png</file>
     <file>images/new-file.png</file>
     <file>images/cross.png</file>

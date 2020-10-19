@@ -21,7 +21,10 @@
 # in the Software.
 
 # We first include external libraries on which this project depends
-add_subdirectory(External)
+#add_subdirectory(External)
+
+set(BUILD_SHARED_LIBS OFF CACHE BOOL "Build as shared library" FORCE)
+add_subdirectory(nodeeditor)
 
 # Then we build our project
 add_subdirectory(Gogh)

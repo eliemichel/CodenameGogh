@@ -5,11 +5,11 @@
 using QtNodes::FlowView;
 using QtNodes::FlowScene;
 class GoghFlowScene;
+class QRubberBand;
 
 class GoghFlowView : public FlowView {
 	Q_OBJECT
 public:
-	GoghFlowView(QWidget *parent = nullptr);
 	GoghFlowView(GoghFlowScene *scene, QWidget *parent = nullptr);
 
 	void setScene(GoghFlowScene *scene);
@@ -19,6 +19,10 @@ public slots:
 	void paste();
 
 protected:
+	void mousePressEvent(QMouseEvent* event) override;
+	void mouseMoveEvent(QMouseEvent* event) override;
+	void mouseReleaseEvent(QMouseEvent* event) override;
+
 	void keyPressEvent(QKeyEvent *event) override;
 
 	void keyReleaseEvent(QKeyEvent *event) override;
@@ -33,5 +37,9 @@ protected:
 	GoghFlowScene * goghScene();
 
 private:
-	void setScene(FlowScene *) {} // shadow original, replaced by the GoghFlowScene version
+	using FlowView::setScene; // make private the raw pointer version
+
+private:
+	QPointF m_clickPos;
+	QRubberBand* m_rubberBand = nullptr;
 };

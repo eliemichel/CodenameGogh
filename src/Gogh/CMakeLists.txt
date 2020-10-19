@@ -98,7 +98,11 @@ set(SRC
 	main.cpp
 )
 
-add_executable (Gogh ${SRC})
+set(RESOURCES
+	resources/resources.qrc
+)
+
+add_executable (Gogh "${SRC}" "${RESOURCES}")
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 

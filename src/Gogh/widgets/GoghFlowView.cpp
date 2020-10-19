@@ -9,26 +9,100 @@
 #include <QRegularExpression>
 #include <QJsonDocument>
 #include <QJsonArray>
+#include <QRubberBand>
 
 #include <nodes/FlowScene>
 
 #include "GoghFlowView.h"
 #include "GoghFlowScene.h"
 
-GoghFlowView::GoghFlowView(QWidget *parent)
-	: FlowView(parent)
-{
-	setAcceptDrops(true);
-}
 
 GoghFlowView::GoghFlowView(GoghFlowScene *scene, QWidget *parent)
 	: FlowView(scene, parent)
 {
+	setTransformationAnchor(ViewportAnchor::AnchorUnderMouse);
+	setDragMode(NoDrag); // we implement our own
+	setFocusPolicy(Qt::ClickFocus);
 	setAcceptDrops(true);
 }
 
 void GoghFlowView::setScene(GoghFlowScene *scene) {
 	FlowView::setScene(scene);
+}
+
+
+// ----------------------------------------------------------------------------
+
+void GoghFlowView::mousePressEvent(QMouseEvent* event)
+{
+	bool navig = (event->button() == Qt::MiddleButton) || (((event->button() == Qt::LeftButton) && (event->modifiers() & Qt::AltModifier) != 0));
+	if (navig)
+	{
+		m_clickPos = mapToScene(event->pos());
+		setCursor(QCursor(Qt::ClosedHandCursor));
+		return;
+	}
+
+	QGraphicsView::mousePressEvent(event);
+
+	bool rubberband = event->button() == Qt::LeftButton && !navig && !event->isAccepted();
+	if (rubberband)
+	{
+		m_clickPos = mapToScene(event->pos());
+		if (!m_rubberBand) {
+			m_rubberBand = new QRubberBand(QRubberBand::Rectangle, this);
+		}
+		m_rubberBand->setGeometry(QRect(event->pos(), QSize()));
+		m_rubberBand->show();
+	}
+}
+
+void GoghFlowView::mouseMoveEvent(QMouseEvent* event)
+{
+	FlowView::mouseMoveEvent(event);
+	bool navig = (event->buttons() == Qt::MiddleButton) || (((event->buttons() == Qt::LeftButton) && (event->modifiers() & Qt::AltModifier) != 0));
+	if (scene() && scene()->mouseGrabberItem() == nullptr && navig)
+	{
+		// Make sure shift is not being pressed
+		if ((event->modifiers() & Qt::ShiftModifier) == 0)
+		{
+			QPointF difference = m_clickPos - mapToScene(event->pos());
+			setSceneRect(sceneRect().translated(difference.x(), difference.y()));
+		}
+	}
+
+	if (m_rubberBand != nullptr && m_rubberBand->isVisible())
+	{
+		m_rubberBand->setGeometry(QRect(mapFromScene(m_clickPos), event->pos()).normalized());
+	}
+}
+
+void GoghFlowView::mouseReleaseEvent(QMouseEvent* event)
+{
+	if (m_rubberBand != nullptr && m_rubberBand->isVisible())
+	{
+		if (scene())
+		{
+			QPointF releasePos = mapToScene(event->pos());
+			QPainterPath path;
+			path.addRect(QRectF(m_clickPos, releasePos));
+			scene()->setSelectionArea(path, Qt::IntersectsItemBoundingRect);
+			for (const auto& i : scene()->selectedItems())
+			{
+				// TODO: fix selection hitbox
+			}
+		}
+		m_rubberBand->hide();
+	}
+	if ((event->modifiers() & Qt::AltModifier) != 0)
+	{
+		setCursor(QCursor(Qt::OpenHandCursor));
+	}
+	else
+	{
+		setCursor(QCursor(Qt::ArrowCursor));
+	}
+	QGraphicsView::mouseReleaseEvent(event);
 }
 
 // ----------------------------------------------------------------------------
